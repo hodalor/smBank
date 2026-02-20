@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { createClient, getClient, updateClient } from '../api';
+import { showError, showSuccess } from '../components/Toaster';
+import { confirm } from '../components/Confirm';
 
 export default function ClientProfile() {
   const { accountNumber } = useParams();
@@ -9,6 +12,7 @@ export default function ClientProfile() {
     createdAt: new Date().toISOString(),
     fullName: '',
     nationalId: '',
+    dob: '',
     phone: '',
     email: '',
     address: '',
@@ -73,21 +77,107 @@ export default function ClientProfile() {
     else setSignaturePreview(null);
   };
   useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (!accountNumber) return;
+      try {
+        const c = await getClient(accountNumber);
+        if (!mounted) return;
+        setForm({
+          accountType: c.accountType || 'Individual',
+          createdAt: c.createdAt || new Date().toISOString(),
+          fullName: c.fullName || '',
+          nationalId: c.nationalId || '',
+          dob: c.dob || '',
+          phone: c.phone || '',
+          email: c.email || '',
+          address: c.address || '',
+          dateRegistered: c.dateRegistered || '',
+          status: c.status || 'Active',
+          photo: null,
+          idFront: null,
+          idBack: null,
+          signaturePhoto: null,
+          companyName: c.companyName || '',
+          registrationNumber: c.registrationNumber || '',
+          registrationDate: c.registrationDate || '',
+          registeredAddress: c.registeredAddress || '',
+          operatingAddress: c.operatingAddress || '',
+          contactName: c.contactName || '',
+          contactPhone: c.contactPhone || '',
+          contactEmail: c.contactEmail || '',
+          contactAddress: c.contactAddress || '',
+          directors: Array.isArray(c.directors) ? c.directors : [],
+          shareholders: Array.isArray(c.shareholders) ? c.shareholders : [],
+          signatories: Array.isArray(c.signatories) ? c.signatories : [],
+          nok1Name: c.nok1Name || '',
+          nok1Phone: c.nok1Phone || '',
+          nok1Email: c.nok1Email || '',
+          nok1Address: c.nok1Address || '',
+          nok2Name: c.nok2Name || '',
+          nok2Phone: c.nok2Phone || '',
+          nok2Email: c.nok2Email || '',
+          nok2Address: c.nok2Address || '',
+        });
+      } catch {}
+    };
+    load();
     return () => {
       if (photoPreview) URL.revokeObjectURL(photoPreview);
       if (idFrontPreview) URL.revokeObjectURL(idFrontPreview);
       if (idBackPreview) URL.revokeObjectURL(idBackPreview);
       if (signaturePreview) URL.revokeObjectURL(signaturePreview);
     };
-  }, [photoPreview, idFrontPreview, idBackPreview, signaturePreview]);
-  const submit = (e) => {
+  }, [accountNumber, photoPreview, idFrontPreview, idBackPreview, signaturePreview]);
+  const submit = async (e) => {
     e.preventDefault();
-    navigate('/clients');
+    const payload = { ...form };
+    delete payload.photo;
+    delete payload.idFront;
+    delete payload.idBack;
+    delete payload.signaturePhoto;
+    if (Array.isArray(payload.directors)) {
+      payload.directors = payload.directors.map(d => {
+        const x = { ...d };
+        delete x.photo; delete x.idFront; delete x.idBack; delete x.signature;
+        return x;
+      });
+    }
+    if (Array.isArray(payload.shareholders)) {
+      payload.shareholders = payload.shareholders.map(s => {
+        const x = { ...s };
+        delete x.photo; delete x.idFront; delete x.idBack; delete x.signature;
+        return x;
+      });
+    }
+    if (Array.isArray(payload.signatories)) {
+      payload.signatories = payload.signatories.map(p => {
+        const x = { ...p };
+        delete x.photo; delete x.idFront; delete x.idBack; delete x.signature;
+        return x;
+      });
+    }
+    try {
+      if (accountNumber) {
+        await updateClient(accountNumber, payload);
+      } else {
+        await createClient(payload);
+      }
+      showSuccess('Client saved');
+      navigate('/clients');
+    } catch (e) {
+      if (e && e.message && e.message.includes('duplicate_contact')) showError('Duplicate email/phone/ID detected');
+      else showError('Failed to save client');
+    }
   };
-  const retire = () => {
+  const retire = async () => {
     if (form.status === 'Inactive') return;
-    if (window.confirm('Retire this account? The status will change to Inactive.')) {
-      setForm({ ...form, status: 'Inactive' });
+    if (await confirm('Retire this account? The status will change to Inactive.')) {
+      const next = { ...form, status: 'Inactive' };
+      setForm(next);
+      if (accountNumber) {
+        try { await updateClient(accountNumber, { status: 'Inactive' }); showSuccess('Account retired'); } catch { showError('Failed to retire account'); }
+      }
     }
   };
   return (
@@ -135,6 +225,10 @@ export default function ClientProfile() {
               <label>
                 National ID / Passport Number
                 <input className="input" name="nationalId" value={form.nationalId} onChange={change} required />
+              </label>
+              <label>
+                Date of Birth
+                <input className="input" type="date" name="dob" value={form.dob} onChange={change} required />
               </label>
               <label>
                 Phone Number

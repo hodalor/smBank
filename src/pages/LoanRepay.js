@@ -1,5 +1,7 @@
-import { useMemo, useState } from 'react';
-import { addPendingTxn, lookupAccountBasic, findAccount } from '../state/ops';
+import { useEffect, useState } from 'react';
+import { getCurrentUserName } from '../state/ops';
+import { createLoanRepayment, directoryLookup, listClients, listLoanRepayPosted, listLoans } from '../api';
+import { showError, showSuccess, showWarning } from '../components/Toaster';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
@@ -9,51 +11,85 @@ export default function LoanRepay() {
   const [mode, setMode] = useState('full'); // full | partial | writeoff
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
-  const [status, setStatus] = useState('');
 
-  // Mock loan data for demo; replace with API fetch by account+loanId
-  const loan = useMemo(() => {
-    if (loanId === 'LN-1001') return { id: 'LN-1001', account: '4839201746', principal: 5000, repaid: 240, writtenOff: 0 };
-    if (loanId === 'LN-1002') return { id: 'LN-1002', account: '7392046158', principal: 3000, repaid: 0, writtenOff: 0 };
-    return loanId ? { id: loanId, account, principal: 0, repaid: 0, writtenOff: 0 } : null;
+  const [loan, setLoan] = useState(null);
+  const [outstanding, setOutstanding] = useState(0);
+  useEffect(() => {
+    let mounted = true;
+    const run = async () => {
+      if (!loanId) { setLoan(null); setOutstanding(0); return; }
+      try {
+        let loans = [];
+        if (account && /^\d{10}$/.test(account)) {
+          loans = await listLoans({ accountNumber: account, status: 'Active' });
+        } else {
+          loans = await listLoans({ status: 'Active' });
+        }
+        const found = loans.find(l => l.id === loanId) || null;
+        if (!mounted) return;
+        setLoan(found);
+        if (found) {
+          const posted = await listLoanRepayPosted({ accountNumber: found.accountNumber });
+          const totalRepaid = posted.filter(r => r.loanId === loanId && r.mode !== 'writeoff').reduce((s, r) => s + Number(r.amount || 0), 0);
+          const totalWriteOff = posted.filter(r => r.loanId === loanId && r.mode === 'writeoff').reduce((s, r) => s + Number(r.amount || 0), 0);
+          setOutstanding(Math.max(Number(found.principal || 0) - totalRepaid - totalWriteOff, 0));
+        } else {
+          setOutstanding(0);
+        }
+      } catch {
+        if (!mounted) return;
+        setLoan(null);
+        setOutstanding(0);
+      }
+    };
+    run();
+    return () => { mounted = false; };
   }, [loanId, account]);
-
-  const outstanding = loan ? Math.max(loan.principal - loan.repaid - loan.writtenOff, 0) : 0;
 
   const [client, setClient] = useState(null);
   const lookup = () => {
     const q = (account || '').trim();
     if (!q) return;
-    let info = null;
-    if (/^\d{10}$/.test(q)) info = lookupAccountBasic(q);
-    else {
-      const found = findAccount(q);
-      if (found) {
-        setAccount(found.accountNumber);
-        info = found;
+    (async () => {
+      try {
+        if (/^\d{10}$/.test(q)) {
+          const info = await directoryLookup(q);
+          setClient(info);
+          return;
+        }
+        const res = await listClients({ q });
+        if (res && res.length) {
+          const acct = res[0].accountNumber;
+          setAccount(acct);
+          const info = await directoryLookup(acct);
+          setClient(info);
+          return;
+        }
+        setClient(null);
+        showWarning('No matching client found');
+      } catch (e) {
+        setClient(null);
+        if (e && e.status === 404) showError('Account not found');
+        else showError('Lookup failed');
       }
-    }
-    setClient(info);
+    })();
   };
   const submit = (e) => {
     e.preventDefault();
     if (!loanId || !account) {
-      setStatus('Enter account and loan ID.');
+      showWarning('Enter account and loan ID');
       return;
     }
-    if (mode !== 'full' && !amount) return setStatus('Enter amount for partial or write-off.');
+    if (mode !== 'full' && !amount) return showWarning('Enter amount for partial or write-off');
     const finalAmount = mode === 'full' ? outstanding : Number(amount);
-    addPendingTxn({
-      type: 'Loan Repayment',
-      mode,
-      accountNumber: account,
-      loanId,
-      amount: finalAmount,
-      note,
-      initiatedAt: new Date().toISOString(),
-      client
-    });
-    setStatus('Submitted for approval.');
+    (async () => {
+      try {
+        await createLoanRepayment(loanId, { mode, amount: finalAmount, initiatorName: getCurrentUserName() });
+        showSuccess('Loan repayment submitted for approval');
+      } catch {
+        showError('Failed to submit loan repayment');
+      }
+    })();
     setAmount('');
   };
 
@@ -106,7 +142,6 @@ export default function LoanRepay() {
         </label>
         <div className="row">
           <button className="btn btn-primary" type="submit">Submit for Approval</button>
-          {status && <div style={{ color: '#0f172a', marginLeft: 12 }}>{status}</div>}
         </div>
       </form>
       <div className="card">

@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { addPendingTxn, lookupAccountBasic, findAccount } from '../state/ops';
+import { getCurrentUserName } from '../state/ops';
+import { createDeposit, directoryLookup, listClients } from '../api';
+import { showError, showSuccess, showWarning } from '../components/Toaster';
 
 export default function Deposit() {
   const [form, setForm] = useState({
@@ -18,32 +20,55 @@ export default function Deposit() {
   const lookup = () => {
     const q = (form.accountNumber || '').trim();
     if (!q) return;
-    let info = null;
-    if (/^\d{10}$/.test(q)) {
-      info = lookupAccountBasic(q);
-    } else {
-      const found = findAccount(q);
-      if (found) {
-        setForm(f => ({ ...f, accountNumber: found.accountNumber }));
-        info = found;
+    (async () => {
+      try {
+        if (/^\d{10}$/.test(q)) {
+          const info = await directoryLookup(q);
+          setClient(info);
+          return;
+        }
+        const res = await listClients({ q });
+        if (res && res.length) {
+          const acct = res[0].accountNumber;
+          setForm(f => ({ ...f, accountNumber: acct }));
+          const info = await directoryLookup(acct);
+          setClient(info);
+          return;
+        }
+        setClient(null);
+        showWarning('No matching client found');
+      } catch (e) {
+        setClient(null);
+        if (e && e.status === 404) showError('Account not found');
+        else showError('Lookup failed');
       }
-    }
-    setClient(info);
+    })();
   };
   const submit = (e) => {
     e.preventDefault();
-    addPendingTxn({
-      type: 'Deposit',
-      accountNumber: form.accountNumber,
-      depositorName: form.depositorName,
-      depositorAddress: form.depositorAddress,
-      incomeSource: form.incomeSource,
-      amount: Number(form.amount),
-      initiatedAt: new Date().toISOString(),
-      method: form.method,
-      notes: form.notes,
-      client
-    });
+    (async () => {
+      try {
+        if (!form.accountNumber || !form.amount) {
+          showWarning('Enter account and amount');
+          return;
+        }
+        await createDeposit({
+          accountNumber: form.accountNumber,
+          amount: Number(form.amount),
+          initiatorName: getCurrentUserName(),
+          meta: {
+            depositorName: form.depositorName,
+            depositorAddress: form.depositorAddress,
+            incomeSource: form.incomeSource,
+            method: form.method,
+            notes: form.notes,
+          },
+        });
+        showSuccess('Deposit submitted for approval');
+      } catch {
+        showError('Failed to submit deposit');
+      }
+    })();
     setForm({ accountNumber: '', depositorName: '', depositorAddress: '', incomeSource: '', amount: '', date: '', method: 'cash', notes: '' });
     setClient(null);
   };

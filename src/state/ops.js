@@ -33,6 +33,7 @@ const PERMS = {
   USERS_MANAGE: 'users.manage',
   SUPERBIN_VIEW: 'superbin.view',
   CONFIG_MANAGE: 'config.manage',
+  ACTIVITY_VIEW: 'activity.view',
 };
 
 const ROLE_PERMISSIONS = {
@@ -137,6 +138,10 @@ export function getEffectivePermissions(user) {
   // Enforce: only Admin and Super Admin can manage Config regardless of overrides
   if (user.role !== ROLES.ADMIN && user.role !== ROLES.SUPER_ADMIN) {
     base.delete(PERMS.CONFIG_MANAGE);
+  }
+  // Enforce: only Super Admin can view Super Bin regardless of overrides
+  if (user.role !== ROLES.SUPER_ADMIN) {
+    base.delete(PERMS.SUPERBIN_VIEW);
   }
   return base;
 }

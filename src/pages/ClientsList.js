@@ -1,26 +1,45 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchByAccount from '../components/SearchByAccount';
 import { hasPermission, PERMISSIONS } from '../state/ops';
+import { listClients } from '../api';
 
 export default function ClientsList() {
   const navigate = useNavigate();
   const [query, setQuery] = useState({ type: 'account', value: '' });
-  const data = useMemo(
-    () => [
-      { accountNumber: '4839201746', name: 'Jane Doe', nationalId: 'NID12345', phone: '0712345678', status: 'Active' },
-      { accountNumber: '7392046158', name: 'John Smith', nationalId: 'NID98765', phone: '0798765432', status: 'Active' }
-    ],
-    []
-  );
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    let mounted = true;
+    const run = async () => {
+      try {
+        const v = query.value.trim();
+        if (!v) {
+          const res = await listClients({});
+          if (mounted) setData(res);
+          return;
+        }
+        if (query.type === 'account' && /^\d{10}$/.test(v)) {
+          const res = await listClients({ accountNumber: v });
+          if (mounted) setData(res);
+          return;
+        }
+        const res = await listClients({ q: v });
+        if (mounted) setData(res);
+      } catch {
+        if (mounted) setData([]);
+      }
+    };
+    run();
+    return () => { mounted = false; };
+  }, [query]);
   const filtered = useMemo(() => {
-    const v = query.value.trim().toLowerCase();
-    if (!v) return data;
-    if (query.type === 'account') return data.filter(d => d.accountNumber.includes(v));
-    if (query.type === 'name') return data.filter(d => d.name.toLowerCase().includes(v));
-    if (query.type === 'nationalId') return data.filter(d => d.nationalId.toLowerCase().includes(v));
-    return data;
-  }, [data, query]);
+    return data.map(c => {
+      const name = c.fullName || c.companyName || '';
+      const nationalId = c.nationalId || c.registrationNumber || '';
+      const phone = c.phone || c.contactPhone || '';
+      return { accountNumber: c.accountNumber, name, nationalId, phone, status: c.status || 'Active' };
+    });
+  }, [data]);
   const onSearch = ({ type, value }) => setQuery({ type, value });
   return (
     <div className="stack">

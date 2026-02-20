@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import TopBar from './TopBar';
+import Toaster from './Toaster';
 import './layout.css';
 import { addTab } from '../state/tabs';
 import { hasPermission, PERMISSIONS, getAppConfig, onConfigUpdate } from '../state/ops';
@@ -71,6 +72,9 @@ export default function Layout() {
           {hasPermission(PERMISSIONS.USERS_MANAGE) && (
             <NavLink to="/users" className="nav-item" onClick={() => addTab({ to: '/users', label: 'Users' })}>Users</NavLink>
           )}
+          {hasPermission(PERMISSIONS.ACTIVITY_VIEW) && (
+            <NavLink to="/activity" className="nav-item" onClick={() => addTab({ to: '/activity', label: 'Activity' })}>Activity</NavLink>
+          )}
           {hasPermission(PERMISSIONS.SUPERBIN_VIEW) && (
             <NavLink to="/super-bin" className="nav-item" onClick={() => addTab({ to: '/super-bin', label: 'Super Bin' })}>Super Bin</NavLink>
           )}
@@ -85,6 +89,7 @@ export default function Layout() {
           <div className="container">{cfg.footerText || ''}</div>
         </div>
       </main>
+      <Toaster />
     </div>
   );
 }

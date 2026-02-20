@@ -1,19 +1,45 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SavingsLine, LoansBar, LoanStatusDoughnut } from '../components/Charts';
+import { listLoanRepayPosted, listLoans, listPostedTransactions } from '../api';
 
 export default function Dashboard() {
   const [acct, setAcct] = useState('');
-  const transactions = useMemo(
-    () => [
-      { account: '4839201746', type: 'Deposit', amount: 300 },
-      { account: '4839201746', type: 'Withdrawal', amount: 50 },
-      { account: '4839201746', type: 'Loan Disbursement', amount: 500 },
-      { account: '4839201746', type: 'Loan Repayment', amount: 120 },
-      { account: '7392046158', type: 'Deposit', amount: 200 }
-    ],
-    []
-  );
+  const [posted, setPosted] = useState([]);
+  const [repays, setRepays] = useState([]);
+  const [loans, setLoans] = useState([]);
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const [tx, rp, ls] = await Promise.all([
+          listPostedTransactions({}),
+          listLoanRepayPosted({}),
+          listLoans({}),
+        ]);
+        const normTx = tx.map(p => ({
+          account: p.accountNumber,
+          type: p.kind === 'deposit' ? 'Deposit' : p.kind === 'withdraw' ? 'Withdrawal' : 'Loan Disbursement',
+          amount: p.amount,
+          date: p.approvedAt?.slice(0, 10) || '',
+        }));
+        const normRp = rp.map(r => ({
+          account: r.accountNumber,
+          type: 'Loan Repayment',
+          amount: r.amount,
+          date: (r.approvedAt || r.initiatedAt || '').slice(0, 10),
+        }));
+        setPosted(normTx);
+        setRepays(normRp);
+        setLoans(ls || []);
+      } catch {
+        setPosted([]);
+        setRepays([]);
+        setLoans([]);
+      }
+    };
+    run();
+  }, []);
+  const transactions = useMemo(() => [...posted, ...repays], [posted, repays]);
   const totals = useMemo(() => {
     const rows = transactions.filter(t => !acct || t.account === acct);
     let deposits = 0, withdrawals = 0, repayments = 0, disbursed = 0;
@@ -28,6 +54,50 @@ export default function Dashboard() {
       deposits, withdrawals, repayments, disbursed
     };
   }, [transactions, acct]);
+  const last6Months = useMemo(() => {
+    const arr = [];
+    const d = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const dt = new Date(d.getFullYear(), d.getMonth() - i, 1);
+      const ym = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+      arr.push(ym);
+    }
+    return arr;
+  }, []);
+  const savingsSeries = useMemo(() => {
+    const map = new Map(last6Months.map(m => [m, { deposits: 0, withdrawals: 0 }]));
+    transactions.filter(t => !acct || t.account === acct).forEach(t => {
+      if (!t.date) return;
+      const ym = t.date.slice(0, 7);
+      if (!map.has(ym)) return;
+      const rec = map.get(ym);
+      if (t.type === 'Deposit') rec.deposits += t.amount;
+      if (t.type === 'Withdrawal') rec.withdrawals += t.amount;
+    });
+    return last6Months.map(m => ({ date: m, ...map.get(m) }));
+  }, [transactions, acct, last6Months]);
+  const loansBar = useMemo(() => {
+    const map = new Map(last6Months.map(m => [m, { disbursed: 0, repaid: 0 }]));
+    posted.filter(p => p.type === 'Loan Disbursement' && (!acct || p.account === acct)).forEach(p => {
+      if (!p.date) return;
+      const ym = p.date.slice(0, 7);
+      if (map.has(ym)) map.get(ym).disbursed += p.amount;
+    });
+    repays.filter(r => !acct || r.account === acct).forEach(r => {
+      if (!r.date) return;
+      const ym = r.date.slice(0, 7);
+      if (map.has(ym)) map.get(ym).repaid += r.amount;
+    });
+    return last6Months.map(m => ({ month: m, ...map.get(m) }));
+  }, [posted, repays, acct, last6Months]);
+  const statusCounts = useMemo(() => {
+    const counts = { Pending: 0, Active: 0 };
+    loans.forEach(l => {
+      if (l.status === 'Pending') counts.Pending++;
+      else counts.Active++;
+    });
+    return counts;
+  }, [loans]);
   const currency = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
   return (
     <div className="stack">
@@ -50,27 +120,15 @@ export default function Dashboard() {
         </div>
         <div className="card">
           <h3>Savings Trend</h3>
-          <SavingsLine series={[
-            { date: '2026-01', deposits: 1200, withdrawals: 300 },
-            { date: '2026-02', deposits: 1600, withdrawals: 400 },
-            { date: '2026-03', deposits: 900, withdrawals: 500 },
-            { date: '2026-04', deposits: 1400, withdrawals: 600 },
-          ]} />
+          <SavingsLine series={savingsSeries} />
         </div>
         <div className="card">
           <h3>Loans: Disbursed vs Repaid</h3>
-          <LoansBar months={[
-            { month: 'Jan', disbursed: 5000, repaid: 1000, writtenOff: 200 },
-            { month: 'Feb', disbursed: 3000, repaid: 1800, writtenOff: 0 },
-            { month: 'Mar', disbursed: 4200, repaid: 2100, writtenOff: 150 },
-            { month: 'Apr', disbursed: 3500, repaid: 2500, writtenOff: 300 },
-          ]} />
+          <LoansBar months={loansBar} />
         </div>
         <div className="card">
           <h3>Loan Status Distribution</h3>
-          <LoanStatusDoughnut counts={{
-            Pending: 6, Approved: 12, Active: 30, Completed: 18, Overdue: 4, 'Written Off': 3
-          }} />
+          <LoanStatusDoughnut counts={statusCounts} />
         </div>
         <div className="card" style={{ gridColumn: '1 / -1' }}>
           <h3>Balances Quick Lookup</h3>

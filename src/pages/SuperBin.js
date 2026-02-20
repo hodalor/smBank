@@ -1,13 +1,25 @@
 import { useEffect, useState } from 'react';
-import { getSuperBin, restoreFromSuperBin, purgeFromSuperBin, hasPermission } from '../state/ops';
+import { useNavigate } from 'react-router-dom';
+import { getSuperBin, restoreFromSuperBin, purgeFromSuperBin } from '../state/ops';
 import { listSuperBin, restoreSuperBin, deleteSuperBin } from '../api';
+import { confirm } from '../components/Confirm';
+import { showWarning } from '../components/Toaster';
 
 export default function SuperBin() {
-  const allowed = hasPermission('superbin.view');
+  const navigate = useNavigate();
   const [rows, setRows] = useState(getSuperBin());
+  const [forbidden, setForbidden] = useState(false);
   useEffect(() => {
     const pull = () => {
-      listSuperBin().then(setRows).catch(() => setRows(getSuperBin()));
+      listSuperBin().then(setRows).catch((e) => {
+        if (e && e.status === 403) {
+          setForbidden(true);
+          showWarning('Please log in as Super Admin to access Super Bin');
+          setTimeout(() => navigate('/login'), 300);
+          return;
+        }
+        setRows(getSuperBin());
+      });
     };
     pull();
     const id = setInterval(pull, 2000);
@@ -15,17 +27,26 @@ export default function SuperBin() {
   }, []);
   const restore = (id) => {
     restoreSuperBin(id).then(() => {
-      listSuperBin().then(setRows).catch(() => setRows(getSuperBin()));
-    }).catch(() => {
+      listSuperBin().then(setRows).catch((e) => {
+        if (e && e.status === 403) { setForbidden(true); return; }
+        setRows(getSuperBin());
+      });
+    }).catch((e) => {
+      if (e && e.status === 403) { setForbidden(true); return; }
       restoreFromSuperBin(id);
       setRows(getSuperBin());
     });
   };
-  const purge = (id) => {
-    if (!window.confirm('Permanently delete this item?')) return;
+  const purge = async (id) => {
+    const ok = await confirm('Permanently delete this item?');
+    if (!ok) return;
     deleteSuperBin(id).then(() => {
-      listSuperBin().then(setRows).catch(() => setRows(getSuperBin()));
-    }).catch(() => {
+      listSuperBin().then(setRows).catch((e) => {
+        if (e && e.status === 403) { setForbidden(true); return; }
+        setRows(getSuperBin());
+      });
+    }).catch((e) => {
+      if (e && e.status === 403) { setForbidden(true); return; }
       purgeFromSuperBin(id);
       setRows(getSuperBin());
     });
@@ -52,7 +73,7 @@ export default function SuperBin() {
     a.click();
     URL.revokeObjectURL(url);
   };
-  if (!allowed) return <div className="card">Not authorized.</div>;
+  if (forbidden) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Super Bin</h1>

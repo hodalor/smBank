@@ -19,6 +19,7 @@ import LoanRepayApprovals from './pages/LoanRepayApprovals';
 import Users from './pages/Users';
 import SuperBin from './pages/SuperBin';
 import Config from './pages/Config';
+import Activity from './pages/Activity';
 
 export default function App() {
   return (
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="loans/repay/approvals" element={<LoanRepayApprovals />} />
         <Route path="reports" element={<Reports />} />
         <Route path="users" element={<Users />} />
+        <Route path="activity" element={<Activity />} />
         <Route path="super-bin" element={<SuperBin />} />
         <Route path="config" element={<Config />} />
       </Route>

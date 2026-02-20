@@ -1,14 +1,31 @@
 import { useEffect, useMemo, useState } from 'react';
-import { approvePendingTxn, getPendingTxns, onPendingUpdate, rejectPendingTxn } from '../state/ops';
+import { approveLoanRepayPending, listLoanRepayPending, rejectLoanRepayPending } from '../api';
+import { showError, showSuccess } from '../components/Toaster';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
 export default function LoanRepayApprovals() {
-  const [rows, setRows] = useState(getPendingTxns());
-  useEffect(() => onPendingUpdate(setRows), []);
-  const repayRows = useMemo(() => rows.filter(r => r.type === 'Loan Repayment'), [rows]);
-  const approve = (id) => approvePendingTxn(id);
-  const reject = (id) => rejectPendingTxn(id);
+  const [rows, setRows] = useState([]);
+  const load = async () => {
+    try {
+      const res = await listLoanRepayPending();
+      setRows(res);
+    } catch {
+      setRows([]);
+    }
+  };
+  useEffect(() => { load(); }, []);
+  const repayRows = useMemo(() => rows, [rows]);
+  const approve = async (id) => {
+    try { await approveLoanRepayPending(id); showSuccess('Repayment approved'); }
+    catch { showError('Approve failed'); }
+    await load();
+  };
+  const reject = async (id) => {
+    try { await rejectLoanRepayPending(id, {}); showSuccess('Repayment rejected'); }
+    catch { showError('Reject failed'); }
+    await load();
+  };
   return (
     <div className="stack">
       <h1>Repay Loan Approvals</h1>
@@ -38,7 +55,7 @@ export default function LoanRepayApprovals() {
                 <td style={{ textTransform: 'capitalize' }}>{r.mode}</td>
                 <td>{gh(r.amount)}</td>
                 <td>{r.initiatedAt || '—'}</td>
-                <td>{r.client?.name || '—'}</td>
+                <td>—</td>
                 <td>{r.note || ''}</td>
                 <td>
                   <button className="btn btn-primary" onClick={() => approve(r.id)}>Approve</button>{' '}

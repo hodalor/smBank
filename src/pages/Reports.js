@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { listClients, listLoans, listLoanRepayPosted, listPostedTransactions } from '../api';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
@@ -6,26 +7,103 @@ export default function Reports() {
   const [reportType, setReportType] = useState('All Clients');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const dataset = useMemo(() => ({
-    clients: [
-      { account: '4839201746', name: 'Jane Doe', nationalId: 'NID12345', loans: 1, balance: 1270 },
-      { account: '7392046158', name: 'John Smith', nationalId: 'NID98765', loans: 0, balance: 200 }
-    ],
-    loans: [
-      { id: 'LN-1001', account: '4839201746', client: 'Jane Doe', principal: 5000, status: 'Active', start: '2026-02-01', due: '2026-08-01', overdue: false, restructured: false, writtenOff: false },
-      { id: 'LN-1002', account: '7392046158', client: 'John Smith', principal: 3000, status: 'Pending', start: '2026-03-01', due: '2026-07-01', overdue: false, restructured: false, writtenOff: false },
-      { id: 'LN-1003', account: '4839201746', client: 'Jane Doe', principal: 1200, status: 'Written Off', start: '2025-11-10', due: '2026-01-10', overdue: true, restructured: false, writtenOff: true }
-    ]
-  }), []);
+  const [clients, setClients] = useState([]);
+  const [loans, setLoans] = useState([]);
+  const [posted, setPosted] = useState([]);
+  const [repays, setRepays] = useState([]);
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const [cs, ls, tx, rp] = await Promise.all([
+          listClients({}),
+          listLoans({}),
+          listPostedTransactions({}),
+          listLoanRepayPosted({}),
+        ]);
+        setClients(cs || []);
+        setLoans(ls || []);
+        setPosted(tx || []);
+        setRepays(rp || []);
+      } catch {
+        setClients([]);
+        setLoans([]);
+        setPosted([]);
+        setRepays([]);
+      }
+    };
+    run();
+  }, []);
 
+  const balancesByAccount = useMemo(() => {
+    const map = new Map();
+    posted.forEach(p => {
+      const acct = p.accountNumber;
+      const amt = Number(p.amount || 0);
+      const kind = p.kind;
+      const prev = map.get(acct) || 0;
+      if (kind === 'deposit') map.set(acct, prev + amt);
+      else if (kind === 'withdraw') map.set(acct, prev - amt);
+      else if (kind === 'loan_disbursement') map.set(acct, prev - amt);
+    });
+    repays.forEach(r => {
+      const acct = r.accountNumber;
+      const amt = Number(r.amount || 0);
+      map.set(acct, (map.get(acct) || 0) + amt);
+    });
+    return map;
+  }, [posted, repays]);
+  const loansByAccount = useMemo(() => {
+    const map = new Map();
+    loans.forEach(l => map.set(l.accountNumber, (map.get(l.accountNumber) || 0) + 1));
+    return map;
+  }, [loans]);
+  const loansRows = useMemo(() => {
+    const plusMonths = (dateStr, m) => {
+      try { const d = new Date(dateStr); d.setMonth(d.getMonth() + (m || 0)); return d.toISOString().slice(0,10); } catch { return ''; }
+    };
+    return loans.map(l => ({
+      id: l.id,
+      account: l.accountNumber,
+      client: '',
+      principal: l.principal,
+      status: l.status,
+      start: (l.createdAt || '').slice(0,10),
+      due: plusMonths(l.createdAt || '', l.termMonths),
+      overdue: false,
+      restructured: false,
+      writtenOff: false,
+    }));
+  }, [loans]);
   const rows = useMemo(() => {
-    if (reportType === 'All Clients') return dataset.clients;
-    if (reportType === 'Clients With Loans') return dataset.clients.filter(c => c.loans > 0);
-    if (reportType === 'Overdue Loans') return dataset.loans.filter(l => l.overdue && (!startDate || l.due >= startDate) && (!endDate || l.due <= endDate));
-    if (reportType === 'Restructured Loans') return dataset.loans.filter(l => l.restructured);
-    if (reportType === 'Written Off Loans') return dataset.loans.filter(l => l.writtenOff);
+    if (reportType === 'All Clients') {
+      return clients.map(c => ({
+        account: c.accountNumber,
+        name: c.name,
+        nationalId: c.nationalId || '',
+        loans: loansByAccount.get(c.accountNumber) || 0,
+        balance: balancesByAccount.get(c.accountNumber) || 0,
+      }));
+    }
+    if (reportType === 'Clients With Loans') {
+      return clients.filter(c => (loansByAccount.get(c.accountNumber) || 0) > 0).map(c => ({
+        account: c.accountNumber,
+        name: c.name,
+        nationalId: c.nationalId || '',
+        loans: loansByAccount.get(c.accountNumber) || 0,
+        balance: balancesByAccount.get(c.accountNumber) || 0,
+      }));
+    }
+    if (reportType === 'Overdue Loans') {
+      return loansRows.filter(l => {
+        if (startDate && l.due < startDate) return false;
+        if (endDate && l.due > endDate) return false;
+        return false;
+      });
+    }
+    if (reportType === 'Restructured Loans') return loansRows.filter(() => false);
+    if (reportType === 'Written Off Loans') return loansRows.filter(() => false);
     return [];
-  }, [dataset, reportType, startDate, endDate]);
+  }, [clients, loansRows, reportType, startDate, endDate, balancesByAccount, loansByAccount]);
 
   const downloadCSV = (filename, tableRows) => {
     let header = [];

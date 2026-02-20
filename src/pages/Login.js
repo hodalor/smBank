@@ -63,20 +63,26 @@ export default function Login() {
       regenerateCaptcha();
       return;
     }
-    const uname = (username || 'Admin').trim();
+    const uname = (username || '').trim();
+    if (!uname || !password) {
+      setError('Enter account and password');
+      return;
+    }
     try {
-      const { role } = await apiLogin(uname, password);
+      const { role, token } = await apiLogin(uname, password);
+      if (token && typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('smbank_token', token);
+      }
       const existing = getUserByUsername(uname);
       if (!existing) {
         saveUser({ username: uname, role, permsAdd: [], permsRemove: [] });
       } else if (existing.role !== role) {
         saveUser({ ...existing, role });
       }
-    } catch {
-      // Fallback local role if API not reachable
-      const role = superCandidate ? ROLE_NAMES.SUPER_ADMIN : ROLE_NAMES.ADMIN;
-      const existing = getUserByUsername(uname);
-      if (!existing) saveUser({ username: uname, role, permsAdd: [], permsRemove: [] });
+    } catch (e) {
+      setError('Invalid username or password');
+      regenerateCaptcha();
+      return;
     }
     setCurrentUserName(uname);
     if (remember) localStorage.setItem('remember_username', uname);

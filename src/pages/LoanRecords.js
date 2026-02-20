@@ -1,19 +1,46 @@
-import { useMemo, useState } from 'react';
-import { findAccount, lookupAccountBasic } from '../state/ops';
+import { useEffect, useMemo, useState } from 'react';
+import { directoryLookup, listClients, listLoans } from '../api';
+import { showError, showWarning } from '../components/Toaster';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
 export default function LoanRecords() {
   const [account, setAccount] = useState('');
+  const [client, setClient] = useState(null);
+  const [rows, setRows] = useState([]);
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const q = {};
+        if (account && /^\d{10}$/.test(account)) q.accountNumber = account;
+        const res = await listLoans(q);
+        setRows(res || []);
+      } catch {
+        setRows([]);
+      }
+    };
+    run();
+  }, [account]);
 
-  const loans = useMemo(
-    () => [
-      { id: 'LN-1001', account: '4839201746', principal: 5000, rate: 10, months: 6, start: '2026-02-01', due: '2026-08-01', status: 'Active' },
-      { id: 'LN-1003', account: '4839201746', principal: 1200, rate: 8, months: 3, start: '2025-11-10', due: '2026-01-10', status: 'Completed' },
-      { id: 'LN-1002', account: '7392046158', principal: 3000, rate: 9, months: 4, start: '2026-03-01', due: '2026-07-01', status: 'Pending' }
-    ],
-    []
-  );
+  const loans = useMemo(() => {
+    const plusMonths = (dateStr, m) => {
+      try {
+        const d = new Date(dateStr);
+        d.setMonth(d.getMonth() + (m || 0));
+        return d.toISOString().slice(0, 10);
+      } catch { return ''; }
+    };
+    return rows.map(l => ({
+      id: l.id,
+      account: l.accountNumber,
+      principal: l.principal,
+      rate: l.rate,
+      months: l.termMonths,
+      start: (l.createdAt || '').slice(0, 10),
+      due: plusMonths(l.createdAt || '', l.termMonths),
+      status: l.status === 'Pending' ? 'Pending' : 'Active',
+    }));
+  }, [rows]);
 
   const filtered = useMemo(
     () => loans.filter(l => !account || l.account === account),
@@ -40,21 +67,30 @@ export default function LoanRecords() {
               const q = account.trim();
               if (!q) return;
               if (/^\\d{10}$/.test(q)) return;
-              const found = findAccount(q);
-              if (found) setAccount(found.accountNumber);
+              listClients({ q }).then(list => {
+                if (list && list.length) setAccount(list[0].accountNumber);
+                else showWarning('No matching client found');
+              }).catch(() => { showError('Lookup failed'); });
             }}>Find</button>
           </div>
         </label>
         {/^\\d{10}$/.test(account) && (
           <div className="row" style={{ gap: 24 }}>
-            {(() => { const c = lookupAccountBasic(account); return c ? (
-              <>
-                <div><div style={{ color: '#64748b', fontSize: 12 }}>Name</div><div>{c.name}</div></div>
-                <div><div style={{ color: '#64748b', fontSize: 12 }}>National ID</div><div>{c.nationalId}</div></div>
-                <div><div style={{ color: '#64748b', fontSize: 12 }}>DOB</div><div>{c.dob}</div></div>
-                <div><div style={{ color: '#64748b', fontSize: 12 }}>Phone</div><div>{c.phone}</div></div>
-              </>
-            ) : null; })()}
+            {(() => {
+              if (!client || client.accountNumber !== account) {
+                directoryLookup(account).then(setClient).catch((e) => { setClient(null); if (e && e.status === 404) showError('Account not found'); else showError('Lookup failed'); });
+                return null;
+              }
+              const c = client;
+              return (
+                <>
+                  <div><div style={{ color: '#64748b', fontSize: 12 }}>Name</div><div>{c.name}</div></div>
+                  <div><div style={{ color: '#64748b', fontSize: 12 }}>National ID</div><div>{c.nationalId}</div></div>
+                  <div><div style={{ color: '#64748b', fontSize: 12 }}>DOB</div><div>{c.dob}</div></div>
+                  <div><div style={{ color: '#64748b', fontSize: 12 }}>Phone</div><div>{c.phone}</div></div>
+                </>
+              );
+            })()}
           </div>
         )}
         <div>

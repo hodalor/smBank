@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { getPostedTxns, onPostedUpdate, findAccount, lookupAccountBasic } from '../state/ops';
+import { useLocation } from 'react-router-dom';
+import { directoryLookup, listClients, listLoanRepayPosted, listPostedTransactions } from '../api';
+import { showError, showWarning } from '../components/Toaster';
 
 function toCurrency(n) {
   const num = Number(n || 0);
@@ -12,84 +14,80 @@ export default function Statements() {
   const [endDate, setEndDate] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
   const [client, setClient] = useState(null);
+  const location = useLocation();
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(location.search);
+      const acct = sp.get('accountNumber') || '';
+      if (acct) setAccountNumber(acct);
+    } catch {}
+  }, [location.search]);
 
-  const [posted, setPosted] = useState(getPostedTxns());
-  useEffect(() => onPostedUpdate(setPosted), []);
+  const [postedTx, setPostedTx] = useState([]);
+  const [postedRep, setPostedRep] = useState([]);
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const q = {};
+        if (accountNumber) q.accountNumber = accountNumber;
+        if (startDate) q.from = startDate;
+        if (endDate) q.to = endDate;
+        const [tx, rp] = await Promise.all([
+          listPostedTransactions(q),
+          listLoanRepayPosted(accountNumber ? { accountNumber } : {}),
+        ]);
+        setPostedTx(tx);
+        setPostedRep(rp);
+      } catch {
+        setPostedTx([]);
+        setPostedRep([]);
+      }
+    };
+    run();
+  }, [accountNumber, startDate, endDate]);
 
-  const transactions = useMemo(
-    () => [
-      { id: 'T001', account: '4839201746', type: 'Deposit', amount: 300, date: '2026-01-10', initiator: 'admin', approver: '', notes: 'Opening' },
-      { id: 'T002', account: '4839201746', type: 'Withdrawal', amount: 50, date: '2026-01-15', initiator: 'admin', approver: '', notes: '' },
-      { id: 'T003', account: '4839201746', type: 'Loan Disbursement', amount: 500, date: '2026-02-01', initiator: 'admin', approver: '', notes: 'LN-1001' },
-      { id: 'T004', account: '4839201746', type: 'Loan Repayment', amount: 120, date: '2026-02-28', initiator: 'admin', approver: '', notes: 'LN-1001' },
-      { id: 'T005', account: '7392046158', type: 'Deposit', amount: 200, date: '2026-01-05', initiator: 'admin', approver: '', notes: '' }
-    ],
-    []
-  );
   const postedTransactions = useMemo(() => {
-    return posted.flatMap(p => {
-      if (p.type === 'Deposit' || p.type === 'Withdrawal') {
-        return [{
-          id: p.id,
-          account: p.accountNumber,
-          type: p.type,
-          amount: p.amount,
-          date: p.date,
-          initiator: p.initiatorName || '',
-          approver: p.approverName || '',
-          notes: p.notes || ''
-        }];
-      }
-      if (p.type === 'Loan Repayment') {
-        if (p.mode === 'writeoff') {
-          return [{
-            id: p.id,
-            account: p.accountNumber,
-            type: 'Loan Write-Off',
-            amount: p.amount,
-            date: p.date,
-            initiator: p.initiatorName || '',
-            approver: p.approverName || '',
-            notes: p.loanId
-          }];
-        }
-        return [{
-          id: p.id,
-          account: p.accountNumber,
-          type: 'Loan Repayment',
-          amount: p.amount,
-          date: p.date,
-          initiator: p.initiatorName || '',
-          approver: p.approverName || '',
-          notes: p.loanId
-        }];
-      }
-      return [];
+    return postedTx.map(p => {
+      const type = p.kind === 'deposit' ? 'Deposit' : p.kind === 'withdraw' ? 'Withdrawal' : 'Loan Disbursement';
+      const notes = p.kind === 'loan_disbursement' ? (p.meta?.loanId || '') : (p.meta?.notes || '');
+      return {
+        id: p.id,
+        account: p.accountNumber,
+        type,
+        amount: p.amount,
+        date: p.approvedAt,
+        initiator: p.initiatorName || '',
+        approver: p.approverName || '',
+        notes
+      };
     });
-  }, [posted]);
+  }, [postedTx]);
 
-  const repayments = useMemo(
-    () => [
-      { id: 'R001', account: '4839201746', loanId: 'LN-1001', amount: 120, date: '2026-02-28', notes: '' },
-      { id: 'R002', account: '4839201746', loanId: 'LN-1001', amount: 120, date: '2026-03-28', notes: '' }
-    ],
-    []
-  );
   const postedRepayments = useMemo(() => {
-    return posted.filter(p => p.type === 'Loan Repayment' && p.mode !== 'writeoff').map(p => ({
+    return postedRep.map(p => ({
       id: p.id,
       account: p.accountNumber,
       loanId: p.loanId,
       amount: p.amount,
-      date: p.date,
+      date: p.approvedAt || p.initiatedAt,
       initiator: p.initiatorName || '',
       approver: p.approverName || '',
-      notes: p.note || ''
+      type: p.mode === 'writeoff' ? 'Loan Write-Off' : 'Loan Repayment',
+      notes: ''
     }));
-  }, [posted]);
+  }, [postedRep]);
 
   const rows = useMemo(() => {
-    const combined = [...transactions, ...postedTransactions];
+    const combined = [...postedTransactions, ...postedRepayments.map(r => ({
+      id: r.id,
+      account: r.account,
+      type: r.type,
+      amount: r.amount,
+      date: r.date,
+      initiator: r.initiator,
+      approver: r.approver,
+      notes: r.loanId
+    }))];
     return combined.filter(t => {
       if (accountNumber && t.account !== accountNumber) return false;
       if (typeFilter !== 'All' && t.type !== typeFilter) return false;
@@ -97,16 +95,16 @@ export default function Statements() {
       if (endDate && t.date > endDate) return false;
       return true;
     });
-  }, [transactions, postedTransactions, accountNumber, startDate, endDate, typeFilter]);
+  }, [postedTransactions, postedRepayments, accountNumber, startDate, endDate, typeFilter]);
   const repayRows = useMemo(() => {
-    const combined = [...repayments, ...postedRepayments];
+    const combined = postedRepayments.filter(r => r.type !== 'Loan Write-Off');
     return combined.filter(r => {
       if (accountNumber && r.account !== accountNumber) return false;
       if (startDate && r.date < startDate) return false;
       if (endDate && r.date > endDate) return false;
       return true;
     });
-  }, [repayments, postedRepayments, accountNumber, startDate, endDate]);
+  }, [postedRepayments, accountNumber, startDate, endDate]);
 
   const balance = useMemo(() => {
     return rows.reduce((acc, t) => {
@@ -153,15 +151,17 @@ export default function Statements() {
             <button className="btn" type="button" onClick={() => {
               const q = accountNumber.trim();
               let info = null;
-              if (/^\\d{10}$/.test(q)) { info = lookupAccountBasic(q); }
-              else {
-                const found = findAccount(q);
-                if (found) {
-                  setAccountNumber(found.accountNumber);
-                  info = found;
-                }
+              if (/^\\d{10}$/.test(q)) {
+                directoryLookup(q).then(c => { setClient(c); }).catch((e) => { setClient(null); if (e && e.status === 404) showError('Account not found'); else showError('Lookup failed'); });
+              } else {
+                listClients({ q }).then(list => {
+                  if (list && list.length) {
+                    setAccountNumber(list[0].accountNumber);
+                    directoryLookup(list[0].accountNumber).then(c => setClient(c)).catch((e) => { setClient(null); if (e && e.status === 404) showError('Account not found'); else showError('Lookup failed'); });
+                  }
+                  else showWarning('No matching client found');
+                }).catch(() => { showError('Lookup failed'); });
               }
-              setClient(info);
             }}>Lookup</button>
           </div>
         </label>

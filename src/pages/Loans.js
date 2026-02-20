@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { lookupAccountBasic, findAccount } from '../state/ops';
+import { useEffect, useState } from 'react';
+import { createLoan, directoryLookup, listClients, listLoans } from '../api';
+import { showError, showSuccess, showWarning } from '../components/Toaster';
 
 export default function Loans() {
   const [form, setForm] = useState({
@@ -24,21 +25,42 @@ export default function Loans() {
   const lookup = () => {
     const q = (form.accountNumber || '').trim();
     if (!q) return;
-    let info = null;
-    if (/^\d{10}$/.test(q)) info = lookupAccountBasic(q);
-    else {
-      const found = findAccount(q);
-      if (found) {
-        setForm(f => ({ ...f, accountNumber: found.accountNumber }));
-        info = found;
-      }
+    if (/^\d{10}$/.test(q)) {
+      directoryLookup(q).then(setClient).catch((e) => { setClient(null); if (e && e.status === 404) showError('Account not found'); else showError('Lookup failed'); });
+    } else {
+      listClients({ q }).then(list => {
+        if (list && list.length) {
+          setForm(f => ({ ...f, accountNumber: list[0].accountNumber }));
+          directoryLookup(list[0].accountNumber).then(setClient).catch((e) => { setClient(null); if (e && e.status === 404) showError('Account not found'); else showError('Lookup failed'); });
+        }
+        else showWarning('No matching client found');
+      }).catch(() => { showError('Lookup failed'); });
     }
-    setClient(info);
   };
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setForm({ accountNumber: '', principal: '', interestRate: '', durationMonths: '', startDate: '', g1Name: '', g1Phone: '', g1Id: '', g2Name: '', g2Phone: '', g2Id: '', collateralDesc: '', collateralValue: '', collateralDoc: null });
+    try {
+      await createLoan({
+        accountNumber: form.accountNumber,
+        principal: Number(form.principal),
+        rate: Number(form.interestRate),
+        termMonths: Number(form.durationMonths),
+        startDate: form.startDate,
+        guarantor1: { name: form.g1Name, phone: form.g1Phone, id: form.g1Id },
+        guarantor2: { name: form.g2Name, phone: form.g2Phone, id: form.g2Id },
+        collateral: { description: form.collateralDesc, value: Number(form.collateralValue || 0) },
+      });
+      showSuccess('Loan created and submitted for approval');
+      setForm({ accountNumber: '', principal: '', interestRate: '', durationMonths: '', startDate: '', g1Name: '', g1Phone: '', g1Id: '', g2Name: '', g2Phone: '', g2Id: '', collateralDesc: '', collateralValue: '', collateralDoc: null });
+    } catch (e) {
+      if (e && e.message && e.message.includes('duplicate')) showError('Duplicate contact detected');
+      else showError('Failed to create loan');
+    }
   };
+  const [rows, setRows] = useState([]);
+  useEffect(() => {
+    listLoans({}).then(setRows).catch(() => setRows([]));
+  }, []);
   return (
     <div className="stack">
       <h1>Loans</h1>
@@ -126,7 +148,27 @@ export default function Loans() {
       </section>
       <section className="card">
         <h3>Loans List</h3>
-        <p>No loans loaded.</p>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Loan ID</th>
+              <th>Account</th>
+              <th>Principal</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.id}>
+                <td>{r.id}</td>
+                <td>{r.accountNumber}</td>
+                <td>{r.principal}</td>
+                <td>{r.status}</td>
+              </tr>
+            ))}
+            {!rows.length && <tr><td colSpan="4">No loans loaded.</td></tr>}
+          </tbody>
+        </table>
       </section>
     </div>
   );

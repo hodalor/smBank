@@ -2,6 +2,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { getTabs, onTabsUpdate, closeTab } from '../state/tabs';
 import { getCurrentUserName, setCurrentUserName } from '../state/ops';
+import { apiLogout } from '../api';
 
 export default function TopBar() {
   const location = useLocation();
@@ -50,8 +51,10 @@ export default function TopBar() {
     if (!el) return;
     el.scrollBy({ left: dx, behavior: 'smooth' });
   };
-  const logout = () => {
+  const logout = async () => {
+    try { await apiLogout(); } catch {}
     setCurrentUserName('');
+    try { if (typeof window !== 'undefined' && window.localStorage) window.localStorage.removeItem('smbank_token'); } catch {}
     setUser(getCurrentUserName());
     setOpen(false);
     navigate('/login');

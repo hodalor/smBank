@@ -1,21 +1,28 @@
-import { useMemo, useState } from 'react';
-import { findAccount, lookupAccountBasic } from '../state/ops';
+import { useEffect, useMemo, useState } from 'react';
+import { directoryLookup, listClients, listLoanRepayPosted } from '../api';
+import { showError, showWarning } from '../components/Toaster';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
 export default function LoanRepayments() {
   const [account, setAccount] = useState('');
   const [loanId, setLoanId] = useState('');
+  const [client, setClient] = useState(null);
 
-  const repayments = useMemo(
-    () => [
-      { id: 'RP-001', loanId: 'LN-1001', account: '4839201746', amount: 120, date: '2026-02-28' },
-      { id: 'RP-002', loanId: 'LN-1001', account: '4839201746', amount: 150, date: '2026-03-15' },
-      { id: 'RP-003', loanId: 'LN-1001', account: '4839201746', amount: 120, date: '2026-03-28' },
-      { id: 'RP-004', loanId: 'LN-1002', account: '7392046158', amount: 200, date: '2026-04-01' }
-    ],
-    []
-  );
+  const [repayments, setRepayments] = useState([]);
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const q = {};
+        if (account && /^\d{10}$/.test(account)) q.accountNumber = account;
+        const res = await listLoanRepayPosted(q);
+        setRepayments(res.map(r => ({ id: r.id, loanId: r.loanId, account: r.accountNumber, amount: r.amount, date: r.approvedAt || r.initiatedAt })));
+      } catch {
+        setRepayments([]);
+      }
+    };
+    run();
+  }, [account]);
 
   const filtered = useMemo(
     () => repayments.filter(r => (!account || r.account === account) && (!loanId || r.loanId === loanId)),
@@ -36,13 +43,15 @@ export default function LoanRepayments() {
           <label>
             Account
             <div className="row">
-              <input className="input" placeholder="Account / Name / ID" value={account} onChange={(e) => setAccount(e.target.value)} />
+            <input className="input" placeholder="Account / Name / ID" value={account} onChange={(e) => setAccount(e.target.value)} />
               <button className="btn" type="button" onClick={() => {
                 const q = account.trim();
                 if (!q) return;
-                if (/^\\d{10}$/.test(q)) return;
-                const found = findAccount(q);
-                if (found) setAccount(found.accountNumber);
+              if (/^\\d{10}$/.test(q)) return;
+              listClients({ q }).then(list => {
+                if (list && list.length) setAccount(list[0].accountNumber);
+                else showWarning('No matching client found');
+              }).catch(() => { showError('Lookup failed'); });
               }}>Find</button>
             </div>
           </label>
@@ -51,14 +60,23 @@ export default function LoanRepayments() {
             <input className="input" placeholder="e.g. LN-1001" value={loanId} onChange={(e) => setLoanId(e.target.value)} />
           </label>
         </div>
-        {/^\\d{10}$/.test(account) && (() => { const c = lookupAccountBasic(account); return c ? (
-          <div className="row" style={{ gap: 24 }}>
-            <div><div style={{ color: '#64748b', fontSize: 12 }}>Name</div><div>{c.name}</div></div>
-            <div><div style={{ color: '#64748b', fontSize: 12 }}>National ID</div><div>{c.nationalId}</div></div>
-            <div><div style={{ color: '#64748b', fontSize: 12 }}>DOB</div><div>{c.dob}</div></div>
-            <div><div style={{ color: '#64748b', fontSize: 12 }}>Phone</div><div>{c.phone}</div></div>
-          </div>
-        ) : null; })()}
+        {/^\\d{10}$/.test(account) && (() => {
+          if (!client || client.accountNumber !== account) {
+            directoryLookup(account).then(setClient).catch((e) => {
+              setClient(null);
+              if (e && e.status === 404) showError('Account not found'); else showError('Lookup failed');
+            });
+            return null;
+          }
+          return (
+            <div className="row" style={{ gap: 24 }}>
+              <div><div style={{ color: '#64748b', fontSize: 12 }}>Name</div><div>{client.name}</div></div>
+              <div><div style={{ color: '#64748b', fontSize: 12 }}>National ID</div><div>{client.nationalId}</div></div>
+              <div><div style={{ color: '#64748b', fontSize: 12 }}>DOB</div><div>{client.dob}</div></div>
+              <div><div style={{ color: '#64748b', fontSize: 12 }}>Phone</div><div>{client.phone}</div></div>
+            </div>
+          );
+        })()}
         {loanId && (
           <div><strong>Total Paid on {loanId}:</strong> {gh(totalsByLoan.get(loanId) || 0)}</div>
         )}
