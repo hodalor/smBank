@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getCurrentUserName } from '../state/ops';
-import { createWithdraw, directoryLookup, listClients, listPostedTransactions, listLoanRepayPosted, listLoans } from '../api';
+import { createWithdraw, directoryLookup, listClients, listPostedTransactions, listLoanRepayPosted, listLoans, fetchConfig } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 
 export default function Withdraw() {
@@ -15,6 +15,7 @@ export default function Withdraw() {
   const [loadingBal, setLoadingBal] = useState(false);
   const [accountBal, setAccountBal] = useState(0);
   const [loanBal, setLoanBal] = useState(0);
+  const [cfg, setCfg] = useState({ withdrawalFeeRate: 0 });
   const [withdrawer, setWithdrawer] = useState({
     idNumber: '',
     phone: '',
@@ -24,6 +25,16 @@ export default function Withdraw() {
     const num = Number(n || 0);
     try { return num.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' }); } catch { return `GHS ${num.toFixed(2)}`; }
   };
+  useEffect(() => {
+    fetchConfig().then(c => setCfg({ withdrawalFeeRate: Number(c.withdrawalFeeRate ?? 0) }))
+      .catch(() => setCfg({ withdrawalFeeRate: 0 }));
+  }, []);
+  const feeCalc = useMemo(() => {
+    const amt = Number(form.amount || 0);
+    const fee = Math.round((amt * (Number(cfg.withdrawalFeeRate || 0) / 100)) * 100) / 100;
+    const total = Math.round((amt + fee) * 100) / 100;
+    return { fee, total };
+  }, [form.amount, cfg.withdrawalFeeRate]);
   const computeBalances = async (acct) => {
     setLoadingBal(true);
     try {
@@ -94,8 +105,9 @@ export default function Withdraw() {
           return;
         }
         const amt = Number(form.amount);
-        if (amt > Number(accountBal || 0)) {
-          showWarning(`Insufficient balance. Max withdraw is ${toCurrency(accountBal)}.`);
+        const total = Number(feeCalc.total || amt);
+        if (total > Number(accountBal || 0)) {
+          showWarning(`Insufficient balance. Max withdraw is ${toCurrency(accountBal)} (includes fees).`);
           return;
         }
         await createWithdraw({
@@ -107,6 +119,8 @@ export default function Withdraw() {
             withdrawerIdNumber: withdrawer.idNumber,
             withdrawerPhone: withdrawer.phone,
             withdrawerAddress: withdrawer.address,
+            feePreviewRate: Number(cfg.withdrawalFeeRate || 0),
+            feePreviewAmount: Number(feeCalc.fee || 0),
           },
         });
         showSuccess('Withdrawal submitted for approval');
@@ -157,11 +171,16 @@ export default function Withdraw() {
             const v = e.target.value;
             setForm({ ...form, amount: v });
             const num = Number(v);
-            if (!Number.isNaN(num) && num > Number(accountBal || 0)) {
-              showWarning(`Amount exceeds available balance of ${toCurrency(accountBal)}.`);
+            const total = Math.round((num + Math.round((num * (Number(cfg.withdrawalFeeRate || 0) / 100)) * 100) / 100) * 100) / 100;
+            if (!Number.isNaN(num) && total > Number(accountBal || 0)) {
+              showWarning(`Amount + fee exceeds available balance of ${toCurrency(accountBal)}.`);
             }
           }} placeholder="Amount" required max={Math.max(0, Number(accountBal || 0))} />
         </label>
+        <div className="row" style={{ gap: 24 }}>
+          <div><div style={{ color: '#64748b', fontSize: 12 }}>Withdrawal Fee</div><div>{toCurrency(feeCalc.fee)}</div></div>
+          <div><div style={{ color: '#64748b', fontSize: 12 }}>Total Deduct</div><div>{toCurrency(feeCalc.total)}</div></div>
+        </div>
         <div className="row" style={{ gap: 12 }}>
           <label style={{ flex: 1 }}>
             Withdrawer ID Number

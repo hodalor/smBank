@@ -22,6 +22,7 @@ import Config from './pages/Config';
 import Activity from './pages/Activity';
 import MyAccount from './pages/MyAccount';
 import LoanStatements from './pages/LoanStatements';
+import LoanDetails from './pages/LoanDetails';
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="loans" element={<Loans />} />
         <Route path="loans/approvals" element={<LoanApprovals />} />
         <Route path="loans/records" element={<LoanRecords />} />
+        <Route path="loans/:id" element={<LoanDetails />} />
         <Route path="loans/repayments" element={<LoanRepayments />} />
         <Route path="loans/repay" element={<LoanRepay />} />
         <Route path="loans/repay/approvals" element={<LoanRepayApprovals />} />

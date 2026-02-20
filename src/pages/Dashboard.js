@@ -50,11 +50,21 @@ export default function Dashboard() {
     return { balance: deposits - withdrawals, deposits, withdrawals };
   }, [posted, acct]);
   const loanTotals = useMemo(() => {
-    if (!acct) return { outstanding: 0, repaid: 0, disbursed: 0 };
-    const repaid = repays.filter(r => r.account === acct).reduce((s, r) => s + Number(r.amount || 0), 0);
-    const ls = (loans || []).filter(l => l.accountNumber === acct && l.status === 'Active');
+    const allRepaid = repays.reduce((s, r) => s + Number(r.amount || 0), 0);
+    const repaid = acct ? repays.filter(r => r.account === acct).reduce((s, r) => s + Number(r.amount || 0), 0) : allRepaid;
+    const ls = (loans || []).filter(l => {
+      const acctOk = acct ? l.accountNumber === acct : true;
+      const isActive = !l.status || l.status === 'Active';
+      return acctOk && isActive;
+    });
     const disbursed = ls.reduce((s, l) => s + Number(l.principal || 0), 0);
-    const totalDue = ls.reduce((s, l) => s + Number(l.totalDue || l.principal || 0), 0);
+    const totalDue = ls.reduce((s, l) => {
+      const principal = Number(l.principal || 0);
+      const totalInterest = Number(l.totalInterest || 0);
+      const fees = Number(l.totalFees || 0);
+      const due = Number(l.totalDue || (principal + totalInterest + fees));
+      return s + due;
+    }, 0);
     const outstanding = Math.max(0, totalDue - repaid);
     return { outstanding, repaid, disbursed };
   }, [loans, repays, acct]);

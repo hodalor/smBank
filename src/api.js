@@ -132,6 +132,9 @@ export async function listLoans(params = {}) {
   if (params.status) q.set('status', params.status);
   return apiFetch(`/loans?${q.toString()}`, { method: 'GET' });
 }
+export async function getLoan(id) {
+  return apiFetch(`/loans/${id}`, { method: 'GET' });
+}
 export async function listLoanApprovals() {
   return apiFetch('/loans/approvals', { method: 'GET' });
 }
@@ -153,6 +156,7 @@ export async function listLoanRepayPending() {
 export async function listLoanRepayPosted(params = {}) {
   const q = new URLSearchParams();
   if (params.accountNumber) q.set('accountNumber', params.accountNumber);
+  if (params.loanId) q.set('loanId', params.loanId);
   if (params.id) q.set('id', params.id);
   return apiFetch(`/loans/repay/posted?${q.toString()}`, { method: 'GET' });
 }

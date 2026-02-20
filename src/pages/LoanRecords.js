@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { directoryLookup, listClients, listLoans } from '../api';
 import { showError, showWarning } from '../components/Toaster';
 
@@ -35,6 +36,8 @@ export default function LoanRecords() {
       id: l.id,
       account: l.accountNumber,
       principal: l.principal,
+      interest: l.totalInterest ?? 0,
+      totalDue: l.totalDue ?? (Number(l.principal || 0) + Number(l.totalInterest || 0)),
       rate: l.rate,
       months: l.termMonths,
       start: (l.createdAt || '').slice(0, 10),
@@ -67,7 +70,7 @@ export default function LoanRecords() {
             <button className="btn" type="button" onClick={() => {
               const q = account.trim();
               if (!q) return;
-              if (/^\\d{10}$/.test(q)) return;
+              if (/^\\d{10,13}$/.test(q)) return;
               listClients({ q }).then(list => {
                 if (list && list.length) setAccount(list[0].accountNumber);
                 else showWarning('No matching client found');
@@ -79,7 +82,7 @@ export default function LoanRecords() {
           Loan ID
           <input className="input" placeholder="e.g. L0000123" value={loanId} onChange={(e) => setLoanId(e.target.value)} />
         </label>
-        {/^\\d{10}$/.test(account) && (
+        {/^\\d{10,13}$/.test(account) && (
           <div className="row" style={{ gap: 24 }}>
             {(() => {
               if (!client || client.accountNumber !== account) {
@@ -109,6 +112,8 @@ export default function LoanRecords() {
               <th>Loan ID</th>
               <th>Account</th>
               <th>Principal</th>
+              <th>Interest</th>
+              <th>Total Payable</th>
               <th>Rate</th>
               <th>Months</th>
               <th>Start</th>
@@ -119,9 +124,11 @@ export default function LoanRecords() {
           <tbody>
             {filtered.map(l => (
               <tr key={l.id}>
-                <td>{l.id}</td>
+                <td><Link to={`/loans/${l.id}`}>{l.id}</Link></td>
                 <td>{l.account}</td>
                 <td>{gh(l.principal)}</td>
+                <td>{gh(l.interest)}</td>
+                <td>{gh(l.totalDue)}</td>
                 <td>{l.rate}%</td>
                 <td>{l.months}</td>
                 <td>{l.start}</td>

@@ -35,6 +35,10 @@ export default function Config() {
       primaryContrast: '#ffffff',
       darkMode: false,
       defaultLoanRate: 0,
+      serviceFeeRate: 0,
+      adminFeeRate: 0,
+      commitmentFeeRate: 0,
+      withdrawalFeeRate: 0,
       bankCode: '07',
       branches: [{ code: '001', name: 'Head office', active: true }],
       accountTypes: [
@@ -74,6 +78,22 @@ export default function Config() {
           <label>
             Default Loan Rate (% per annum)
             <input className="input" type="number" step="0.01" min="0" name="defaultLoanRate" value={cfg.defaultLoanRate ?? 0} onChange={change} />
+          </label>
+          <label>
+            Service Fee (% of principal)
+            <input className="input" type="number" step="0.01" min="0" name="serviceFeeRate" value={cfg.serviceFeeRate ?? 0} onChange={change} />
+          </label>
+          <label>
+            Administration Fee (% of principal)
+            <input className="input" type="number" step="0.01" min="0" name="adminFeeRate" value={cfg.adminFeeRate ?? 0} onChange={change} />
+          </label>
+          <label>
+            Commitment Fee (% of principal)
+            <input className="input" type="number" step="0.01" min="0" name="commitmentFeeRate" value={cfg.commitmentFeeRate ?? 0} onChange={change} />
+          </label>
+          <label>
+            Withdrawal Fee (% of amount)
+            <input className="input" type="number" step="0.01" min="0" name="withdrawalFeeRate" value={cfg.withdrawalFeeRate ?? 0} onChange={change} />
           </label>
           <label>
             Bank Code (2 digits)

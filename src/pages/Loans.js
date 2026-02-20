@@ -22,6 +22,7 @@ export default function Loans() {
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const changeFile = (e) => setForm({ ...form, collateralDoc: e.target.files?.[0] || null });
   const [client, setClient] = useState(null);
+  const [cfg, setCfg] = useState({ defaultLoanRate: 0, serviceFeeRate: 0, adminFeeRate: 0, commitmentFeeRate: 0 });
   const lookup = () => {
     const q = (form.accountNumber || '').trim();
     if (!q) return;
@@ -64,7 +65,13 @@ export default function Loans() {
   }, []);
   useEffect(() => {
     fetchConfig().then(cfg => {
-      setForm(f => ({ ...f, interestRate: f.interestRate || String(cfg.defaultLoanRate ?? '') }));
+      setCfg({
+        defaultLoanRate: Number(cfg.defaultLoanRate ?? 0),
+        serviceFeeRate: Number(cfg.serviceFeeRate ?? 0),
+        adminFeeRate: Number(cfg.adminFeeRate ?? 0),
+        commitmentFeeRate: Number(cfg.commitmentFeeRate ?? 0),
+      });
+      setForm(f => ({ ...f, interestRate: f.interestRate || String(Number(cfg.defaultLoanRate ?? 0)) }));
     }).catch(() => {});
   }, []);
   const interestCalc = useMemo(() => {
@@ -72,8 +79,19 @@ export default function Loans() {
     const r = Number(form.interestRate || 0) / 100;
     const m = Number(form.durationMonths || 0) / 12;
     const ti = p * r * m;
-    return { totalInterest: Math.round(ti * 100) / 100, totalDue: Math.round((p + ti) * 100) / 100 };
-  }, [form.principal, form.interestRate, form.durationMonths]);
+    const sFee = p * (Number(cfg.serviceFeeRate || 0) / 100);
+    const aFee = p * (Number(cfg.adminFeeRate || 0) / 100);
+    const cFee = p * (Number(cfg.commitmentFeeRate || 0) / 100);
+    const fees = sFee + aFee + cFee;
+    return {
+      serviceFee: Math.round(sFee * 100) / 100,
+      adminFee: Math.round(aFee * 100) / 100,
+      commitmentFee: Math.round(cFee * 100) / 100,
+      feesTotal: Math.round(fees * 100) / 100,
+      totalInterest: Math.round(ti * 100) / 100,
+      totalDue: Math.round((p + ti + fees) * 100) / 100
+    };
+  }, [form.principal, form.interestRate, form.durationMonths, cfg.serviceFeeRate, cfg.adminFeeRate, cfg.commitmentFeeRate]);
   const listFiltered = rows.filter(r => !loanIdFilter || String(r.id || '').includes(loanIdFilter.trim()));
   return (
     <div className="stack">
@@ -110,7 +128,13 @@ export default function Loans() {
           </label>
           <div className="row" style={{ gap: 24 }}>
             <div><div style={{ fontSize: 12, color: '#64748b' }}>Total Interest</div><div style={{ fontWeight: 600 }}>{interestCalc.totalInterest.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' })}</div></div>
-            <div><div style={{ fontSize: 12, color: '#64748b' }}>Total Due</div><div style={{ fontWeight: 600 }}>{interestCalc.totalDue.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' })}</div></div>
+            <div><div style={{ fontSize: 12, color: '#64748b' }}>Fees</div><div style={{ fontWeight: 600 }}>{interestCalc.feesTotal.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' })}</div></div>
+            <div><div style={{ fontSize: 12, color: '#64748b' }}>Total Payable</div><div style={{ fontWeight: 600 }}>{interestCalc.totalDue.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' })}</div></div>
+          </div>
+          <div className="row" style={{ gap: 24 }}>
+            <div><div style={{ fontSize: 12, color: '#64748b' }}>Service Fee</div><div>{(interestCalc.serviceFee).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' })}</div></div>
+            <div><div style={{ fontSize: 12, color: '#64748b' }}>Administration Fee</div><div>{(interestCalc.adminFee).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' })}</div></div>
+            <div><div style={{ fontSize: 12, color: '#64748b' }}>Commitment Fee</div><div>{(interestCalc.commitmentFee).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' })}</div></div>
           </div>
           <label>
             Start Date
