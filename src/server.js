@@ -164,6 +164,10 @@ let config = readJSON(CONFIG_FILE, {
   primaryContrast: '#ffffff',
   darkMode: false,
   defaultLoanRate: 0,
+  serviceFeeRate: 0,
+  adminFeeRate: 0,
+  commitmentFeeRate: 0,
+  withdrawalFeeRate: 0,
   bankCode: '07',
   branches: [
     { code: '001', name: 'Head office', active: true },
@@ -687,11 +691,23 @@ app.get('/config', async (req, res) => {
 app.put('/config', async (req, res) => {
   if (isConnected()) {
     const { Config } = getModels();
-    const saved = await Config.findOneAndUpdate({}, { $set: req.body }, { upsert: true, new: true });
+    const body = { ...req.body };
+    // Coerce numeric fields explicitly
+    const numKeys = ['defaultLoanRate', 'serviceFeeRate', 'adminFeeRate', 'commitmentFeeRate', 'withdrawalFeeRate', 'lastCustomerSerial'];
+    numKeys.forEach(k => {
+      if (Object.prototype.hasOwnProperty.call(body, k)) body[k] = Number(body[k] ?? 0);
+    });
+    const saved = await Config.findOneAndUpdate({}, { $set: body }, { upsert: true, new: true });
     await logActivity(req, 'config.update', 'config', '', {});
-    return res.json(saved);
+    const obj = saved && saved.toObject ? saved.toObject() : saved;
+    return res.json({ ...config, ...obj });
   }
-  config = { ...config, ...req.body };
+  const body = { ...req.body };
+  const numKeys = ['defaultLoanRate', 'serviceFeeRate', 'adminFeeRate', 'commitmentFeeRate', 'withdrawalFeeRate', 'lastCustomerSerial'];
+  numKeys.forEach(k => {
+    if (Object.prototype.hasOwnProperty.call(body, k)) body[k] = Number(body[k] ?? 0);
+  });
+  config = { ...config, ...body };
   writeJSON(CONFIG_FILE, config);
   await logActivity(req, 'config.update', 'config', '', {});
   res.json(config);
@@ -1020,7 +1036,7 @@ function addPending(kind) {
       id: body.id || newTxnId(kind),
       kind, // 'deposit' | 'withdraw'
       status: 'Pending',
-      initiatorName: body.initiatorName || 'api',
+      initiatorName: (req.user && req.user.username) || body.initiatorName || 'api',
       initiatedAt: body.initiatedAt || new Date().toISOString(),
       accountNumber: body.accountNumber,
       amount: body.amount,
@@ -1045,7 +1061,7 @@ app.post('/transactions/pending/:id/approve', async (req, res) => {
   const id = req.params.id;
   let txn = null;
   if (isConnected()) {
-    const { PendingTxn, PostedTxn, LoanRepayPosted } = getModels();
+    const { PendingTxn, PostedTxn, LoanRepayPosted, Config } = getModels();
     if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
     if (!canApproveTxn(req.user.role)) return res.status(403).json({ error: 'forbidden' });
     const code = req.body && req.body.approvalCode;
@@ -1057,18 +1073,22 @@ app.post('/transactions/pending/:id/approve', async (req, res) => {
     txn = await PendingTxn.findOne({ id }).lean();
     if (!txn) return res.status(404).json({ error: 'not found' });
     if (txn.kind === 'withdraw') {
-      // Recompute balance at approval time
+      const cfg = (await Config.findOne().lean()) || {};
+      const feeRate = Number(cfg.withdrawalFeeRate || 0);
+      const fee = Math.round((Number(txn.amount || 0) * (feeRate / 100)) * 100) / 100;
+      const total = Number(txn.amount) + fee;
       const bal = await computeAccountBalance(txn.accountNumber);
-      if (Number(txn.amount) > bal) {
+      if (total > bal) {
         await logActivity(req, 'txn.approve.blocked', 'transaction', id, { accountNumber: txn.accountNumber, amount: txn.amount, available: bal });
         return res.status(400).json({ error: 'insufficient_funds', available: bal });
       }
+      txn = { ...txn, meta: { ...(txn.meta || {}), feeRate, feeAmount: fee, baseAmount: Number(txn.amount) }, amount: total };
     }
     await PendingTxn.deleteOne({ id });
     const posted = {
       ...txn,
       approvedAt: new Date().toISOString(),
-      approverName: (req.body && req.body.approverName) || 'api',
+      approverName: (req.user && req.user.username) || 'api',
       status: 'Approved',
     };
     await PostedTxn.create(posted);
@@ -1089,17 +1109,21 @@ app.post('/transactions/pending/:id/approve', async (req, res) => {
     return res.status(401).json({ error: 'approval_code_invalid' });
   }
   if (txn.kind === 'withdraw') {
+    const feeRate = Number(config.withdrawalFeeRate || 0);
+    const fee = Math.round((Number(txn.amount || 0) * (feeRate / 100)) * 100) / 100;
+    const total = Number(txn.amount) + fee;
     const bal = await computeAccountBalance(txn.accountNumber);
-    if (Number(txn.amount) > bal) {
+    if (total > bal) {
       await logActivity(req, 'txn.approve.blocked', 'transaction', id, { accountNumber: txn.accountNumber, amount: txn.amount, available: bal });
       return res.status(400).json({ error: 'insufficient_funds', available: bal });
     }
+    txn = { ...txn, meta: { ...(txn.meta || {}), feeRate, feeAmount: fee, baseAmount: Number(txn.amount) }, amount: total };
   }
   pendingTx.splice(idx, 1);
   const posted = {
     ...txn,
     approvedAt: new Date().toISOString(),
-    approverName: (req.body && req.body.approverName) || 'api',
+    approverName: (req.user && req.user.username) || 'api',
     status: 'Approved',
   };
   postedTx.unshift(posted);
@@ -1117,7 +1141,7 @@ app.post('/transactions/pending/:id/reject', async (req, res) => {
     const txn = await PendingTxn.findOneAndDelete({ id }).lean();
     if (!txn) return res.status(404).json({ error: 'not found' });
     const item = await SuperBin.create({
-      by: (req.body && req.body.by) || 'api',
+      by: (req.user && req.user.username) || (req.body && req.body.by) || 'api',
       deletedAt: new Date(),
       kind: 'pending_txn',
       payload: { ...txn, reason: (req.body && req.body.reason) || '' },
@@ -1133,7 +1157,7 @@ app.post('/transactions/pending/:id/reject', async (req, res) => {
   writeJSON(PENDING_TX_FILE, pendingTx);
   const item = {
     id: newId('BIN'),
-    by: (req.body && req.body.by) || 'api',
+    by: (req.user && req.user.username) || (req.body && req.body.by) || 'api',
     deletedAt: new Date().toISOString(),
     kind: 'pending_txn',
     payload: { ...txn, reason: (req.body && req.body.reason) || '' },
@@ -1162,6 +1186,28 @@ app.get('/loans', async (req, res) => {
   if (status) result = result.filter(l => l.status === status);
   res.json(result);
 });
+app.get('/loans/:id', async (req, res) => {
+  const id = req.params.id;
+  if (isConnected()) {
+    const { Loan, Client, LoanRepayPosted } = getModels();
+    const loan = await Loan.findOne({ id }).lean();
+    if (!loan) return res.status(404).json({ error: 'not found' });
+    const client = await Client.findOne({ accountNumber: loan.accountNumber }).lean();
+    const repayments = await LoanRepayPosted.find({ loanId: id }).sort({ approvedAt: -1, _id: -1 }).lean();
+    const summary = {
+      totalRepaid: (repayments || []).reduce((s, r) => s + Number(r.amount || 0), 0),
+    };
+    return res.json({ loan, client, repayments, summary });
+  }
+  const loan = loans.find(l => l.id === id);
+  if (!loan) return res.status(404).json({ error: 'not found' });
+  const client = clients.find(c => c.accountNumber === loan.accountNumber) || null;
+  const repayments = loanRepayPosted.filter(r => r.loanId === id).sort((a, b) => (String(b.approvedAt || '').localeCompare(String(a.approvedAt || ''))));
+  const summary = {
+    totalRepaid: (repayments || []).reduce((s, r) => s + Number(r.amount || 0), 0),
+  };
+  return res.json({ loan, client, repayments, summary });
+});
 app.get('/loans/approvals', async (req, res) => {
   if (isConnected()) {
     const { Loan } = getModels();
@@ -1176,6 +1222,18 @@ app.post('/loans', async (req, res) => {
   const principalNum = Number(body.principal || 0);
   const monthsNum = Number(body.termMonths || 0);
   const totalInterest = Math.max(0, (principalNum * (rateNum / 100) * (monthsNum / 12)));
+  let cfg = null;
+  if (isConnected()) {
+    try {
+      const { Config } = getModels();
+      cfg = await Config.findOne().lean();
+    } catch { cfg = null; }
+  }
+  cfg = cfg || config || {};
+  const serviceFee = Math.round((principalNum * (Number(cfg.serviceFeeRate || 0) / 100)) * 100) / 100;
+  const adminFee = Math.round((principalNum * (Number(cfg.adminFeeRate || 0) / 100)) * 100) / 100;
+  const commitmentFee = Math.round((principalNum * (Number(cfg.commitmentFeeRate || 0) / 100)) * 100) / 100;
+  const totalFees = Math.round((serviceFee + adminFee + commitmentFee) * 100) / 100;
   const loan = {
     id: body.id || newLoanId(),
     accountNumber: body.accountNumber,
@@ -1183,7 +1241,11 @@ app.post('/loans', async (req, res) => {
     rate: rateNum || 0,
     termMonths: monthsNum || 0,
     totalInterest: Math.round(totalInterest * 100) / 100,
-    totalDue: Math.round((principalNum + totalInterest) * 100) / 100,
+    serviceFee,
+    adminFee,
+    commitmentFee,
+    totalFees,
+    totalDue: Math.round((principalNum + totalInterest + totalFees) * 100) / 100,
     guarantors: body.guarantors || [],
     collateral: body.collateral || {},
     attachments: body.attachments || [],
@@ -1214,9 +1276,11 @@ app.post('/loans', async (req, res) => {
   }
   if (isConnected()) {
     const { Loan } = getModels();
-    await Loan.create(loan);
+    const u = req.user && req.user.username ? req.user.username : 'api';
+    await Loan.create({ ...loan, initiatorName: u });
   } else {
-    loans.unshift(loan);
+    const u = req.user && req.user.username ? req.user.username : 'api';
+    loans.unshift({ ...loan, initiatorName: u });
     writeJSON(LOANS_FILE, loans);
   }
   const io = req.app.get('io');
@@ -1236,17 +1300,21 @@ app.post('/loans/:id/approve', async (req, res) => {
       await logActivity(req, 'approval.code.invalid', 'loan', id, {});
       return res.status(401).json({ error: 'approval_code_invalid' });
     }
-    const loan = await Loan.findOneAndUpdate({ id }, { $set: { status: 'Active', approvedAt: new Date().toISOString(), approverName: 'api' } }, { new: true }).lean();
+    const loan = await Loan.findOneAndUpdate(
+      { id },
+      { $set: { status: 'Active', approvedAt: new Date().toISOString(), approverName: (req.user && req.user.username) || 'api' } },
+      { new: true }
+    ).lean();
     if (!loan) return res.status(404).json({ error: 'not found' });
     const disbursed = {
       id: newTxnId('loan_disbursement'),
       kind: 'loan_disbursement',
       status: 'Approved',
-      initiatorName: 'api',
+      initiatorName: loan.initiatorName || 'api',
       initiatedAt: loan.createdAt || new Date().toISOString(),
       accountNumber: loan.accountNumber,
       amount: loan.principal,
-      approverName: 'api',
+      approverName: (req.user && req.user.username) || 'api',
       approvedAt: loan.approvedAt,
       meta: { loanId: loan.id, rate: loan.rate || 0, termMonths: loan.termMonths || 0 },
     };
@@ -1269,17 +1337,17 @@ app.post('/loans/:id/approve', async (req, res) => {
     await logActivity(req, 'approval.code.invalid', 'loan', id, {});
     return res.status(401).json({ error: 'approval_code_invalid' });
   }
-  loans[idx] = { ...loans[idx], status: 'Active', approvedAt: new Date().toISOString(), approverName: 'api' };
+  loans[idx] = { ...loans[idx], status: 'Active', approvedAt: new Date().toISOString(), approverName: (req.user && req.user.username) || 'api' };
   const loan = loans[idx];
   const disbursed = {
     id: newTxnId('loan_disbursement'),
     kind: 'loan_disbursement',
     status: 'Approved',
-    initiatorName: 'api',
+    initiatorName: loan.initiatorName || 'api',
     initiatedAt: loan.createdAt || new Date().toISOString(),
     accountNumber: loan.accountNumber,
     amount: loan.principal,
-    approverName: 'api',
+    approverName: (req.user && req.user.username) || 'api',
     approvedAt: loan.approvedAt,
     meta: { loanId: loan.id, rate: loan.rate || 0, termMonths: loan.termMonths || 0 },
   };
@@ -1340,11 +1408,12 @@ app.get('/loans/repay/pending', async (req, res) => {
   return res.json(loanRepayPending);
 });
 app.get('/loans/repay/posted', async (req, res) => {
-  const { accountNumber, id } = req.query;
+  const { accountNumber, id, loanId } = req.query;
   if (isConnected()) {
     const { LoanRepayPosted } = getModels();
     const filter = {};
     if (accountNumber) filter.accountNumber = accountNumber;
+    if (loanId) filter.loanId = loanId;
     if (id) filter.id = { $regex: String(id), $options: 'i' };
     const docs = await LoanRepayPosted.find(filter).sort({ approvedAt: -1, _id: -1 }).lean();
     await logActivity(req, 'statements.view', 'loan_repay', String(accountNumber || ''), {});
@@ -1352,6 +1421,7 @@ app.get('/loans/repay/posted', async (req, res) => {
   }
   let result = loanRepayPosted;
   if (accountNumber) result = result.filter(r => r.accountNumber === accountNumber);
+  if (loanId) result = result.filter(r => r.loanId === loanId);
   if (id) { const s = String(id).toLowerCase(); result = result.filter(r => String(r.id || '').toLowerCase().includes(s)); }
   await logActivity(req, 'statements.view', 'loan_repay', String(accountNumber || ''), {});
   res.json(result);
@@ -1369,7 +1439,7 @@ app.post('/loans/:id/repay', async (req, res) => {
       accountNumber: loan.accountNumber,
       mode: body.mode, // full | partial | writeoff
       amount: body.amount || 0,
-      initiatorName: body.initiatorName || 'api',
+      initiatorName: (req.user && req.user.username) || body.initiatorName || 'api',
       initiatedAt: new Date().toISOString(),
       status: 'Pending',
     };
@@ -1388,7 +1458,7 @@ app.post('/loans/:id/repay', async (req, res) => {
     accountNumber: loan.accountNumber,
     mode: body.mode, // full | partial | writeoff
     amount: body.amount || 0,
-    initiatorName: body.initiatorName || 'api',
+    initiatorName: (req.user && req.user.username) || body.initiatorName || 'api',
     initiatedAt: new Date().toISOString(),
     status: 'Pending',
   };
@@ -1413,7 +1483,7 @@ app.post('/loans/repay/pending/:id/approve', async (req, res) => {
     }
     const r = await LoanRepayPending.findOneAndDelete({ id }).lean();
     if (!r) return res.status(404).json({ error: 'not found' });
-    const posted = { ...r, status: 'Approved', approvedAt: new Date().toISOString(), approverName: 'api' };
+    const posted = { ...r, status: 'Approved', approvedAt: new Date().toISOString(), approverName: (req.user && req.user.username) || 'api' };
     await LoanRepayPosted.create(posted);
     const io = req.app.get('io');
     if (io) io.emit('loans:repay:posted:new', posted);
@@ -1431,7 +1501,7 @@ app.post('/loans/repay/pending/:id/approve', async (req, res) => {
     return res.status(401).json({ error: 'approval_code_invalid' });
   }
   const [r] = loanRepayPending.splice(idx, 1);
-  const posted = { ...r, status: 'Approved', approvedAt: new Date().toISOString(), approverName: 'api' };
+  const posted = { ...r, status: 'Approved', approvedAt: new Date().toISOString(), approverName: (req.user && req.user.username) || 'api' };
   loanRepayPosted.unshift(posted);
   writeJSON(LOAN_REPAY_PENDING_FILE, loanRepayPending);
   writeJSON(LOAN_REPAY_POSTED_FILE, loanRepayPosted);

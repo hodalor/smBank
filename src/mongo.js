@@ -39,6 +39,10 @@ async function connect(uri) {
     primaryContrast: String,
     darkMode: Boolean,
     defaultLoanRate: { type: Number, default: 0 },
+    serviceFeeRate: { type: Number, default: 0 },
+    adminFeeRate: { type: Number, default: 0 },
+    commitmentFeeRate: { type: Number, default: 0 },
+    withdrawalFeeRate: { type: Number, default: 0 },
     bankCode: { type: String, default: '07' }, // 2 digits
     branches: [{
       code: String, // 3 digits
@@ -95,6 +99,10 @@ async function connect(uri) {
     rate: Number,
     termMonths: Number,
     totalInterest: { type: Number, default: 0 },
+    serviceFee: { type: Number, default: 0 },
+    adminFee: { type: Number, default: 0 },
+    commitmentFee: { type: Number, default: 0 },
+    totalFees: { type: Number, default: 0 },
     totalDue: { type: Number, default: 0 },
     guarantors: Mixed,
     collateral: Mixed,
@@ -103,6 +111,7 @@ async function connect(uri) {
     status: String, // Pending | Active
     approvedAt: String,
     approverName: String,
+    initiatorName: String,
   }, { timestamps: true });
 
   const LoanRepaySchema = new Schema({
