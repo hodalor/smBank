@@ -215,6 +215,18 @@ function padDigits(s, n) {
   const only = String(s || '').replace(/\D/g, '');
   return only.padStart(n, '0').slice(-n);
 }
+function deriveCodesFromAccountNumber(acct) {
+  const s = String(acct || '');
+  if (/^\d{13}$/.test(s)) {
+    return {
+      bankCode: s.slice(0, 2),
+      branchCode: s.slice(2, 5),
+      accountTypeCode: s.slice(5, 7),
+      serialNumber: s.slice(7, 13),
+    };
+  }
+  return {};
+}
 async function nextCustomerSerial() {
   if (isConnected()) {
     const { Config } = getModels();
@@ -797,12 +809,27 @@ app.get('/clients/:id', async (req, res) => {
     const { Client } = getModels();
     const d = await Client.findOne({ $or: [{ accountNumber: req.params.id }, { id: req.params.id }] }).lean();
     if (!d) return res.status(404).json({ error: 'not found' });
-    const obj = { ...(d.data || {}), id: d.id, accountNumber: d.accountNumber, createdAt: d.createdAt, fullName: d.fullName, companyName: d.companyName, nationalId: d.nationalId, dob: d.dob, phone: d.phone, companyPhone: d.companyPhone, registrationDate: d.registrationDate };
+    const derived = deriveCodesFromAccountNumber(d.accountNumber);
+    const base = { ...(d.data || {}) };
+    if (!base.branchCode && derived.branchCode) base.branchCode = derived.branchCode;
+    if (!base.accountTypeCode && derived.accountTypeCode) base.accountTypeCode = derived.accountTypeCode;
+    const obj = { ...base, id: d.id, accountNumber: d.accountNumber, createdAt: d.createdAt, fullName: d.fullName, companyName: d.companyName, nationalId: d.nationalId, dob: d.dob, phone: d.phone, companyPhone: d.companyPhone, registrationDate: d.registrationDate };
+    // Persist normalized codes if newly derived
+    if ((derived.branchCode && !((d.data || {}).branchCode)) || (derived.accountTypeCode && !((d.data || {}).accountTypeCode))) {
+      try {
+        await Client.updateOne({ _id: d._id }, { $set: { 'data.branchCode': obj.branchCode, 'data.accountTypeCode': obj.accountTypeCode } });
+      } catch {}
+    }
     await logActivity(req, 'client.view', 'client', String(d.accountNumber || d.id || ''), {});
     return res.json(obj);
   }
   const it = clients.find(c => c.accountNumber === req.params.id || c.id === req.params.id);
   if (!it) return res.status(404).json({ error: 'not found' });
+  const derived = deriveCodesFromAccountNumber(it.accountNumber);
+  let mutated = false;
+  if (!it.branchCode && derived.branchCode) { it.branchCode = derived.branchCode; mutated = true; }
+  if (!it.accountTypeCode && derived.accountTypeCode) { it.accountTypeCode = derived.accountTypeCode; mutated = true; }
+  if (mutated) { writeJSON(CLIENTS_FILE, clients); }
   await logActivity(req, 'client.view', 'client', String(it.accountNumber || it.id || ''), {});
   res.json(it);
 });
