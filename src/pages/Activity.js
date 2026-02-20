@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listActivity, getClient, listUsers, listPostedTransactions, listLoans, listLoanRepayPosted } from '../api';
-import { hasPermission, PERMISSIONS } from '../state/ops';
+import { hasPermission, PERMISSIONS, displayUserName } from '../state/ops';
 import { showError } from '../components/Toaster';
 
 export default function Activity() {
@@ -115,8 +115,8 @@ export default function Activity() {
             ['Account Number', t.accountNumber],
             ['Amount', String(t.amount)],
             ['Status', t.status],
-            ['Initiator', t.initiatorName],
-            ['Approver', t.approverName || ''],
+            ['Initiator', displayUserName(t.initiatorName)],
+            ['Approver', displayUserName(t.approverName) || ''],
             ['Initiated At', t.initiatedAt || ''],
             ['Approved At', t.approvedAt || ''],
           ]);
@@ -142,8 +142,8 @@ export default function Activity() {
             ['Account Number', loan.accountNumber],
             ['Principal', String(loan.principal)],
             ['Status', loan.status],
-            ['Initiator', loan.initiatorName || ''],
-            ['Approver', loan.approverName || ''],
+            ['Initiator', displayUserName(loan.initiatorName) || ''],
+            ['Approver', displayUserName(loan.approverName) || ''],
             ['Initiated At', loan.initiatedAt || ''],
             ['Approved At', loan.approvedAt || ''],
           ]);
@@ -169,8 +169,8 @@ export default function Activity() {
             ['Mode', item.mode],
             ['Amount', String(item.amount)],
             ['Status', item.status],
-            ['Initiator', item.initiatorName],
-            ['Approver', item.approverName || ''],
+            ['Initiator', displayUserName(item.initiatorName)],
+            ['Approver', displayUserName(item.approverName) || ''],
             ['Initiated At', item.initiatedAt || ''],
             ['Approved At', item.approvedAt || ''],
           ]);

@@ -39,6 +39,8 @@ export default function Config() {
       adminFeeRate: 0,
       commitmentFeeRate: 0,
       withdrawalFeeRate: 0,
+      loanOverdueGraceDays: 0,
+      loanOverdueDailyPenaltyRate: 0,
       bankCode: '07',
       branches: [{ code: '001', name: 'Head office', active: true }],
       accountTypes: [
@@ -96,8 +98,16 @@ export default function Config() {
             <input className="input" type="number" step="0.01" min="0" name="withdrawalFeeRate" value={cfg.withdrawalFeeRate ?? 0} onChange={change} />
           </label>
           <label>
+            Loan Overdue Grace Days
+            <input className="input" type="number" step="1" min="0" name="loanOverdueGraceDays" value={cfg.loanOverdueGraceDays ?? 0} onChange={change} />
+          </label>
+          <label>
+            Loan Overdue Penalty (% per day)
+            <input className="input" type="number" step="0.01" min="0" name="loanOverdueDailyPenaltyRate" value={cfg.loanOverdueDailyPenaltyRate ?? 0} onChange={change} />
+          </label>
+          <label>
             Bank Code (2 digits)
-            <input className="input" name="bankCode" value={cfg.bankCode || ''} onChange={change} placeholder="e.g. 07" />
+            <input className="input" name="bankCode" value={cfg.bankCode || ''} onChange={change} placeholder="e.g. 07" pattern="\\d{2}" title="Two digits" maxLength={2} />
           </label>
           <label style={{ alignSelf: 'end' }}>
             <input type="checkbox" name="darkMode" checked={!!cfg.darkMode} onChange={change} /> Dark Mode
@@ -112,7 +122,7 @@ export default function Config() {
         <h3>Branches</h3>
         {(cfg.branches || []).map((b, i) => (
           <div key={i} className="row" style={{ gap: 8, marginBottom: 8 }}>
-            <input className="input" style={{ width: 100 }} placeholder="Code" value={b.code} onChange={(e) => {
+            <input className="input" style={{ width: 100 }} placeholder="Code" value={b.code} pattern="\\d{3}" title="Three digits" maxLength={3} onChange={(e) => {
               const arr = [...(cfg.branches || [])]; arr[i] = { ...arr[i], code: e.target.value }; setCfg({ ...cfg, branches: arr });
             }} />
             <input className="input" style={{ flex: 1 }} placeholder="Name" value={b.name} onChange={(e) => {
@@ -135,7 +145,7 @@ export default function Config() {
         <h3>Account Types</h3>
         {(cfg.accountTypes || []).map((a, i) => (
           <div key={i} className="row" style={{ gap: 8, marginBottom: 8 }}>
-            <input className="input" style={{ width: 100 }} placeholder="Code" value={a.code} onChange={(e) => {
+            <input className="input" style={{ width: 100 }} placeholder="Code" value={a.code} pattern="\\d{2}" title="Two digits" maxLength={2} onChange={(e) => {
               const arr = [...(cfg.accountTypes || [])]; arr[i] = { ...arr[i], code: e.target.value }; setCfg({ ...cfg, accountTypes: arr });
             }} />
             <input className="input" style={{ flex: 1 }} placeholder="Name" value={a.name} onChange={(e) => {

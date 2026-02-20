@@ -92,7 +92,30 @@ export default function Loans() {
       totalDue: Math.round((p + ti + fees) * 100) / 100
     };
   }, [form.principal, form.interestRate, form.durationMonths, cfg.serviceFeeRate, cfg.adminFeeRate, cfg.commitmentFeeRate]);
-  const listFiltered = rows.filter(r => !loanIdFilter || String(r.id || '').includes(loanIdFilter.trim()));
+  const withComputed = useMemo(() => {
+    const plusMonths = (dateStr, m) => {
+      try {
+        const d = new Date(dateStr);
+        d.setMonth(d.getMonth() + (m || 0));
+        return d.toISOString();
+      } catch { return ''; }
+    };
+    const daysDiff = (d) => {
+      try {
+        const dd = new Date(d);
+        const now = new Date();
+        return Math.ceil((dd.getTime() - now.getTime()) / (24 * 3600 * 1000));
+      } catch { return null; }
+    };
+    return rows.map(r => {
+      const start = r.approvedAt || r.createdAt || '';
+      const due = start ? plusMonths(start, r.termMonths) : '';
+      const daysToDue = due ? daysDiff(due) : null;
+      const overdueDays = daysToDue != null ? Math.max(0, -daysToDue) : 0;
+      return { ...r, _due: due, _daysToDue: daysToDue, _overdueDays: overdueDays };
+    });
+  }, [rows]);
+  const listFiltered = withComputed.filter(r => !loanIdFilter || String(r.id || '').includes(loanIdFilter.trim()));
   return (
     <div className="stack">
       <h1>Loans</h1>
@@ -204,17 +227,21 @@ export default function Loans() {
               <th>Principal</th>
               <th>Total Interest</th>
               <th>Total Due</th>
+              <th>Due</th>
+              <th>Days To Due</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {listFiltered.map(r => (
-              <tr key={r.id}>
+              <tr key={r.id} style={{ background: (r._overdueDays || 0) > 0 ? '#fff1f2' : undefined }}>
                 <td>{r.id}</td>
                 <td>{r.accountNumber}</td>
-                <td>{r.principal}</td>
-                <td>{r.totalInterest ?? '-'}</td>
-                <td>{r.totalDue ?? '-'}</td>
+                <td>{Number(r.principal || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' })}</td>
+                <td>{Number(r.totalInterest || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' })}</td>
+                <td>{Number(r.totalDue || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' })}</td>
+                <td>{r._due ? r._due.slice(0,10) : '—'}</td>
+                <td>{r._daysToDue != null ? String(r._daysToDue) : '—'}</td>
                 <td>{r.status}</td>
               </tr>
             ))}

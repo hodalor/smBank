@@ -32,18 +32,33 @@ export default function LoanRecords() {
         return d.toISOString().slice(0, 10);
       } catch { return ''; }
     };
-    return rows.map(l => ({
-      id: l.id,
-      account: l.accountNumber,
-      principal: l.principal,
-      interest: l.totalInterest ?? 0,
-      totalDue: l.totalDue ?? (Number(l.principal || 0) + Number(l.totalInterest || 0)),
-      rate: l.rate,
-      months: l.termMonths,
-      start: (l.createdAt || '').slice(0, 10),
-      due: plusMonths(l.createdAt || '', l.termMonths),
-      status: l.status === 'Pending' ? 'Pending' : 'Active',
-    }));
+    const daysDiff = (d) => {
+      try {
+        const dd = new Date(d);
+        const now = new Date();
+        return Math.ceil((dd.getTime() - now.getTime()) / (24 * 3600 * 1000));
+      } catch { return null; }
+    };
+    return rows.map(l => {
+      const start = (l.approvedAt || l.createdAt || '');
+      const dueISO = plusMonths(start, l.termMonths);
+      const daysToDue = dueISO ? daysDiff(dueISO) : null;
+      const overdueDays = daysToDue != null ? Math.max(0, -daysToDue) : 0;
+      return ({
+        id: l.id,
+        account: l.accountNumber,
+        principal: l.principal,
+        interest: l.totalInterest ?? 0,
+        totalDue: l.totalDue ?? (Number(l.principal || 0) + Number(l.totalInterest || 0)),
+        rate: l.rate,
+        months: l.termMonths,
+        start: String(start).slice(0, 10),
+        due: dueISO,
+        daysToDue,
+        overdueDays,
+        status: l.status === 'Pending' ? 'Pending' : 'Active',
+      });
+    });
   }, [rows]);
 
   const filtered = useMemo(
@@ -118,12 +133,14 @@ export default function LoanRecords() {
               <th>Months</th>
               <th>Start</th>
               <th>Due</th>
+              <th>Days To Due</th>
+              <th>Overdue</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map(l => (
-              <tr key={l.id}>
+              <tr key={l.id} style={{ background: l.overdueDays > 0 ? '#fff1f2' : undefined }}>
                 <td><Link to={`/loans/${l.id}`}>{l.id}</Link></td>
                 <td>{l.account}</td>
                 <td>{gh(l.principal)}</td>
@@ -132,7 +149,9 @@ export default function LoanRecords() {
                 <td>{l.rate}%</td>
                 <td>{l.months}</td>
                 <td>{l.start}</td>
-                <td>{l.due}</td>
+                <td>{l.due ? l.due.slice(0,10) : '—'}</td>
+                <td>{l.daysToDue != null ? String(l.daysToDue) : '—'}</td>
+                <td>{l.overdueDays || 0}</td>
                 <td>{l.status}</td>
               </tr>
             ))}

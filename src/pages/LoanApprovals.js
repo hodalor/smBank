@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { approveLoan, listLoanApprovals, rejectLoan, getMe } from '../api';
+import { printLoanDisbursementReceipt } from '../state/ops';
 import { showError, showSuccess } from '../components/Toaster';
 
 export default function LoanApprovals() {
@@ -113,8 +114,9 @@ export default function LoanApprovals() {
                 <button className="btn" onClick={() => setAskCodeFor(null)}>Cancel</button>
                 <button className="btn btn-primary" onClick={async () => {
                   try {
-                    await approveLoan(askCodeFor, { approvalCode: code });
+                    const loan = await approveLoan(askCodeFor, { approvalCode: code });
                     showSuccess('Loan approved and disbursed');
+                    try { printLoanDisbursementReceipt(loan, { copies: 2 }); } catch {}
                     setAskCodeFor(null);
                     await load();
                   } catch (e) {

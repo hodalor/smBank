@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createClient, getClient, updateClient, fetchConfig } from '../api';
+import { createClient, getClient, updateClient, fetchConfig, uploadMedia } from '../api';
 import { showError, showSuccess } from '../components/Toaster';
 import { confirm } from '../components/Confirm';
 
@@ -48,34 +48,77 @@ export default function ClientProfile() {
   const [idFrontPreview, setIdFrontPreview] = useState(null);
   const [idBackPreview, setIdBackPreview] = useState(null);
   const [signaturePreview, setSignaturePreview] = useState(null);
+  const [attachments, setAttachments] = useState([]);
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-  const changeFile = (e) => {
+  const changeFile = async (e) => {
     const file = e.target.files?.[0] || null;
     setForm({ ...form, photo: file });
-    if (file) {
+    if (!file) { setPhotoPreview(null); return; }
+    if (accountNumber) {
+      try {
+        const up = await uploadMedia(file, { entityType: 'client', entityId: accountNumber, tag: 'photo' });
+        setPhotoPreview(up.url);
+        setAttachments(a => [up, ...(a || [])]);
+      } catch {
+        const url = URL.createObjectURL(file);
+        setPhotoPreview(url);
+        showError('Upload failed');
+      }
+    } else {
       const url = URL.createObjectURL(file);
       setPhotoPreview(url);
-    } else {
-      setPhotoPreview(null);
     }
   };
-  const changeIdFront = (e) => {
+  const changeIdFront = async (e) => {
     const file = e.target.files?.[0] || null;
     setForm({ ...form, idFront: file });
-    if (file) setIdFrontPreview(URL.createObjectURL(file));
-    else setIdFrontPreview(null);
+    if (!file) { setIdFrontPreview(null); return; }
+    if (accountNumber) {
+      try {
+        const up = await uploadMedia(file, { entityType: 'client', entityId: accountNumber, tag: 'id_front' });
+        setIdFrontPreview(up.url);
+        setAttachments(a => [up, ...(a || [])]);
+      } catch {
+        setIdFrontPreview(URL.createObjectURL(file));
+        showError('Upload failed');
+      }
+    } else {
+      setIdFrontPreview(URL.createObjectURL(file));
+    }
   };
-  const changeIdBack = (e) => {
+  const changeIdBack = async (e) => {
     const file = e.target.files?.[0] || null;
     setForm({ ...form, idBack: file });
-    if (file) setIdBackPreview(URL.createObjectURL(file));
-    else setIdBackPreview(null);
+    if (!file) { setIdBackPreview(null); return; }
+    if (accountNumber) {
+      try {
+        const up = await uploadMedia(file, { entityType: 'client', entityId: accountNumber, tag: 'id_back' });
+        setIdBackPreview(up.url);
+        setAttachments(a => [up, ...(a || [])]);
+      } catch {
+        setIdBackPreview(URL.createObjectURL(file));
+        showError('Upload failed');
+      }
+    } else {
+      setIdBackPreview(URL.createObjectURL(file));
+    }
   };
-  const changeSignature = (e) => {
+  const changeSignature = async (e) => {
     const file = e.target.files?.[0] || null;
     setForm({ ...form, signaturePhoto: file });
-    if (file) setSignaturePreview(URL.createObjectURL(file));
-    else setSignaturePreview(null);
+    if (!file) { setSignaturePreview(null); return; }
+    if (accountNumber) {
+      try {
+        const up = await uploadMedia(file, { entityType: 'client', entityId: accountNumber, tag: 'signature' });
+        setSignaturePreview(up.url);
+        setAttachments(a => [up, ...(a || [])]);
+      } catch {
+        setSignaturePreview(URL.createObjectURL(file));
+        showError('Upload failed');
+      }
+    } else {
+      setSignaturePreview(URL.createObjectURL(file));
+    }
   };
   useEffect(() => {
     let mounted = true;
@@ -131,6 +174,8 @@ export default function ClientProfile() {
           nok2Email: c.nok2Email || '',
           nok2Address: c.nok2Address || '',
         });
+        const catts = Array.isArray(c.attachments) ? c.attachments : (Array.isArray(c.data && c.data.attachments) ? c.data.attachments : []);
+        setAttachments(catts);
       } catch {}
     };
     load();
@@ -147,6 +192,12 @@ export default function ClientProfile() {
   const branchRec = config.branches?.find(b => b.code === form.branchCode) || null;
   const submit = async (e) => {
     e.preventDefault();
+    const files = {
+      photo: form.photo,
+      id_front: form.idFront,
+      id_back: form.idBack,
+      signature: form.signaturePhoto,
+    };
     const payload = { ...form };
     delete payload.photo;
     delete payload.idFront;
@@ -174,13 +225,29 @@ export default function ClientProfile() {
       });
     }
     try {
+      let acct = accountNumber;
       if (accountNumber) {
         await updateClient(accountNumber, payload);
       } else {
-        await createClient(payload);
+        const created = await createClient(payload);
+        acct = created?.accountNumber || created?.id || acct;
+      }
+      const uploads = [];
+      if (files.photo) uploads.push(uploadMedia(files.photo, { entityType: 'client', entityId: acct, tag: 'photo' }));
+      if (files.id_front) uploads.push(uploadMedia(files.id_front, { entityType: 'client', entityId: acct, tag: 'id_front' }));
+      if (files.id_back) uploads.push(uploadMedia(files.id_back, { entityType: 'client', entityId: acct, tag: 'id_back' }));
+      if (files.signature) uploads.push(uploadMedia(files.signature, { entityType: 'client', entityId: acct, tag: 'signature' }));
+      if (uploads.length) {
+        try { await Promise.allSettled(uploads); } catch {}
+      }
+      if (acct) {
+        try {
+          const c = await getClient(acct);
+          setAttachments(Array.isArray(c.attachments) ? c.attachments : []);
+        } catch {}
       }
       showSuccess('Client saved');
-      navigate('/clients');
+      if (!accountNumber) navigate('/clients');
     } catch (e) {
       if (e && e.message && e.message.includes('duplicate_contact')) showError('Duplicate email/phone/ID detected');
       else showError('Failed to save client');
@@ -304,6 +371,12 @@ export default function ClientProfile() {
                   <img src={photoPreview} alt="Client" style={{ width: 180, height: 180, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--border)' }} />
                 </div>
               )}
+              {!photoPreview && attachments.filter(a => (a.tag || '') === 'photo').length > 0 && (
+                <div style={{ display: 'grid', gap: 6 }}>
+                  <div style={{ color: '#64748b', fontSize: 12 }}>Current</div>
+                  <img src={attachments.find(a => (a.tag || '') === 'photo').url} alt="Client" style={{ width: 180, height: 180, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--border)' }} />
+                </div>
+              )}
             </>
           )}
         </div>
@@ -329,6 +402,19 @@ export default function ClientProfile() {
               {idBackPreview && <img src={idBackPreview} alt="ID Back" style={{ width: 180, height: 120, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--border)' }} />}
               {signaturePreview && <img src={signaturePreview} alt="Signature" style={{ width: 180, height: 120, objectFit: 'contain', borderRadius: 12, border: '1px solid var(--border)' }} />}
             </div>
+            {(!idFrontPreview || !idBackPreview || !signaturePreview) && (
+              <div className="row" style={{ gap: 16, marginTop: 8 }}>
+                {!idFrontPreview && attachments.filter(a => (a.tag || '') === 'id_front').slice(0,1).map((a,i) => (
+                  <img key={`idfront-${i}`} src={a.url} alt="ID Front" style={{ width: 180, height: 120, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--border)' }} />
+                ))}
+                {!idBackPreview && attachments.filter(a => (a.tag || '') === 'id_back').slice(0,1).map((a,i) => (
+                  <img key={`idback-${i}`} src={a.url} alt="ID Back" style={{ width: 180, height: 120, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--border)' }} />
+                ))}
+                {!signaturePreview && attachments.filter(a => (a.tag || '') === 'signature').slice(0,1).map((a,i) => (
+                  <img key={`sig-${i}`} src={a.url} alt="Signature" style={{ width: 180, height: 120, objectFit: 'contain', borderRadius: 12, border: '1px solid var(--border)' }} />
+                ))}
+              </div>
+            )}
           </div>
         )}
         {!isIndividual && (
@@ -634,6 +720,31 @@ export default function ClientProfile() {
                 <input className="input" name="contactAddress" value={form.contactAddress} onChange={change} />
               </label>
             </div>
+          </div>
+        )}
+        {accountNumber && (
+          <div className="stack">
+            <h3>Media & Attachments</h3>
+            {attachments && attachments.length > 0 ? (
+              <div className="row" style={{ gap: 12, flexWrap: 'wrap' }}>
+                {attachments.map((a, i) => (
+                  <div key={i} className="card" style={{ padding: 8, width: 220 }}>
+                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 6 }}>{a.tag || a.name || 'file'}</div>
+                    {String(a.contentType || '').startsWith('image/') ? (
+                      <img src={a.url} alt={a.name || a.tag || 'attachment'} style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)' }} />
+                    ) : (
+                      <div style={{ fontSize: 12, color: '#64748b' }}>{a.contentType || 'document'}</div>
+                    )}
+                    <div className="row" style={{ marginTop: 8, justifyContent: 'space-between' }}>
+                      <a className="btn" href={a.url} target="_blank" rel="noreferrer">Open</a>
+                      <div style={{ fontSize: 12, color: '#64748b' }}>{Math.round((Number(a.size || 0) / 1024) * 10) / 10} KB</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="card">No media uploaded yet.</div>
+            )}
           </div>
         )}
         <div className="row">

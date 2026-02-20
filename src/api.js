@@ -179,3 +179,50 @@ export async function listActivity(params = {}) {
   const qs = q.toString();
   return apiFetch(`/activity${qs ? `?${qs}` : ''}`, { method: 'GET' });
 }
+
+export async function listServerLogs(params = {}) {
+  const q = new URLSearchParams();
+  if (params.q) q.set('q', params.q);
+  if (params.level) q.set('level', params.level);
+  if (params.method) q.set('method', params.method);
+  if (params.status) q.set('status', String(params.status));
+  if (params.from) q.set('from', params.from);
+  if (params.to) q.set('to', params.to);
+  if (params.limit) q.set('limit', String(params.limit));
+  const qs = q.toString();
+  return apiFetch(`/server-logs${qs ? `?${qs}` : ''}`, { method: 'GET' });
+}
+
+export async function getServerLog(id) {
+  return apiFetch(`/server-logs/${encodeURIComponent(id)}`, { method: 'GET' });
+}
+
+export async function uploadMedia(file, { entityType, entityId, tag } = {}) {
+  const form = new FormData();
+  form.append('file', file);
+  if (entityType) form.append('entityType', entityType);
+  if (entityId) form.append('entityId', entityId);
+  if (tag) form.append('tag', tag);
+  const headers = {};
+  try {
+    const tok = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('smbank_token') : '';
+    if (tok) headers['Authorization'] = `Bearer ${tok}`;
+  } catch {}
+  const res = await fetch(`${API_BASE}/media/upload`, {
+    method: 'POST',
+    headers,
+    body: form,
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    let text = await res.text();
+    try {
+      const obj = JSON.parse(text);
+      text = obj && (obj.details || obj.error || text);
+    } catch {}
+    const err = new Error(text || `HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
+}

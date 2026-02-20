@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { approvePendingTransaction, listPendingTransactions, rejectPendingTransaction, getMe } from '../api';
+import { printTxnReceipt } from '../state/ops';
 import { showError, showSuccess } from '../components/Toaster';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
@@ -93,8 +94,9 @@ export default function TxnApprovals() {
                 <button className="btn" onClick={() => setAskCodeFor(null)}>Cancel</button>
                 <button className="btn btn-primary" onClick={async () => {
                   try {
-                    await approvePendingTransaction(askCodeFor, { approvalCode: code });
+                    const posted = await approvePendingTransaction(askCodeFor, { approvalCode: code });
                     showSuccess('Transaction approved');
+                    try { printTxnReceipt(posted, { copies: 2 }); } catch {}
                     setAskCodeFor(null);
                     await load();
                   } catch (e) {

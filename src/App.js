@@ -20,6 +20,8 @@ import Users from './pages/Users';
 import SuperBin from './pages/SuperBin';
 import Config from './pages/Config';
 import Activity from './pages/Activity';
+import ServerLogs from './pages/ServerLogs';
+import MediaUpload from './pages/MediaUpload';
 import MyAccount from './pages/MyAccount';
 import LoanStatements from './pages/LoanStatements';
 import LoanDetails from './pages/LoanDetails';
@@ -50,6 +52,8 @@ export default function App() {
         <Route path="reports" element={<Reports />} />
         <Route path="users" element={<Users />} />
         <Route path="activity" element={<Activity />} />
+        <Route path="media" element={<MediaUpload />} />
+        <Route path="server-logs" element={<ServerLogs />} />
         <Route path="super-bin" element={<SuperBin />} />
         <Route path="config" element={<Config />} />
       </Route>

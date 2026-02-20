@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { approveLoanRepayPending, listLoanRepayPending, rejectLoanRepayPending, getMe } from '../api';
+import { printTxnReceipt } from '../state/ops';
 import { showError, showSuccess } from '../components/Toaster';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
@@ -93,8 +94,9 @@ export default function LoanRepayApprovals() {
                 <button className="btn" onClick={() => setAskCodeFor(null)}>Cancel</button>
                 <button className="btn btn-primary" onClick={async () => {
                   try {
-                    await approveLoanRepayPending(askCodeFor, { approvalCode: code });
+                    const posted = await approveLoanRepayPending(askCodeFor, { approvalCode: code });
                     showSuccess('Repayment approved');
+                    try { printTxnReceipt({ ...posted, kind: posted.mode === 'writeoff' ? 'loan_writeoff' : 'loan_repayment' }, { copies: 2 }); } catch {}
                     setAskCodeFor(null);
                     await load();
                   } catch (e) {

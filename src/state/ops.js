@@ -34,11 +34,13 @@ const PERMS = {
   SUPERBIN_VIEW: 'superbin.view',
   CONFIG_MANAGE: 'config.manage',
   ACTIVITY_VIEW: 'activity.view',
+  SERVERLOGS_VIEW: 'serverlogs.view',
+  MEDIA_UPLOAD: 'media.upload',
 };
 
 const ROLE_PERMISSIONS = {
   [ROLES.SUPER_ADMIN]: Object.values(PERMS),
-  [ROLES.ADMIN]: Object.values(PERMS).filter(p => p !== PERMS.SUPERBIN_VIEW),
+  [ROLES.ADMIN]: Object.values(PERMS).filter(p => p !== PERMS.SUPERBIN_VIEW && p !== PERMS.SERVERLOGS_VIEW),
   [ROLES.LOAN_MANAGER]: [
     PERMS.DASHBOARD_VIEW,
     PERMS.LOANS_VIEW,
@@ -142,6 +144,7 @@ export function getEffectivePermissions(user) {
   // Enforce: only Super Admin can view Super Bin regardless of overrides
   if (user.role !== ROLES.SUPER_ADMIN) {
     base.delete(PERMS.SUPERBIN_VIEW);
+    base.delete(PERMS.SERVERLOGS_VIEW);
   }
   return base;
 }
@@ -274,6 +277,152 @@ export function getCurrentUserName() {
 }
 export function setCurrentUserName(name) {
   localStorage.setItem(USER_KEY, name || 'Admin');
+}
+
+export function displayUserName(name) {
+  if (!name) return '';
+  return name === 'api' ? 'System' : name;
+}
+
+function currencyGH(n) {
+  const num = Number(n || 0);
+  try { return num.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' }); } catch { return `GHS ${num.toFixed(2)}`; }
+}
+
+function openPrint(html) {
+  const w = window.open('', '_blank', 'width=400,height=600');
+  if (!w) return;
+  w.document.write(`<!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Receipt</title>
+    <style>
+      @page { margin: 6mm; }
+      body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-size: 12px; color: #0f172a; width: 260px; }
+      .center { text-align: center; }
+      .title { font-weight: 700; font-size: 14px; margin: 4px 0; }
+      .hr { border-top: 1px dashed #999; margin: 8px 0; }
+      table { width: 100%; border-collapse: collapse; }
+      td { padding: 2px 0; vertical-align: top; }
+      .label { color: #475569; width: 45%; }
+      .value { width: 55%; text-align: right; }
+      .sign { margin-top: 14px; display: flex; justify-content: space-between; }
+      .sign div { width: 48%; }
+      .line { border-top: 1px solid #0f172a; margin-top: 22px; }
+      .copy { margin-top: 6px; font-size: 11px; text-align: center; color: #64748b; }
+    </style>
+  </head>
+  <body>${html}</body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { try { w.print(); } catch {} }, 150);
+}
+
+export function printTxnReceipt(txn, { copies = 2 } = {}) {
+  if (!txn) return;
+  const app = getAppConfig();
+  const title = txn.kind === 'deposit' ? 'Deposit Receipt' :
+                txn.kind === 'withdraw' ? 'Withdrawal Receipt' :
+                txn.kind === 'loan_disbursement' ? 'Loan Disbursement Receipt' :
+                (txn.mode === 'writeoff' ? 'Loan Write‑Off Receipt' : txn.loanId ? 'Loan Repayment Receipt' : 'Transaction Receipt');
+  const notes = txn.meta && txn.meta.notes ? String(txn.meta.notes) : '';
+  const feeAmount = Number(txn.meta && txn.meta.feeAmount || 0);
+  const baseAmount = Number(txn.meta && txn.meta.baseAmount || 0);
+  const feeRate = Number(txn.meta && txn.meta.feeRate || 0);
+  const hasFees = txn.kind === 'withdraw' && feeAmount > 0;
+  const rows = [
+    ['Date', txn.approvedAt || txn.initiatedAt || new Date().toISOString()],
+    ['Transaction ID', txn.id || '—'],
+    ['Account', txn.accountNumber || '—'],
+    ['Initiator', displayUserName(txn.initiatorName || '')],
+    ['Approver', displayUserName(txn.approverName || '')],
+    ...(txn.kind === 'loan_disbursement' ? [['Loan ID', txn.meta && txn.meta.loanId ? txn.meta.loanId : '—']] : []),
+    ...(txn.loanId ? [['Loan ID', txn.loanId]] : []),
+    ...(txn.mode ? [['Mode', String(txn.mode).toUpperCase()]] : []),
+    ...(txn.kind === 'deposit' ? [['Amount', currencyGH(txn.amount)]] : []),
+    ...(txn.kind === 'deposit'
+        ? [
+            ...(txn.meta?.depositorName ? [['Depositor Name', txn.meta.depositorName]] : []),
+            ...(txn.meta?.depositorAddress ? [['Address', txn.meta.depositorAddress]] : []),
+            ...(txn.meta?.incomeSource ? [['Income Source', txn.meta.incomeSource]] : []),
+            ...(txn.meta?.method ? [['Method', String(txn.meta.method).toUpperCase()]] : []),
+          ]
+        : []),
+    ...(txn.kind === 'withdraw'
+        ? (hasFees
+            ? [['Base Amount', currencyGH(baseAmount)], ['Fee', `${currencyGH(feeAmount)} (${feeRate}%)`], ['Total Deduct', currencyGH(txn.amount)]]
+            : [['Amount', currencyGH(txn.amount)]])
+        : []),
+    ...(txn.kind !== 'deposit' && txn.kind !== 'withdraw' && txn.kind !== 'loan_disbursement' && txn.amount != null ? [['Amount', currencyGH(txn.amount)]] : []),
+    ...(notes ? [['Notes', notes]] : []),
+    ...(txn.kind === 'withdraw'
+        ? [
+            ...(txn.meta?.withdrawerIdNumber ? [['Withdrawer ID', txn.meta.withdrawerIdNumber]] : []),
+            ...(txn.meta?.withdrawerPhone ? [['Withdrawer Phone', txn.meta.withdrawerPhone]] : []),
+            ...(txn.meta?.withdrawerAddress ? [['Withdrawer Address', txn.meta.withdrawerAddress]] : []),
+          ]
+        : []),
+  ];
+  const block = (copyLabel) => `
+    <div class="center">
+      <div class="title">${app.appName || 'smBank'}</div>
+      <div>${title}</div>
+      <div class="copy">${copyLabel}</div>
+    </div>
+    <div class="hr"></div>
+    <table>${rows.map(([l,v]) => `<tr><td class="label">${l}</td><td class="value">${v}</td></tr>`).join('')}</table>
+    <div class="sign">
+      <div>
+        <div style="height:28px"></div>
+        <div class="line"></div>
+        <div class="copy">Customer Signature</div>
+      </div>
+      <div>
+        <div style="height:28px"></div>
+        <div class="line"></div>
+        <div class="copy">Initiator Signature</div>
+      </div>
+    </div>`;
+  const html = Array.from({ length: Math.max(1, copies) }).map((_, i) => block(i === 0 ? 'Customer Copy' : 'Records Copy')).join('<div class="hr"></div>');
+  openPrint(html);
+}
+
+export function printLoanDisbursementReceipt(loan, { copies = 2 } = {}) {
+  if (!loan) return;
+  const app = getAppConfig();
+  const title = 'Loan Disbursement Receipt';
+  const rows = [
+    ['Date', loan.approvedAt || loan.createdAt || new Date().toISOString()],
+    ['Loan ID', loan.id || '—'],
+    ['Account', loan.accountNumber || '—'],
+    ['Initiator', displayUserName(loan.initiatorName || '')],
+    ['Approver', displayUserName(loan.approverName || '')],
+    ['Principal', currencyGH(loan.principal)],
+    ['Rate/Term', `${loan.rate || 0}% / ${loan.termMonths || 0}m`],
+  ];
+  const block = (copyLabel) => `
+    <div class="center">
+      <div class="title">${app.appName || 'smBank'}</div>
+      <div>${title}</div>
+      <div class="copy">${copyLabel}</div>
+    </div>
+    <div class="hr"></div>
+    <table>${rows.map(([l,v]) => `<tr><td class="label">${l}</td><td class="value">${v}</td></tr>`).join('')}</table>
+    <div class="sign">
+      <div>
+        <div style="height:28px"></div>
+        <div class="line"></div>
+        <div class="copy">Customer Signature</div>
+      </div>
+      <div>
+        <div style="height:28px"></div>
+        <div class="line"></div>
+        <div class="copy">Initiator Signature</div>
+      </div>
+    </div>`;
+  const html = Array.from({ length: Math.max(1, copies) }).map((_, i) => block(i === 0 ? 'Customer Copy' : 'Records Copy')).join('<div class="hr"></div>');
+  openPrint(html);
 }
 
 export function addToSuperBin(entry) {

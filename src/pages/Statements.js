@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { directoryLookup, listClients, listPostedTransactions } from '../api';
+import { displayUserName } from '../state/ops';
 import { showError, showWarning } from '../components/Toaster';
 
 function toCurrency(n) {
@@ -53,8 +54,8 @@ export default function Statements() {
         type,
         amount: p.amount,
         date: p.approvedAt,
-        initiator: p.initiatorName || '',
-        approver: p.approverName || '',
+        initiator: displayUserName(p.initiatorName) || '',
+        approver: displayUserName(p.approverName) || '',
         notes
       };
     });

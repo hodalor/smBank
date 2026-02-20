@@ -79,6 +79,12 @@ export default function Layout() {
           {hasPermission(PERMISSIONS.ACTIVITY_VIEW) && (
             <NavLink to="/activity" className="nav-item" onClick={() => addTab({ to: '/activity', label: 'Activity' })}>Activity</NavLink>
           )}
+          {hasPermission(PERMISSIONS.MEDIA_UPLOAD) && (
+            <NavLink to="/media" className="nav-item" onClick={() => addTab({ to: '/media', label: 'Media Upload' })}>Media Upload</NavLink>
+          )}
+          {hasPermission(PERMISSIONS.SERVERLOGS_VIEW) && (
+            <NavLink to="/server-logs" className="nav-item" onClick={() => addTab({ to: '/server-logs', label: 'Server Logs' })}>Server Logs</NavLink>
+          )}
           {hasPermission(PERMISSIONS.SUPERBIN_VIEW) && (
             <NavLink to="/super-bin" className="nav-item" onClick={() => addTab({ to: '/super-bin', label: 'Super Bin' })}>Super Bin</NavLink>
           )}

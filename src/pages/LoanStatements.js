@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { directoryLookup, listClients, listLoanRepayPosted, listPostedTransactions } from '../api';
+import { displayUserName } from '../state/ops';
 import { showError, showWarning } from '../components/Toaster';
 
 function toCurrency(n) {
@@ -54,8 +55,8 @@ export default function LoanStatements() {
       type: 'Loan Disbursement',
       amount: p.amount,
       date: p.approvedAt,
-      initiator: p.initiatorName || '',
-      approver: p.approverName || '',
+      initiator: displayUserName(p.initiatorName) || '',
+      approver: displayUserName(p.approverName) || '',
       notes: p.meta?.loanId || ''
     }));
   }, [disburseTx]);
@@ -67,8 +68,8 @@ export default function LoanStatements() {
       loanId: p.loanId,
       amount: p.amount,
       date: p.approvedAt || p.initiatedAt,
-      initiator: p.initiatorName || '',
-      approver: p.approverName || '',
+      initiator: displayUserName(p.initiatorName) || '',
+      approver: displayUserName(p.approverName) || '',
       type: p.mode === 'writeoff' ? 'Loan Write-Off' : 'Loan Repayment',
       notes: ''
     }));
