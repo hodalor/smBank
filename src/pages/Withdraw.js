@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getCurrentUserName } from '../state/ops';
-import { createWithdraw, directoryLookup, listClients } from '../api';
+import { createWithdraw, directoryLookup, listClients, listPostedTransactions, listLoanRepayPosted, listLoans } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 
 export default function Withdraw() {
@@ -12,6 +12,42 @@ export default function Withdraw() {
   const [initiatedAt] = useState(new Date().toLocaleString());
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const [client, setClient] = useState(null);
+  const [loadingBal, setLoadingBal] = useState(false);
+  const [accountBal, setAccountBal] = useState(0);
+  const [loanBal, setLoanBal] = useState(0);
+  const [withdrawer, setWithdrawer] = useState({
+    idNumber: '',
+    phone: '',
+    address: '',
+  });
+  const toCurrency = (n) => {
+    const num = Number(n || 0);
+    try { return num.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' }); } catch { return `GHS ${num.toFixed(2)}`; }
+  };
+  const computeBalances = async (acct) => {
+    setLoadingBal(true);
+    try {
+      const [tx, rep, loans] = await Promise.all([
+        listPostedTransactions({ accountNumber: acct }),
+        listLoanRepayPosted({ accountNumber: acct }),
+        listLoans({ accountNumber: acct }),
+      ]);
+      const deposits = (tx || []).filter(t => t.kind === 'deposit').reduce((s, t) => s + Number(t.amount || 0), 0);
+      const withdrawals = (tx || []).filter(t => t.kind === 'withdraw').reduce((s, t) => s + Number(t.amount || 0), 0);
+      // Main account balance excludes all loan transactions
+      setAccountBal(deposits - withdrawals);
+      // Loan outstanding = sum(totalDue of active loans) - repayments - write‑offs
+      const activeLoans = (loans || []).filter(l => !l.status || l.status === 'Active');
+      const totalDue = activeLoans.reduce((s, l) => s + Number((l.totalDue ?? (Number(l.principal || 0) + Number(l.totalInterest || 0))) || 0), 0);
+      const repaid = (rep || []).reduce((s, r) => s + Number(r.amount || 0), 0); // includes write-offs
+      setLoanBal(Math.max(0, totalDue - repaid));
+    } catch {
+      setAccountBal(0);
+      setLoanBal(0);
+    } finally {
+      setLoadingBal(false);
+    }
+  };
   const lookup = () => {
     const q = (form.accountNumber || '').trim();
     if (!q) return;
@@ -20,6 +56,7 @@ export default function Withdraw() {
         if (/^\d{10}$/.test(q)) {
           const info = await directoryLookup(q);
           setClient(info);
+          await computeBalances(q);
           return;
         }
         const res = await listClients({ q });
@@ -28,12 +65,17 @@ export default function Withdraw() {
           setForm(f => ({ ...f, accountNumber: acct }));
           const info = await directoryLookup(acct);
           setClient(info);
+          await computeBalances(acct);
           return;
         }
         setClient(null);
+        setAccountBal(0);
+        setLoanBal(0);
         showWarning('No matching client found');
       } catch (e) {
         setClient(null);
+        setAccountBal(0);
+        setLoanBal(0);
         if (e && e.status === 404) showError('Account not found');
         else showError('Lookup failed');
       }
@@ -47,11 +89,25 @@ export default function Withdraw() {
           showWarning('Enter account and amount');
           return;
         }
+        if (!withdrawer.idNumber || !withdrawer.phone || !withdrawer.address) {
+          showWarning('Enter withdrawer ID number, phone and address');
+          return;
+        }
+        const amt = Number(form.amount);
+        if (amt > Number(accountBal || 0)) {
+          showWarning(`Insufficient balance. Max withdraw is ${toCurrency(accountBal)}.`);
+          return;
+        }
         await createWithdraw({
           accountNumber: form.accountNumber,
-          amount: Number(form.amount),
+          amount: amt,
           initiatorName: getCurrentUserName(),
-          meta: { notes: form.notes },
+          meta: {
+            notes: form.notes,
+            withdrawerIdNumber: withdrawer.idNumber,
+            withdrawerPhone: withdrawer.phone,
+            withdrawerAddress: withdrawer.address,
+          },
         });
         showSuccess('Withdrawal submitted for approval');
       } catch {
@@ -60,6 +116,9 @@ export default function Withdraw() {
     })();
     setForm({ accountNumber: '', amount: '', notes: '' });
     setClient(null);
+    setAccountBal(0);
+    setLoanBal(0);
+    setWithdrawer({ idNumber: '', phone: '', address: '' });
   };
   return (
     <div className="stack">
@@ -80,9 +139,42 @@ export default function Withdraw() {
             <div><div style={{ color: '#64748b', fontSize: 12 }}>Phone</div><div>{client.phone}</div></div>
           </div>
         )}
+        {client && (
+          <div className="row" style={{ gap: 24 }}>
+            <div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>Account Balance</div>
+              <div>{loadingBal ? 'Loading…' : toCurrency(accountBal)}</div>
+            </div>
+            <div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>Loan Balance</div>
+              <div>{loadingBal ? 'Loading…' : toCurrency(loanBal)}</div>
+            </div>
+          </div>
+        )}
         <label>
           Amount
-          <input className="input" type="number" name="amount" value={form.amount} onChange={change} placeholder="Amount" required />
+          <input className="input" type="number" name="amount" value={form.amount} onChange={(e) => {
+            const v = e.target.value;
+            setForm({ ...form, amount: v });
+            const num = Number(v);
+            if (!Number.isNaN(num) && num > Number(accountBal || 0)) {
+              showWarning(`Amount exceeds available balance of ${toCurrency(accountBal)}.`);
+            }
+          }} placeholder="Amount" required max={Math.max(0, Number(accountBal || 0))} />
+        </label>
+        <div className="row" style={{ gap: 12 }}>
+          <label style={{ flex: 1 }}>
+            Withdrawer ID Number
+            <input className="input" value={withdrawer.idNumber} onChange={e => setWithdrawer({ ...withdrawer, idNumber: e.target.value })} placeholder="e.g. National ID" required />
+          </label>
+          <label style={{ flex: 1 }}>
+            Withdrawer Phone
+            <input className="input" type="tel" value={withdrawer.phone} onChange={e => setWithdrawer({ ...withdrawer, phone: e.target.value })} placeholder="e.g. 055..." required />
+          </label>
+        </div>
+        <label>
+          Withdrawer Address
+          <input className="input" value={withdrawer.address} onChange={e => setWithdrawer({ ...withdrawer, address: e.target.value })} placeholder="Residential/Business address" required />
         </label>
         <label>
           Initiation Time

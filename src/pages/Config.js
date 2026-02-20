@@ -28,7 +28,7 @@ export default function Config() {
     }
   };
   const reset = () => {
-    const def = { appName: 'smBank', footerText: '© smBank', primary: '#0f172a', primaryContrast: '#ffffff', darkMode: false };
+    const def = { appName: 'smBank', footerText: '© smBank', primary: '#0f172a', primaryContrast: '#ffffff', darkMode: false, defaultLoanRate: 0 };
     setCfg(def);
     saveAppConfig(def);
   };
@@ -53,6 +53,10 @@ export default function Config() {
           <label>
             Primary Contrast
             <input className="input" type="color" name="primaryContrast" value={cfg.primaryContrast || '#ffffff'} onChange={change} />
+          </label>
+          <label>
+            Default Loan Rate (% per annum)
+            <input className="input" type="number" step="0.01" min="0" name="defaultLoanRate" value={cfg.defaultLoanRate ?? 0} onChange={change} />
           </label>
           <label style={{ alignSelf: 'end' }}>
             <input type="checkbox" name="darkMode" checked={!!cfg.darkMode} onChange={change} /> Dark Mode

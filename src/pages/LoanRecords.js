@@ -6,6 +6,7 @@ const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', cu
 
 export default function LoanRecords() {
   const [account, setAccount] = useState('');
+  const [loanId, setLoanId] = useState('');
   const [client, setClient] = useState(null);
   const [rows, setRows] = useState([]);
   useEffect(() => {
@@ -43,8 +44,8 @@ export default function LoanRecords() {
   }, [rows]);
 
   const filtered = useMemo(
-    () => loans.filter(l => !account || l.account === account),
-    [loans, account]
+    () => loans.filter(l => (!account || l.account === account) && (!loanId || String(l.id || '').includes(loanId.trim()))),
+    [loans, account, loanId]
   );
 
   const countPerClient = useMemo(() => {
@@ -73,6 +74,10 @@ export default function LoanRecords() {
               }).catch(() => { showError('Lookup failed'); });
             }}>Find</button>
           </div>
+        </label>
+        <label>
+          Loan ID
+          <input className="input" placeholder="e.g. L0000123" value={loanId} onChange={(e) => setLoanId(e.target.value)} />
         </label>
         {/^\\d{10}$/.test(account) && (
           <div className="row" style={{ gap: 24 }}>

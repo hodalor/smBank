@@ -14,6 +14,7 @@ export default function LoanRepay() {
 
   const [loan, setLoan] = useState(null);
   const [outstanding, setOutstanding] = useState(0);
+  const [paidToDate, setPaidToDate] = useState(0);
   useEffect(() => {
     let mounted = true;
     const run = async () => {
@@ -32,14 +33,18 @@ export default function LoanRepay() {
           const posted = await listLoanRepayPosted({ accountNumber: found.accountNumber });
           const totalRepaid = posted.filter(r => r.loanId === loanId && r.mode !== 'writeoff').reduce((s, r) => s + Number(r.amount || 0), 0);
           const totalWriteOff = posted.filter(r => r.loanId === loanId && r.mode === 'writeoff').reduce((s, r) => s + Number(r.amount || 0), 0);
-          setOutstanding(Math.max(Number(found.principal || 0) - totalRepaid - totalWriteOff, 0));
+          const base = Number((found.totalDue ?? (Number(found.principal || 0) + Number(found.totalInterest || 0))) || 0);
+          setOutstanding(Math.max(base - totalRepaid - totalWriteOff, 0));
+          setPaidToDate(totalRepaid);
         } else {
           setOutstanding(0);
+          setPaidToDate(0);
         }
       } catch {
         if (!mounted) return;
         setLoan(null);
         setOutstanding(0);
+        setPaidToDate(0);
       }
     };
     run();
@@ -107,7 +112,7 @@ export default function LoanRepay() {
           </label>
           <label>
             Loan ID
-            <input className="input" value={loanId} onChange={(e) => setLoanId(e.target.value)} placeholder="e.g. LN-1001" required />
+            <input className="input" value={loanId} onChange={(e) => setLoanId(e.target.value)} placeholder="e.g. L0000123" required />
           </label>
           <label>
             Mode
@@ -118,8 +123,12 @@ export default function LoanRepay() {
             </select>
           </label>
           <label>
-            Outstanding
+            Loan Balance
             <input className="input" value={loan ? gh(outstanding) : '—'} readOnly />
+          </label>
+          <label>
+            Amount Paid (To Date)
+            <input className="input" value={loan ? gh(paidToDate) : '—'} readOnly />
           </label>
         </div>
         {client && (

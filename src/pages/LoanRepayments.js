@@ -7,6 +7,7 @@ const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', cu
 export default function LoanRepayments() {
   const [account, setAccount] = useState('');
   const [loanId, setLoanId] = useState('');
+  const [txnId, setTxnId] = useState('');
   const [client, setClient] = useState(null);
 
   const [repayments, setRepayments] = useState([]);
@@ -15,6 +16,7 @@ export default function LoanRepayments() {
       try {
         const q = {};
         if (account && /^\d{10}$/.test(account)) q.accountNumber = account;
+        if (txnId) q.id = txnId.trim();
         const res = await listLoanRepayPosted(q);
         setRepayments(res.map(r => ({ id: r.id, loanId: r.loanId, account: r.accountNumber, amount: r.amount, date: r.approvedAt || r.initiatedAt })));
       } catch {
@@ -22,11 +24,15 @@ export default function LoanRepayments() {
       }
     };
     run();
-  }, [account]);
+  }, [account, txnId]);
 
   const filtered = useMemo(
-    () => repayments.filter(r => (!account || r.account === account) && (!loanId || r.loanId === loanId)),
-    [repayments, account, loanId]
+    () => repayments.filter(r =>
+      (!account || r.account === account) &&
+      (!loanId || r.loanId === loanId) &&
+      (!txnId || String(r.id || '').includes(txnId.trim()))
+    ),
+    [repayments, account, loanId, txnId]
   );
 
   const totalsByLoan = useMemo(() => {
@@ -57,7 +63,11 @@ export default function LoanRepayments() {
           </label>
           <label>
             Loan ID
-            <input className="input" placeholder="e.g. LN-1001" value={loanId} onChange={(e) => setLoanId(e.target.value)} />
+            <input className="input" placeholder="e.g. L0000123" value={loanId} onChange={(e) => setLoanId(e.target.value)} />
+          </label>
+          <label>
+            Transaction ID
+            <input className="input" placeholder="Repayment ID" value={txnId} onChange={(e) => setTxnId(e.target.value)} />
           </label>
         </div>
         {/^\\d{10}$/.test(account) && (() => {

@@ -30,6 +30,10 @@ export async function apiLogout() {
   return apiFetch('/auth/logout', { method: 'POST' });
 }
 
+export async function getMe() {
+  return apiFetch('/me', { method: 'GET' });
+}
+
 export async function fetchConfig() {
   return apiFetch('/config', { method: 'GET' });
 }
@@ -112,6 +116,7 @@ export async function listPostedTransactions(params = {}) {
   if (params.type) q.set('type', params.type);
   if (params.from) q.set('from', params.from);
   if (params.to) q.set('to', params.to);
+  if (params.id) q.set('id', params.id);
   return apiFetch(`/transactions/posted?${q.toString()}`, { method: 'GET' });
 }
 export async function approvePendingTransaction(id, payload = {}) {
@@ -133,8 +138,8 @@ export async function listLoanApprovals() {
 export async function createLoan(payload) {
   return apiFetch('/loans', { method: 'POST', body: JSON.stringify(payload) });
 }
-export async function approveLoan(id) {
-  return apiFetch(`/loans/${id}/approve`, { method: 'POST' });
+export async function approveLoan(id, payload = {}) {
+  return apiFetch(`/loans/${id}/approve`, { method: 'POST', body: JSON.stringify(payload) });
 }
 export async function rejectLoan(id, payload = {}) {
   return apiFetch(`/loans/${id}/reject`, { method: 'POST', body: JSON.stringify(payload) });
@@ -148,10 +153,11 @@ export async function listLoanRepayPending() {
 export async function listLoanRepayPosted(params = {}) {
   const q = new URLSearchParams();
   if (params.accountNumber) q.set('accountNumber', params.accountNumber);
+  if (params.id) q.set('id', params.id);
   return apiFetch(`/loans/repay/posted?${q.toString()}`, { method: 'GET' });
 }
-export async function approveLoanRepayPending(id) {
-  return apiFetch(`/loans/repay/pending/${id}/approve`, { method: 'POST' });
+export async function approveLoanRepayPending(id, payload = {}) {
+  return apiFetch(`/loans/repay/pending/${id}/approve`, { method: 'POST', body: JSON.stringify(payload) });
 }
 export async function rejectLoanRepayPending(id, payload = {}) {
   return apiFetch(`/loans/repay/pending/${id}/reject`, { method: 'POST', body: JSON.stringify(payload) });

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { getCurrentUserName } from '../state/ops';
-import { createDeposit, directoryLookup, listClients } from '../api';
+import { createDeposit, directoryLookup, listClients, listPostedTransactions, listLoanRepayPosted, listLoans } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 
 export default function Deposit() {
@@ -15,8 +15,39 @@ export default function Deposit() {
     notes: ''
   });
   const [client, setClient] = useState(null);
+  const [loadingBal, setLoadingBal] = useState(false);
+  const [accountBal, setAccountBal] = useState(0);
+  const [loanBal, setLoanBal] = useState(0);
   const [initiatedAt] = useState(new Date().toLocaleString());
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const toCurrency = (n) => {
+    const num = Number(n || 0);
+    try { return num.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' }); } catch { return `GHS ${num.toFixed(2)}`; }
+  };
+  const computeBalances = async (acct) => {
+    setLoadingBal(true);
+    try {
+      const [tx, rep, loans] = await Promise.all([
+        listPostedTransactions({ accountNumber: acct }),
+        listLoanRepayPosted({ accountNumber: acct }),
+        listLoans({ accountNumber: acct }),
+      ]);
+      const deposits = (tx || []).filter(t => t.kind === 'deposit').reduce((s, t) => s + Number(t.amount || 0), 0);
+      const withdrawals = (tx || []).filter(t => t.kind === 'withdraw').reduce((s, t) => s + Number(t.amount || 0), 0);
+      // Main account balance excludes all loan transactions
+      setAccountBal(deposits - withdrawals);
+      // Loan outstanding = sum(totalDue of active loans) - repayments - write‑offs
+      const activeLoans = (loans || []).filter(l => !l.status || l.status === 'Active');
+      const totalDue = activeLoans.reduce((s, l) => s + Number((l.totalDue ?? (Number(l.principal || 0) + Number(l.totalInterest || 0))) || 0), 0);
+      const repaid = (rep || []).reduce((s, r) => s + Number(r.amount || 0), 0); // includes write-offs
+      setLoanBal(Math.max(0, totalDue - repaid));
+    } catch {
+      setAccountBal(0);
+      setLoanBal(0);
+    } finally {
+      setLoadingBal(false);
+    }
+  };
   const lookup = () => {
     const q = (form.accountNumber || '').trim();
     if (!q) return;
@@ -25,6 +56,7 @@ export default function Deposit() {
         if (/^\d{10}$/.test(q)) {
           const info = await directoryLookup(q);
           setClient(info);
+          await computeBalances(q);
           return;
         }
         const res = await listClients({ q });
@@ -33,12 +65,17 @@ export default function Deposit() {
           setForm(f => ({ ...f, accountNumber: acct }));
           const info = await directoryLookup(acct);
           setClient(info);
+          await computeBalances(acct);
           return;
         }
         setClient(null);
+        setAccountBal(0);
+        setLoanBal(0);
         showWarning('No matching client found');
       } catch (e) {
         setClient(null);
+        setAccountBal(0);
+        setLoanBal(0);
         if (e && e.status === 404) showError('Account not found');
         else showError('Lookup failed');
       }
@@ -89,6 +126,18 @@ export default function Deposit() {
             <div><div style={{ color: '#64748b', fontSize: 12 }}>National ID</div><div>{client.nationalId}</div></div>
             <div><div style={{ color: '#64748b', fontSize: 12 }}>DOB</div><div>{client.dob}</div></div>
             <div><div style={{ color: '#64748b', fontSize: 12 }}>Phone</div><div>{client.phone}</div></div>
+          </div>
+        )}
+        {client && (
+          <div className="row" style={{ gap: 24 }}>
+            <div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>Account Balance</div>
+              <div>{loadingBal ? 'Loading…' : toCurrency(accountBal)}</div>
+            </div>
+            <div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>Loan Balance</div>
+              <div>{loadingBal ? 'Loading…' : toCurrency(loanBal)}</div>
+            </div>
           </div>
         )}
         <label>

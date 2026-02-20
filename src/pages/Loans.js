@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { createLoan, directoryLookup, listClients, listLoans } from '../api';
+import { useEffect, useMemo, useState } from 'react';
+import { createLoan, directoryLookup, listClients, listLoans, fetchConfig } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 
 export default function Loans() {
@@ -58,9 +58,23 @@ export default function Loans() {
     }
   };
   const [rows, setRows] = useState([]);
+  const [loanIdFilter, setLoanIdFilter] = useState('');
   useEffect(() => {
     listLoans({}).then(setRows).catch(() => setRows([]));
   }, []);
+  useEffect(() => {
+    fetchConfig().then(cfg => {
+      setForm(f => ({ ...f, interestRate: f.interestRate || String(cfg.defaultLoanRate ?? '') }));
+    }).catch(() => {});
+  }, []);
+  const interestCalc = useMemo(() => {
+    const p = Number(form.principal || 0);
+    const r = Number(form.interestRate || 0) / 100;
+    const m = Number(form.durationMonths || 0) / 12;
+    const ti = p * r * m;
+    return { totalInterest: Math.round(ti * 100) / 100, totalDue: Math.round((p + ti) * 100) / 100 };
+  }, [form.principal, form.interestRate, form.durationMonths]);
+  const listFiltered = rows.filter(r => !loanIdFilter || String(r.id || '').includes(loanIdFilter.trim()));
   return (
     <div className="stack">
       <h1>Loans</h1>
@@ -94,6 +108,10 @@ export default function Loans() {
             Duration (months)
             <input className="input" type="number" name="durationMonths" value={form.durationMonths} onChange={change} required />
           </label>
+          <div className="row" style={{ gap: 24 }}>
+            <div><div style={{ fontSize: 12, color: '#64748b' }}>Total Interest</div><div style={{ fontWeight: 600 }}>{interestCalc.totalInterest.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' })}</div></div>
+            <div><div style={{ fontSize: 12, color: '#64748b' }}>Total Due</div><div style={{ fontWeight: 600 }}>{interestCalc.totalDue.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' })}</div></div>
+          </div>
           <label>
             Start Date
             <input className="input" type="date" name="startDate" value={form.startDate} onChange={change} required />
@@ -148,25 +166,35 @@ export default function Loans() {
       </section>
       <section className="card">
         <h3>Loans List</h3>
+        <div style={{ marginBottom: 12, maxWidth: 320 }}>
+          <label>
+            Loan ID
+            <input className="input" placeholder="e.g. L0000123" value={loanIdFilter} onChange={(e) => setLoanIdFilter(e.target.value)} />
+          </label>
+        </div>
         <table className="table">
           <thead>
             <tr>
               <th>Loan ID</th>
               <th>Account</th>
               <th>Principal</th>
+              <th>Total Interest</th>
+              <th>Total Due</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map(r => (
+            {listFiltered.map(r => (
               <tr key={r.id}>
                 <td>{r.id}</td>
                 <td>{r.accountNumber}</td>
                 <td>{r.principal}</td>
+                <td>{r.totalInterest ?? '-'}</td>
+                <td>{r.totalDue ?? '-'}</td>
                 <td>{r.status}</td>
               </tr>
             ))}
-            {!rows.length && <tr><td colSpan="4">No loans loaded.</td></tr>}
+            {!listFiltered.length && <tr><td colSpan="6">No loans loaded.</td></tr>}
           </tbody>
         </table>
       </section>

@@ -20,6 +20,8 @@ import Users from './pages/Users';
 import SuperBin from './pages/SuperBin';
 import Config from './pages/Config';
 import Activity from './pages/Activity';
+import MyAccount from './pages/MyAccount';
+import LoanStatements from './pages/LoanStatements';
 
 export default function App() {
   return (
@@ -28,6 +30,7 @@ export default function App() {
       <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="my-account" element={<MyAccount />} />
         <Route path="clients" element={<ClientsList />} />
         <Route path="clients/new" element={<ClientProfile />} />
         <Route path="clients/:accountNumber" element={<ClientProfile />} />
@@ -41,6 +44,7 @@ export default function App() {
         <Route path="loans/repayments" element={<LoanRepayments />} />
         <Route path="loans/repay" element={<LoanRepay />} />
         <Route path="loans/repay/approvals" element={<LoanRepayApprovals />} />
+        <Route path="loans/statements" element={<LoanStatements />} />
         <Route path="reports" element={<Reports />} />
         <Route path="users" element={<Users />} />
         <Route path="activity" element={<Activity />} />

@@ -27,6 +27,7 @@ export default function Layout() {
       <aside className="sidebar">
         <div className="brand" onClick={() => navigate('/dashboard')}>{cfg.appName || 'smBank'}</div>
         <nav className="nav">
+          <NavLink to="/my-account" className="nav-item" onClick={() => addTab({ to: '/my-account', label: 'My Account' })}>My Account</NavLink>
           {hasPermission(PERMISSIONS.DASHBOARD_VIEW) && (
             <NavLink to="/dashboard" className="nav-item" onClick={() => addTab({ to: '/dashboard', label: 'Dashboard' })}>Dashboard</NavLink>
           )}
@@ -47,6 +48,9 @@ export default function Layout() {
           )}
           {hasPermission(PERMISSIONS.LOANS_VIEW) && (
             <NavLink to="/loans" className="nav-item" onClick={() => addTab({ to: '/loans', label: 'Loans' })}>Loans</NavLink>
+          )}
+          {hasPermission(PERMISSIONS.LOANS_REPAYMENTS_VIEW) && (
+            <NavLink to="/loans/statements" className="nav-item" onClick={() => addTab({ to: '/loans/statements', label: 'Loan Statements' })}>Loan Statements</NavLink>
           )}
           {hasPermission(PERMISSIONS.LOANS_APPROVALS_VIEW) && (
             <NavLink to="/loans/approvals" className="nav-item" onClick={() => addTab({ to: '/loans/approvals', label: 'Approvals' })}>Approvals</NavLink>
