@@ -1,5 +1,18 @@
 [
   {
+    "ts": "2026-02-20T21:47:07.756Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "client.create",
+    "entityType": "client",
+    "entityId": "0000110000002",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/clients"
+  },
+  {
     "ts": "2026-02-20T15:42:33.765Z",
     "actor": "system",
     "role": "System",

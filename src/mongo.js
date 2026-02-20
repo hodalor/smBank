@@ -43,6 +43,8 @@ async function connect(uri) {
     adminFeeRate: { type: Number, default: 0 },
     commitmentFeeRate: { type: Number, default: 0 },
     withdrawalFeeRate: { type: Number, default: 0 },
+    loanOverdueGraceDays: { type: Number, default: 0 },
+    loanOverdueDailyPenaltyRate: { type: Number, default: 0 },
     bankCode: { type: String, default: '07' }, // 2 digits
     branches: [{
       code: String, // 3 digits
@@ -140,6 +142,24 @@ async function connect(uri) {
     method: String,
     path: String,
   }, { timestamps: true });
+  
+  const ServerLogSchema = new Schema({
+    ts: { type: Date, index: true },
+    level: String, // info | error
+    method: String,
+    path: String,
+    status: Number,
+    durationMs: Number,
+    actor: String,
+    role: String,
+    ip: String,
+    ua: String,
+    params: Mixed,
+    query: Mixed,
+    body: Mixed,
+    errorMessage: String,
+    errorStack: String,
+  }, { timestamps: true });
 
   Models = {
     User: model('User', UserSchema),
@@ -152,6 +172,7 @@ async function connect(uri) {
     LoanRepayPending: model('LoanRepayPending', LoanRepaySchema),
     LoanRepayPosted: model('LoanRepayPosted', LoanRepaySchema),
     ActivityLog: model('ActivityLog', ActivitySchema),
+    ServerLog: model('ServerLog', ServerLogSchema),
   };
   try {
     await Models.User.init(); // ensure indexes (unique on employeeNumber, username)

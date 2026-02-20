@@ -8,6 +8,10 @@ const fs = require('fs');
 const path = require('path');
 const { connect, isConnected, getModels } = require('./mongo');
 const bcrypt = require('bcryptjs');
+let multer = null;
+let admin = null;
+try { multer = require('multer'); } catch {}
+try { admin = require('firebase-admin'); } catch {}
 
 dotenv.config();
 
@@ -17,6 +21,23 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
   credentials: true,
 }));
+
+let fb = { ready: false, bucket: null };
+if (admin && process.env.FB_PROJECT_ID && process.env.FB_CLIENT_EMAIL && process.env.FB_PRIVATE_KEY && process.env.FB_STORAGE_BUCKET) {
+  try {
+    const pk = String(process.env.FB_PRIVATE_KEY).replace(/\\n/g, '\n');
+    const cred = admin.credential.cert({
+      projectId: process.env.FB_PROJECT_ID,
+      clientEmail: process.env.FB_CLIENT_EMAIL,
+      privateKey: pk,
+    });
+    if (!admin.apps || !admin.apps.length) {
+      admin.initializeApp({ credential: cred, storageBucket: process.env.FB_STORAGE_BUCKET });
+    }
+    fb.bucket = admin.storage().bucket(process.env.FB_STORAGE_BUCKET);
+    fb.ready = true;
+  } catch {}
+}
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -98,6 +119,54 @@ function authOptional(req, _res, next) {
 // Attach auth parsing early
 app.use(authOptional);
 
+app.use((req, res, next) => {
+  try {
+    if (req.path && req.path.startsWith('/server-logs')) return next();
+    const started = Date.now();
+    const actor = (req.user && req.user.username) || 'anon';
+    const role = (req.user && req.user.role) || '';
+    const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '';
+    const ua = req.headers['user-agent'] || '';
+    const params = req.params || {};
+    const query = req.query || {};
+    const body = (() => {
+      const b = req.body && typeof req.body === 'object' ? { ...req.body } : null;
+      if (!b) return b;
+      ['password', 'approvalCode', 'token'].forEach(k => { if (Object.prototype.hasOwnProperty.call(b, k)) b[k] = '***'; });
+      return b;
+    })();
+    res.on('finish', async () => {
+      try {
+        const entry = {
+          id: newId('LOG'),
+          ts: new Date().toISOString(),
+          level: res.statusCode >= 500 ? 'error' : 'info',
+          method: req.method,
+          path: req.path,
+          status: res.statusCode,
+          durationMs: Date.now() - started,
+          actor,
+          role,
+          ip,
+          ua,
+          params,
+          query,
+          body,
+        };
+        if (isConnected()) {
+          const { ServerLog } = getModels();
+          await ServerLog.create({ ...entry, id: undefined });
+        } else {
+          serverLogs.unshift(entry);
+          if (serverLogs.length > 5000) serverLogs = serverLogs.slice(0, 5000);
+          writeJSON(SERVER_LOGS_FILE, serverLogs);
+        }
+      } catch {}
+    });
+  } catch {}
+  next();
+});
+
 // Try MongoDB connection if available
 (async () => {
   try {
@@ -168,6 +237,8 @@ let config = readJSON(CONFIG_FILE, {
   adminFeeRate: 0,
   commitmentFeeRate: 0,
   withdrawalFeeRate: 0,
+  loanOverdueGraceDays: 0,
+  loanOverdueDailyPenaltyRate: 0,
   bankCode: '07',
   branches: [
     { code: '001', name: 'Head office', active: true },
@@ -188,6 +259,9 @@ let superBin = readJSON(BIN_FILE, []);
 
 const ACTIVITY_FILE = 'activity.json';
 let activity = readJSON(ACTIVITY_FILE, []);
+
+const SERVER_LOGS_FILE = 'server_logs.json';
+let serverLogs = readJSON(SERVER_LOGS_FILE, []);
 
 // Helpers
 function newId(prefix) {
@@ -427,9 +501,11 @@ const LOAN_REPAY_POSTED_FILE = 'loan_repay_posted.json';
 let loanRepayPending = readJSON(LOAN_REPAY_PENDING_FILE, []);
 let loanRepayPosted = readJSON(LOAN_REPAY_POSTED_FILE, []);
 
+const upload = multer ? multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } }) : null;
+
 // Health
 app.get('/health', (req, res) => {
-  res.json({ ok: true, ts: new Date().toISOString(), db: isConnected() });
+  res.json({ ok: true, ts: new Date().toISOString(), db: isConnected(), media: !!(fb && fb.ready), bucket: fb && fb.bucket ? fb.bucket.name : '' });
 });
 
 // Current user profile, including daily approval code
@@ -689,11 +765,14 @@ app.get('/config', async (req, res) => {
   res.json(config);
 });
 app.put('/config', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  const role = String(req.user.role || '');
+  if (!(role === 'Admin' || role === 'Super Admin')) return res.status(403).json({ error: 'forbidden' });
   if (isConnected()) {
     const { Config } = getModels();
     const body = { ...req.body };
     // Coerce numeric fields explicitly
-    const numKeys = ['defaultLoanRate', 'serviceFeeRate', 'adminFeeRate', 'commitmentFeeRate', 'withdrawalFeeRate', 'lastCustomerSerial'];
+    const numKeys = ['defaultLoanRate', 'serviceFeeRate', 'adminFeeRate', 'commitmentFeeRate', 'withdrawalFeeRate', 'lastCustomerSerial', 'loanOverdueGraceDays', 'loanOverdueDailyPenaltyRate'];
     numKeys.forEach(k => {
       if (Object.prototype.hasOwnProperty.call(body, k)) body[k] = Number(body[k] ?? 0);
     });
@@ -703,7 +782,7 @@ app.put('/config', async (req, res) => {
     return res.json({ ...config, ...obj });
   }
   const body = { ...req.body };
-  const numKeys = ['defaultLoanRate', 'serviceFeeRate', 'adminFeeRate', 'commitmentFeeRate', 'withdrawalFeeRate', 'lastCustomerSerial'];
+  const numKeys = ['defaultLoanRate', 'serviceFeeRate', 'adminFeeRate', 'commitmentFeeRate', 'withdrawalFeeRate', 'lastCustomerSerial', 'loanOverdueGraceDays', 'loanOverdueDailyPenaltyRate'];
   numKeys.forEach(k => {
     if (Object.prototype.hasOwnProperty.call(body, k)) body[k] = Number(body[k] ?? 0);
   });
@@ -723,10 +802,21 @@ function requireSuperBinAuth(req, res, next) {
   if (expect && token === expect) return next();
   return res.status(403).json({ error: 'forbidden' });
 }
+function requireSuperAdmin(req, res, next) {
+  if (req.user && String(req.user.role) === 'Super Admin') return next();
+  return res.status(403).json({ error: 'forbidden' });
+}
 app.get('/super-bin', requireSuperBinAuth, async (req, res) => {
   if (isConnected()) {
     const { SuperBin } = getModels();
-    const list = await SuperBin.find().sort({ deletedAt: -1, _id: -1 }).lean();
+    const docs = await SuperBin.find().sort({ deletedAt: -1, _id: -1 }).lean();
+    const list = (docs || []).map(d => ({
+      id: String(d._id || d.id || ''),
+      by: d.by || '',
+      deletedAt: d.deletedAt instanceof Date ? d.deletedAt.toISOString() : (d.deletedAt || ''),
+      kind: d.kind || 'unknown',
+      payload: d.payload || {},
+    }));
     await logActivity(req, 'superbin.list', 'superbin', '', {});
     return res.json(list);
   }
@@ -737,13 +827,20 @@ app.post('/super-bin', requireSuperBinAuth, async (req, res) => {
   const entry = req.body;
   if (isConnected()) {
     const { SuperBin } = getModels();
-    const item = await SuperBin.create({
+    const doc = await SuperBin.create({
       by: entry.by || 'api',
       deletedAt: new Date(),
       kind: entry.kind || 'unknown',
       payload: entry.payload || {},
     });
-    await logActivity(req, 'superbin.add', 'superbin', String(item && item._id ? item._id : ''), { kind: entry.kind || '' });
+    const item = {
+      id: String(doc && doc._id ? doc._id : ''),
+      by: doc.by || '',
+      deletedAt: doc.deletedAt instanceof Date ? doc.deletedAt.toISOString() : (doc.deletedAt || ''),
+      kind: doc.kind || 'unknown',
+      payload: doc.payload || {},
+    };
+    await logActivity(req, 'superbin.add', 'superbin', item.id, { kind: entry.kind || '' });
     return res.json(item);
   }
   const item = {
@@ -760,22 +857,113 @@ app.post('/super-bin', requireSuperBinAuth, async (req, res) => {
 });
 app.post('/super-bin/:id/restore', requireSuperBinAuth, async (req, res) => {
   const id = req.params.id;
+  if (!id || typeof id !== 'string' || (isConnected() && !/^[0-9a-fA-F]{24}$/.test(id))) {
+    return res.status(400).json({ error: 'invalid id' });
+  }
   if (isConnected()) {
-    const { SuperBin } = getModels();
-    const item = await SuperBin.findByIdAndDelete(id).lean();
+    const { SuperBin, User, Client, PendingTxn, Loan, LoanRepayPending } = getModels();
+    const item = await SuperBin.findById(id).lean();
     if (!item) return res.status(404).json({ error: 'not found' });
-    await logActivity(req, 'superbin.restore', 'superbin', id, { kind: item.kind || '' });
-    return res.json(item);
+    const kind = String(item.kind || '');
+    const payload = item.payload || {};
+    let restored = null;
+    try {
+      if (kind === 'user') {
+        if (!payload || !payload.username) return res.status(400).json({ error: 'invalid_payload_user' });
+        await User.updateOne({ username: payload.username }, { $set: payload }, { upsert: true });
+        restored = { username: payload.username };
+      } else if (kind === 'client') {
+        const p = payload || {};
+        if (!p.accountNumber) return res.status(400).json({ error: 'invalid_payload_client' });
+        const doc = {
+          id: p.id || p.accountNumber || newId('C'),
+          accountNumber: p.accountNumber,
+          fullName: p.fullName || '',
+          companyName: p.companyName || '',
+          nationalId: p.nationalId || '',
+          dob: p.dob || '',
+          phone: p.phone || '',
+          companyPhone: p.companyPhone || '',
+          registrationDate: p.registrationDate || '',
+          createdAt: p.createdAt || new Date().toISOString(),
+          data: p,
+        };
+        await Client.updateOne({ accountNumber: doc.accountNumber }, { $set: doc }, { upsert: true });
+        restored = { accountNumber: doc.accountNumber };
+      } else if (kind === 'pending_txn') {
+        const p = { ...(payload || {}) };
+        if (!p.id || !p.accountNumber || !p.kind) return res.status(400).json({ error: 'invalid_payload_txn' });
+        p.status = 'Pending';
+        await PendingTxn.updateOne({ id: p.id }, { $set: p }, { upsert: true });
+        restored = { id: p.id };
+      } else if (kind === 'loan') {
+        const p = { ...(payload || {}) };
+        if (!p.id || !p.accountNumber) return res.status(400).json({ error: 'invalid_payload_loan' });
+        p.status = p.status || 'Pending';
+        await Loan.updateOne({ id: p.id }, { $set: p }, { upsert: true });
+        restored = { id: p.id };
+      } else if (kind === 'loan_repay') {
+        const p = { ...(payload || {}) };
+        if (!p.id || !p.loanId || !p.accountNumber) return res.status(400).json({ error: 'invalid_payload_loan_repay' });
+        p.status = 'Pending';
+        await LoanRepayPending.updateOne({ id: p.id }, { $set: p }, { upsert: true });
+        restored = { id: p.id };
+      } else {
+        return res.status(400).json({ error: 'unsupported_kind' });
+      }
+      await SuperBin.findByIdAndDelete(id);
+      await logActivity(req, 'superbin.restore', 'superbin', id, { kind });
+      return res.json({ ok: true, kind, restored });
+    } catch (e) {
+      return res.status(500).json({ error: 'restore_failed', details: String(e && e.message || e) });
+    }
   }
   const idx = superBin.findIndex(i => i.id === id);
   if (idx < 0) return res.status(404).json({ error: 'not found' });
-  const [item] = superBin.splice(idx, 1);
-  writeJSON(BIN_FILE, superBin);
-  await logActivity(req, 'superbin.restore', 'superbin', id, { kind: item && item.kind || '' });
-  res.json(item);
+  const item = superBin[idx];
+  const kind = String(item && item.kind || '');
+  const payload = (item && item.payload) || {};
+  try {
+    if (kind === 'user') {
+      const uidx = users.findIndex(u => u.username === payload.username);
+      if (uidx >= 0) users[uidx] = payload; else users.unshift(payload);
+      writeJSON(USERS_FILE, users);
+    } else if (kind === 'client') {
+      if (!payload.accountNumber) return res.status(400).json({ error: 'invalid_payload_client' });
+      const cidx = clients.findIndex(c => c.accountNumber === payload.accountNumber || c.id === payload.id);
+      if (cidx >= 0) clients[cidx] = payload; else clients.unshift(payload);
+      writeJSON(CLIENTS_FILE, clients);
+    } else if (kind === 'pending_txn') {
+      const tidx = pendingTx.findIndex(t => t.id === payload.id);
+      const p = { ...payload, status: 'Pending' };
+      if (tidx >= 0) pendingTx[tidx] = p; else pendingTx.unshift(p);
+      writeJSON(PENDING_TX_FILE, pendingTx);
+    } else if (kind === 'loan') {
+      const lidx = loans.findIndex(l => l.id === payload.id);
+      const p = { ...payload, status: payload.status || 'Pending' };
+      if (lidx >= 0) loans[lidx] = p; else loans.unshift(p);
+      writeJSON(LOANS_FILE, loans);
+    } else if (kind === 'loan_repay') {
+      const ridx = loanRepayPending.findIndex(r => r.id === payload.id);
+      const p = { ...payload, status: 'Pending' };
+      if (ridx >= 0) loanRepayPending[ridx] = p; else loanRepayPending.unshift(p);
+      writeJSON(LOAN_REPAY_PENDING_FILE, loanRepayPending);
+    } else {
+      return res.status(400).json({ error: 'unsupported_kind' });
+    }
+    superBin.splice(idx, 1);
+    writeJSON(BIN_FILE, superBin);
+    await logActivity(req, 'superbin.restore', 'superbin', id, { kind });
+    return res.json({ ok: true, kind });
+  } catch (e) {
+    return res.status(500).json({ error: 'restore_failed', details: String(e && e.message || e) });
+  }
 });
 app.delete('/super-bin/:id', requireSuperBinAuth, async (req, res) => {
   const id = req.params.id;
+  if (!id || typeof id !== 'string' || (isConnected() && !/^[0-9a-fA-F]{24}$/.test(id))) {
+    return res.status(400).json({ error: 'invalid id' });
+  }
   if (isConnected()) {
     const { SuperBin } = getModels();
     await SuperBin.findByIdAndDelete(id);
@@ -786,6 +974,125 @@ app.delete('/super-bin/:id', requireSuperBinAuth, async (req, res) => {
   writeJSON(BIN_FILE, superBin);
   await logActivity(req, 'superbin.delete', 'superbin', id, {});
   res.json({ ok: true });
+});
+
+app.get('/server-logs', requireSuperAdmin, async (req, res) => {
+  const { level, method, status, q, from, to, limit } = req.query || {};
+  const lim = Math.min(1000, Math.max(1, Number(limit || 200)));
+  if (isConnected()) {
+    const { ServerLog } = getModels();
+    const filter = {};
+    if (level) filter.level = String(level);
+    if (method) filter.method = String(method);
+    if (status) filter.status = Number(status);
+    if (from || to) {
+      filter.ts = {};
+      if (from) filter.ts.$gte = new Date(from);
+      if (to) filter.ts.$lte = new Date(to);
+    }
+    if (q) {
+      const rx = new RegExp(String(q), 'i');
+      filter.$or = [{ path: rx }, { errorMessage: rx }, { actor: rx }, { ua: rx }];
+    }
+    const docs = await ServerLog.find(filter).sort({ ts: -1, _id: -1 }).limit(lim).lean();
+    const list = docs.map(d => ({ ...d, id: String(d._id || d.id || '') }));
+    return res.json(list);
+  }
+  let result = serverLogs.slice().sort((a, b) => String(b.ts).localeCompare(String(a.ts)));
+  if (level) result = result.filter(x => String(x.level) === String(level));
+  if (method) result = result.filter(x => String(x.method) === String(method));
+  if (status) result = result.filter(x => Number(x.status) === Number(status));
+  if (from) result = result.filter(x => String(x.ts) >= String(from));
+  if (to) result = result.filter(x => String(x.ts) <= String(to));
+  if (q) {
+    const s = String(q).toLowerCase();
+    result = result.filter(x =>
+      String(x.path || '').toLowerCase().includes(s) ||
+      String(x.errorMessage || '').toLowerCase().includes(s) ||
+      String(x.actor || '').toLowerCase().includes(s) ||
+      String(x.ua || '').toLowerCase().includes(s));
+  }
+  res.json(result.slice(0, lim));
+});
+app.post('/media/upload', requireAdmin, upload ? upload.single('file') : (req, res, next) => next(), async (req, res) => {
+  try {
+    if (!fb || !fb.ready || !fb.bucket || !admin || !upload) return res.status(503).json({ error: 'media_upload_unavailable' });
+    const f = req.file;
+    if (!f || !f.buffer || !f.originalname) return res.status(400).json({ error: 'no_file' });
+    const actor = (req.user && req.user.username) || 'api';
+    const ext = String(f.originalname).split('.').pop() || 'bin';
+    const now = new Date();
+    const yyyy = now.getUTCFullYear();
+    const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
+    const rand = Math.random().toString(36).slice(2, 8);
+    const dest = `uploads/${yyyy}/${mm}/${Date.now()}-${rand}.${ext}`;
+    const file = fb.bucket.file(dest);
+    const dlToken = crypto.randomBytes(16).toString('hex');
+    await file.save(f.buffer, {
+      metadata: {
+        contentType: f.mimetype,
+        cacheControl: 'public, max-age=31536000',
+        metadata: { firebaseStorageDownloadTokens: dlToken },
+      },
+    });
+    const url = `https://firebasestorage.googleapis.com/v0/b/${fb.bucket.name}/o/${encodeURIComponent(dest)}?alt=media&token=${dlToken}`;
+    let updated = false;
+    const record = { url, path: dest, bucket: fb.bucket.name, contentType: f.mimetype || '', size: f.size || 0, name: f.originalname, uploadedAt: now.toISOString(), uploadedBy: actor, tag: req.body && req.body.tag ? String(req.body.tag) : '' };
+    const entityType = req.body && req.body.entityType ? String(req.body.entityType) : '';
+    const entityId = req.body && req.body.entityId ? String(req.body.entityId) : '';
+    if (entityType && entityId) {
+      if (isConnected()) {
+        const { Client, Loan } = getModels();
+        if (entityType === 'client') {
+          const match = { $or: [{ accountNumber: entityId }, { id: entityId }] };
+          await Client.updateOne(match, { $push: { 'data.attachments': record } });
+          updated = true;
+        } else if (entityType === 'loan') {
+          await Loan.updateOne({ id: entityId }, { $push: { attachments: record } });
+          updated = true;
+        }
+      } else {
+        if (entityType === 'client') {
+          const idx = clients.findIndex(c => c.accountNumber === entityId || c.id === entityId);
+          if (idx >= 0) {
+            const a = Array.isArray(clients[idx].attachments) ? clients[idx].attachments : (Array.isArray(clients[idx].data && clients[idx].data.attachments) ? clients[idx].data.attachments : []);
+            const nextA = [...a, record];
+            if (!clients[idx].data) clients[idx].data = {};
+            clients[idx].data.attachments = nextA;
+            writeJSON(CLIENTS_FILE, clients);
+            updated = true;
+          }
+        } else if (entityType === 'loan') {
+          const idx = loans.findIndex(l => l.id === entityId);
+          if (idx >= 0) {
+            const a = Array.isArray(loans[idx].attachments) ? loans[idx].attachments : [];
+            loans[idx].attachments = [...a, record];
+            writeJSON(LOANS_FILE, loans);
+            updated = true;
+          }
+        }
+      }
+    }
+    await logActivity(req, 'media.upload', entityType || 'media', entityId || dest, { name: f.originalname, size: f.size || 0, contentType: f.mimetype || '' });
+    res.status(201).json({ ...record, entityUpdated: updated });
+  } catch (e) {
+    const msg = String(e && e.message || e);
+    try { await logActivity(req, 'media.upload.error', 'media', '', { message: msg }); } catch {}
+    return res.status(500).json({ error: 'upload_failed', details: msg });
+  }
+});
+app.get('/server-logs/:id', requireSuperAdmin, async (req, res) => {
+  const id = String(req.params.id || '');
+  if (!id) return res.status(400).json({ error: 'invalid id' });
+  if (isConnected()) {
+    const { ServerLog } = getModels();
+    const doc = await ServerLog.findById(id).lean();
+    if (!doc) return res.status(404).json({ error: 'not found' });
+    return res.json({ ...doc, id: String(doc._id || doc.id || '') });
+  }
+  const it = serverLogs.find(x => x.id === id);
+  if (!it) return res.status(404).json({ error: 'not found' });
+  res.json(it);
 });
 
 // Clients
@@ -1194,8 +1501,39 @@ app.get('/loans/:id', async (req, res) => {
     if (!loan) return res.status(404).json({ error: 'not found' });
     const client = await Client.findOne({ accountNumber: loan.accountNumber }).lean();
     const repayments = await LoanRepayPosted.find({ loanId: id }).sort({ approvedAt: -1, _id: -1 }).lean();
+    const totalRepaid = (repayments || []).reduce((s, r) => s + Number(r.amount || 0), 0);
+    const term = Number(loan.termMonths || 0);
+    const start = loan.approvedAt ? new Date(loan.approvedAt) : null;
+    let dueDate = null;
+    if (start && !Number.isNaN(start.getTime())) {
+      const d = new Date(start);
+      d.setMonth(d.getMonth() + term);
+      dueDate = d.toISOString();
+    }
+    const now = new Date();
+    let daysToDue = null;
+    let overdueDays = 0;
+    if (dueDate) {
+      const dd = new Date(dueDate);
+      const ms = dd.getTime() - now.getTime();
+      daysToDue = Math.ceil(ms / (24 * 3600 * 1000));
+      overdueDays = Math.max(0, Math.floor((now.getTime() - dd.getTime()) / (24 * 3600 * 1000)));
+    }
+    const grace = Number(config.loanOverdueGraceDays || 0);
+    const effOverdue = Math.max(0, overdueDays - grace);
+    const outstanding = Math.max(0, Number(loan.totalDue || 0) - Number(totalRepaid || 0));
+    const ratePerDay = Number(config.loanOverdueDailyPenaltyRate || 0);
+    const penaltyAccrued = Math.round(outstanding * (ratePerDay / 100) * effOverdue * 100) / 100;
     const summary = {
-      totalRepaid: (repayments || []).reduce((s, r) => s + Number(r.amount || 0), 0),
+      totalRepaid,
+      dueDate,
+      daysToDue,
+      overdueDays,
+      graceDays: grace,
+      overdueDailyRate: ratePerDay,
+      outstanding,
+      penaltyAccrued,
+      outstandingWithPenalty: outstanding + penaltyAccrued,
     };
     return res.json({ loan, client, repayments, summary });
   }
@@ -1203,8 +1541,39 @@ app.get('/loans/:id', async (req, res) => {
   if (!loan) return res.status(404).json({ error: 'not found' });
   const client = clients.find(c => c.accountNumber === loan.accountNumber) || null;
   const repayments = loanRepayPosted.filter(r => r.loanId === id).sort((a, b) => (String(b.approvedAt || '').localeCompare(String(a.approvedAt || ''))));
+  const totalRepaid = (repayments || []).reduce((s, r) => s + Number(r.amount || 0), 0);
+  const term = Number(loan.termMonths || 0);
+  const start = loan.approvedAt ? new Date(loan.approvedAt) : null;
+  let dueDate = null;
+  if (start && !Number.isNaN(start.getTime())) {
+    const d = new Date(start);
+    d.setMonth(d.getMonth() + term);
+    dueDate = d.toISOString();
+  }
+  const now = new Date();
+  let daysToDue = null;
+  let overdueDays = 0;
+  if (dueDate) {
+    const dd = new Date(dueDate);
+    const ms = dd.getTime() - now.getTime();
+    daysToDue = Math.ceil(ms / (24 * 3600 * 1000));
+    overdueDays = Math.max(0, Math.floor((now.getTime() - dd.getTime()) / (24 * 3600 * 1000)));
+  }
+  const grace = Number(config.loanOverdueGraceDays || 0);
+  const effOverdue = Math.max(0, overdueDays - grace);
+  const outstanding = Math.max(0, Number(loan.totalDue || 0) - Number(totalRepaid || 0));
+  const ratePerDay = Number(config.loanOverdueDailyPenaltyRate || 0);
+  const penaltyAccrued = Math.round(outstanding * (ratePerDay / 100) * effOverdue * 100) / 100;
   const summary = {
-    totalRepaid: (repayments || []).reduce((s, r) => s + Number(r.amount || 0), 0),
+    totalRepaid,
+    dueDate,
+    daysToDue,
+    overdueDays,
+    graceDays: grace,
+    overdueDailyRate: ratePerDay,
+    outstanding,
+    penaltyAccrued,
+    outstandingWithPenalty: outstanding + penaltyAccrued,
   };
   return res.json({ loan, client, repayments, summary });
 });
@@ -1589,6 +1958,42 @@ app.get('/activity', requireAdmin, async (req, res) => {
   if (from) list = list.filter(x => String(x.ts) >= String(from));
   if (to) list = list.filter(x => String(x.ts) <= String(to));
   res.json(list.slice(0, lim));
+});
+
+app.use((err, req, res, next) => {
+  try {
+    const actor = (req.user && req.user.username) || 'anon';
+    const role = (req.user && req.user.role) || '';
+    const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '';
+    const ua = req.headers['user-agent'] || '';
+    const entry = {
+      id: newId('LOG'),
+      ts: new Date().toISOString(),
+      level: 'error',
+      method: req.method,
+      path: req.path,
+      status: Number(err && err.status) || 500,
+      durationMs: 0,
+      actor,
+      role,
+      ip,
+      ua,
+      params: req.params || {},
+      query: req.query || {},
+      body: null,
+      errorMessage: String(err && err.message || ''),
+      errorStack: String(err && err.stack || ''),
+    };
+    if (isConnected()) {
+      const { ServerLog } = getModels();
+      ServerLog.create({ ...entry, id: undefined }).catch(() => {});
+    } else {
+      serverLogs.unshift(entry);
+      if (serverLogs.length > 5000) serverLogs = serverLogs.slice(0, 5000);
+      writeJSON(SERVER_LOGS_FILE, serverLogs);
+    }
+  } catch {}
+  next(err);
 });
 
 const port = process.env.PORT || 5000;
