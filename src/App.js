@@ -1,25 +1,44 @@
-import logo from './logo.svg';
 import './App.css';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './components/Layout';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import ClientsList from './pages/ClientsList';
+import ClientProfile from './pages/ClientProfile';
+import Deposit from './pages/Deposit';
+import Withdraw from './pages/Withdraw';
+import Loans from './pages/Loans';
+import Reports from './pages/Reports';
+import Statements from './pages/Statements';
+import LoanApprovals from './pages/LoanApprovals';
+import LoanRecords from './pages/LoanRecords';
+import LoanRepayments from './pages/LoanRepayments';
+import LoanRepay from './pages/LoanRepay';
+import TxnApprovals from './pages/TxnApprovals';
+import LoanRepayApprovals from './pages/LoanRepayApprovals';
 
-function App() {
+export default function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="clients" element={<ClientsList />} />
+        <Route path="clients/new" element={<ClientProfile />} />
+        <Route path="clients/:accountNumber" element={<ClientProfile />} />
+        <Route path="transactions/deposit" element={<Deposit />} />
+        <Route path="transactions/withdraw" element={<Withdraw />} />
+        <Route path="transactions/approvals" element={<TxnApprovals />} />
+        <Route path="statements" element={<Statements />} />
+        <Route path="loans" element={<Loans />} />
+        <Route path="loans/approvals" element={<LoanApprovals />} />
+        <Route path="loans/records" element={<LoanRecords />} />
+        <Route path="loans/repayments" element={<LoanRepayments />} />
+        <Route path="loans/repay" element={<LoanRepay />} />
+        <Route path="loans/repay/approvals" element={<LoanRepayApprovals />} />
+        <Route path="reports" element={<Reports />} />
+      </Route>
+    </Routes>
   );
 }
-
-export default App;
