@@ -40,20 +40,24 @@ export default function Dashboard() {
     run();
   }, []);
   const transactions = useMemo(() => [...posted, ...repays], [posted, repays]);
-  const totals = useMemo(() => {
-    const rows = transactions.filter(t => !acct || t.account === acct);
-    let deposits = 0, withdrawals = 0, repayments = 0, disbursed = 0;
+  const mainTotals = useMemo(() => {
+    const rows = posted.filter(t => (!acct || t.account === acct) && (t.type === 'Deposit' || t.type === 'Withdrawal'));
+    let deposits = 0, withdrawals = 0;
     rows.forEach(t => {
       if (t.type === 'Deposit') deposits += t.amount;
       if (t.type === 'Withdrawal') withdrawals += t.amount;
-      if (t.type === 'Loan Repayment') repayments += t.amount;
-      if (t.type === 'Loan Disbursement') disbursed += t.amount;
     });
-    return {
-      balance: deposits + repayments - withdrawals - disbursed,
-      deposits, withdrawals, repayments, disbursed
-    };
-  }, [transactions, acct]);
+    return { balance: deposits - withdrawals, deposits, withdrawals };
+  }, [posted, acct]);
+  const loanTotals = useMemo(() => {
+    if (!acct) return { outstanding: 0, repaid: 0, disbursed: 0 };
+    const repaid = repays.filter(r => r.account === acct).reduce((s, r) => s + Number(r.amount || 0), 0);
+    const ls = (loans || []).filter(l => l.accountNumber === acct && l.status === 'Active');
+    const disbursed = ls.reduce((s, l) => s + Number(l.principal || 0), 0);
+    const totalDue = ls.reduce((s, l) => s + Number(l.totalDue || l.principal || 0), 0);
+    const outstanding = Math.max(0, totalDue - repaid);
+    return { outstanding, repaid, disbursed };
+  }, [loans, repays, acct]);
   const last6Months = useMemo(() => {
     const arr = [];
     const d = new Date();
@@ -133,16 +137,24 @@ export default function Dashboard() {
         <div className="card" style={{ gridColumn: '1 / -1' }}>
           <h3>Balances Quick Lookup</h3>
           <div className="row" style={{ margin: '8px 0' }}>
-            <input className="input" placeholder="Account Number (10 digits)" value={acct} onChange={(e) => setAcct(e.target.value.replace(/\\D/g, '').slice(0,10))} />
+            <input className="input" placeholder="Account Number (up to 13 digits)" value={acct} onChange={(e) => setAcct(e.target.value.replace(/\D/g, '').slice(0,13))} />
             <Link className="btn" to={acct ? `/clients/${acct}` : '#'}>Open Client</Link>
             <Link className="btn" to="/statements">Open Statements</Link>
           </div>
           <div className="row" style={{ gap: 24 }}>
-            <div><div style={{ color: '#64748b', fontSize: 12 }}>Balance</div><div style={{ fontWeight: 700 }}>{currency(totals.balance)}</div></div>
-            <div><div style={{ color: '#64748b', fontSize: 12 }}>Deposits</div><div>{currency(totals.deposits)}</div></div>
-            <div><div style={{ color: '#64748b', fontSize: 12 }}>Withdrawals</div><div>{currency(totals.withdrawals)}</div></div>
-            <div><div style={{ color: '#64748b', fontSize: 12 }}>Repayments</div><div>{currency(totals.repayments)}</div></div>
-            <div><div style={{ color: '#64748b', fontSize: 12 }}>Disbursed</div><div>{currency(totals.disbursed)}</div></div>
+            <div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>Main Balance</div>
+              <div style={{ fontWeight: 700 }}>{currency(mainTotals.balance)}</div>
+            </div>
+            <div><div style={{ color: '#64748b', fontSize: 12 }}>Deposits</div><div>{currency(mainTotals.deposits)}</div></div>
+            <div><div style={{ color: '#64748b', fontSize: 12 }}>Withdrawals</div><div>{currency(mainTotals.withdrawals)}</div></div>
+            <div style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch' }} />
+            <div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>Loan Outstanding</div>
+              <div style={{ fontWeight: 700 }}>{currency(loanTotals.outstanding)}</div>
+            </div>
+            <div><div style={{ color: '#64748b', fontSize: 12 }}>Repaid</div><div>{currency(loanTotals.repaid)}</div></div>
+            <div><div style={{ color: '#64748b', fontSize: 12 }}>Disbursed</div><div>{currency(loanTotals.disbursed)}</div></div>
           </div>
         </div>
       </div>

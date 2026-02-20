@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createClient, getClient, updateClient } from '../api';
+import { createClient, getClient, updateClient, fetchConfig } from '../api';
 import { showError, showSuccess } from '../components/Toaster';
 import { confirm } from '../components/Confirm';
 
@@ -8,7 +8,8 @@ export default function ClientProfile() {
   const { accountNumber } = useParams();
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    accountType: 'Individual',
+    branchCode: '',
+    accountTypeCode: '',
     createdAt: new Date().toISOString(),
     fullName: '',
     nationalId: '',
@@ -78,13 +79,24 @@ export default function ClientProfile() {
   };
   useEffect(() => {
     let mounted = true;
+    // Load config for branches and account types
+    fetchConfig().then(cfg => {
+      if (!mounted) return;
+      setConfig(cfg);
+      setForm(f => ({
+        ...f,
+        branchCode: f.branchCode || (cfg.branches && cfg.branches.find(b => b.active)?.code) || (cfg.branches?.[0]?.code || ''),
+        accountTypeCode: f.accountTypeCode || (cfg.accountTypes && cfg.accountTypes.find(a => a.active)?.code) || (cfg.accountTypes?.[0]?.code || ''),
+      }));
+    }).catch(() => {});
     const load = async () => {
       if (!accountNumber) return;
       try {
         const c = await getClient(accountNumber);
         if (!mounted) return;
         setForm({
-          accountType: c.accountType || 'Individual',
+          branchCode: c.branchCode || '',
+          accountTypeCode: c.accountTypeCode || '',
           createdAt: c.createdAt || new Date().toISOString(),
           fullName: c.fullName || '',
           nationalId: c.nationalId || '',
@@ -129,6 +141,10 @@ export default function ClientProfile() {
       if (signaturePreview) URL.revokeObjectURL(signaturePreview);
     };
   }, [accountNumber, photoPreview, idFrontPreview, idBackPreview, signaturePreview]);
+  const [config, setConfig] = useState({ branches: [], accountTypes: [] });
+  const acctType = config.accountTypes?.find(a => a.code === form.accountTypeCode) || null;
+  const isIndividual = acctType ? (acctType.supportsIndividual !== false) : true;
+  const branchRec = config.branches?.find(b => b.code === form.branchCode) || null;
   const submit = async (e) => {
     e.preventDefault();
     const payload = { ...form };
@@ -190,6 +206,14 @@ export default function ClientProfile() {
             <div style={{ fontSize: 18, fontWeight: 600 }}>{accountNumber}</div>
           </div>
           <div>
+            <div style={{ fontSize: 14, color: '#64748b' }}>Branch</div>
+            <div style={{ fontSize: 18, fontWeight: 600 }}>{form.branchCode ? `${form.branchCode} - ${branchRec ? branchRec.name : ''}` : '—'}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 14, color: '#64748b' }}>Account Type</div>
+            <div style={{ fontSize: 18, fontWeight: 600 }}>{form.accountTypeCode ? `${form.accountTypeCode} - ${acctType ? acctType.name : ''}` : '—'}</div>
+          </div>
+          <div>
             <div style={{ fontSize: 14, color: '#64748b' }}>Status</div>
             <div style={{ fontSize: 18, fontWeight: 600 }}>{form.status}</div>
           </div>
@@ -209,14 +233,27 @@ export default function ClientProfile() {
               <input className="input" value={accountNumber} readOnly />
             </label>
           )}
-          <label>
-            Account Type
-            <select className="input" name="accountType" value={form.accountType} onChange={change}>
-              <option value="Individual">Individual</option>
-              <option value="Business">Business</option>
-            </select>
-          </label>
-          {form.accountType === 'Individual' && (
+          {!accountNumber && (
+            <>
+              <label>
+                Branch
+                <select className="input" name="branchCode" value={form.branchCode} onChange={change}>
+                  {(config.branches || []).filter(b => b.active !== false).map(b => (
+                    <option key={b.code} value={b.code}>{b.code} - {b.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Account Type
+                <select className="input" name="accountTypeCode" value={form.accountTypeCode} onChange={change}>
+                  {(config.accountTypes || []).filter(a => a.active !== false).map(a => (
+                    <option key={a.code} value={a.code}>{a.code} - {a.name}</option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
+          {isIndividual && (
             <>
               <label>
                 Full Name
@@ -255,7 +292,7 @@ export default function ClientProfile() {
               <option value="Inactive">Inactive</option>
             </select>
           </label>
-          {form.accountType === 'Individual' && (
+          {isIndividual && (
             <>
               <label>
                 Photo
@@ -270,7 +307,7 @@ export default function ClientProfile() {
             </>
           )}
         </div>
-        {form.accountType === 'Individual' && (
+          {isIndividual && (
           <div className="stack">
             <h3>KYC Documents</h3>
             <div className="form-grid">
@@ -294,7 +331,7 @@ export default function ClientProfile() {
             </div>
           </div>
         )}
-        {form.accountType === 'Business' && (
+        {!isIndividual && (
           <div className="stack">
             <h3>Company Info</h3>
             <div className="form-grid">
@@ -535,7 +572,7 @@ export default function ClientProfile() {
             <button type="button" className="btn" onClick={() => setForm({ ...form, signatories: [...form.signatories, { name: '', role: '', nationalId: '', phone: '', email: '' }] })}>Add Signatory</button>
           </div>
         )}
-        {form.accountType === 'Individual' ? (
+        {isIndividual ? (
           <div className="stack">
             <h3>Next of Kin 1</h3>
             <div className="form-grid">
