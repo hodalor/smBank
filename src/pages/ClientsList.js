@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchByAccount from '../components/SearchByAccount';
+import { hasPermission, PERMISSIONS } from '../state/ops';
 
 export default function ClientsList() {
   const navigate = useNavigate();
@@ -25,7 +26,9 @@ export default function ClientsList() {
     <div className="stack">
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <h1>Clients</h1>
-        <button className="btn btn-primary" onClick={() => navigate('/clients/new')}>New Client</button>
+        {hasPermission(PERMISSIONS.CLIENTS_CREATE) && (
+          <button className="btn btn-primary" onClick={() => navigate('/clients/new')}>New Client</button>
+        )}
       </div>
       <div className="card">
         <SearchByAccount onSearch={onSearch} />

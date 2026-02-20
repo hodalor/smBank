@@ -16,6 +16,9 @@ import LoanRepayments from './pages/LoanRepayments';
 import LoanRepay from './pages/LoanRepay';
 import TxnApprovals from './pages/TxnApprovals';
 import LoanRepayApprovals from './pages/LoanRepayApprovals';
+import Users from './pages/Users';
+import SuperBin from './pages/SuperBin';
+import Config from './pages/Config';
 
 export default function App() {
   return (
@@ -38,6 +41,9 @@ export default function App() {
         <Route path="loans/repay" element={<LoanRepay />} />
         <Route path="loans/repay/approvals" element={<LoanRepayApprovals />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="users" element={<Users />} />
+        <Route path="super-bin" element={<SuperBin />} />
+        <Route path="config" element={<Config />} />
       </Route>
     </Routes>
   );

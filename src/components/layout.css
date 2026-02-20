@@ -52,11 +52,26 @@
   display: flex;
   gap: 8px;
   overflow-x: auto;
+  scroll-behavior: smooth;
 }
 .top-right {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+.tabs-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 60vw;
+}
+.tabs-arrow {
+  height: 28px;
+  width: 28px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #f8fafc;
+  cursor: pointer;
 }
 .user {
   position: relative;
@@ -141,6 +156,12 @@
   padding-top: 72px;
   height: 100vh;
   overflow-y: auto;
+}
+.app-footer {
+  margin-top: 16px;
+  padding: 12px 0 28px 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 .content .container > h1 {
   margin-bottom: 16px;

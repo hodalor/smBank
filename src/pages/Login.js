@@ -1,24 +1,116 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setCurrentUserName } from '../state/ops';
+import { setCurrentUserName, saveUser, getUserByUsername, ROLE_NAMES } from '../state/ops';
+import { apiLogin } from '../api';
+import logo from '../logo.svg';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(true);
+  const [marchCode, setMarchCode] = useState('');
+  const [captcha, setCaptcha] = useState('');
+  const [captchaInput, setCaptchaInput] = useState('');
+  const [error, setError] = useState('');
+  const canvasRef = useRef(null);
   const navigate = useNavigate();
-  const submit = (e) => {
+  const superCandidate = useMemo(() => {
+    const u = (username || '').trim().toLowerCase();
+    return u === 'super' || u === 'superadmin';
+  }, [username]);
+  useEffect(() => {
+    const saved = localStorage.getItem('remember_username');
+    if (saved) {
+      setUsername(saved);
+      setRemember(true);
+    }
+  }, []);
+  const regenerateCaptcha = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let c = '';
+    for (let i = 0; i < 4; i++) c += chars[Math.floor(Math.random() * chars.length)];
+    setCaptcha(c);
+    setCaptchaInput('');
+  };
+  useEffect(() => {
+    if (!captcha) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 20; i++) {
+      ctx.fillStyle = `rgba(22,163,74,${Math.random() * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(Math.random() * w, Math.random() * h, Math.random() * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.font = '24px sans-serif';
+    ctx.fillStyle = '#0f172a';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.fillText(captcha, w / 2, h / 2);
+  }, [captcha]);
+  useEffect(() => {
+    regenerateCaptcha();
+  }, []);
+  const submit = async (e) => {
     e.preventDefault();
-    setCurrentUserName(username || 'Admin');
+    setError('');
+    if (!captchaInput || captchaInput.toLowerCase() !== captcha.toLowerCase()) {
+      setError('Invalid captcha');
+      regenerateCaptcha();
+      return;
+    }
+    const uname = (username || 'Admin').trim();
+    try {
+      const { role } = await apiLogin(uname, password);
+      const existing = getUserByUsername(uname);
+      if (!existing) {
+        saveUser({ username: uname, role, permsAdd: [], permsRemove: [] });
+      } else if (existing.role !== role) {
+        saveUser({ ...existing, role });
+      }
+    } catch {
+      // Fallback local role if API not reachable
+      const role = superCandidate ? ROLE_NAMES.SUPER_ADMIN : ROLE_NAMES.ADMIN;
+      const existing = getUserByUsername(uname);
+      if (!existing) saveUser({ username: uname, role, permsAdd: [], permsRemove: [] });
+    }
+    setCurrentUserName(uname);
+    if (remember) localStorage.setItem('remember_username', uname);
+    else localStorage.removeItem('remember_username');
     navigate('/dashboard');
   };
   return (
-    <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh' }}>
-      <form onSubmit={submit} style={{ width: 320, display: 'grid', gap: 12 }}>
-        <h2>Admin Login</h2>
-        <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
-        <button type="submit" style={{ padding: 10 }}>Login</button>
-      </form>
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f1f5f9' }}>
+      <div className="card" style={{ width: 420, padding: 24, borderRadius: 16, boxShadow: '0 10px 30px rgba(2,6,23,0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <img src={logo} alt="smBank" style={{ width: 44, height: 44 }} />
+          <div style={{ fontSize: 26, fontWeight: 800, color: '#16a34a' }}>smBank</div>
+        </div>
+        <form onSubmit={submit} className="stack" style={{ display: 'grid', gap: 12 }}>
+          <input className="input" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="account" />
+          <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="password" />
+          <div className="row" style={{ gap: 8 }}>
+            <input className="input" value={captchaInput} onChange={(e) => setCaptchaInput(e.target.value)} placeholder="captcha" style={{ flex: 1 }} />
+            <canvas ref={canvasRef} width={100} height={40} style={{ border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }} onClick={regenerateCaptcha} />
+          </div>
+          <input className="input" value={marchCode} onChange={(e) => setMarchCode(e.target.value)} placeholder="march code" />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+            <span>remember password</span>
+          </label>
+          {error && <div style={{ color: '#dc2626', fontSize: 12 }}>{error}</div>}
+          {superCandidate ? (
+            <div style={{ fontSize: 12, color: '#0ea5e9' }}>Super Admin login</div>
+          ) : (
+            <div style={{ fontSize: 12, color: '#64748b' }}>Tip: use “super” or “superadmin” for Super Admin</div>
+          )}
+          <button type="submit" className="btn btn-primary" style={{ background: '#16a34a', borderColor: '#16a34a' }}>Login In</button>
+        </form>
+      </div>
     </div>
   );
 }

@@ -10,6 +10,8 @@ export default function TopBar() {
   const [user, setUser] = useState(getCurrentUserName());
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
+  const scrollerRef = useRef(null);
+  const [showArrows, setShowArrows] = useState(false);
   useEffect(() => onTabsUpdate(setTabs), []);
   useEffect(() => {
     const onStorage = (e) => {
@@ -26,6 +28,15 @@ export default function TopBar() {
     document.addEventListener('click', handle);
     return () => document.removeEventListener('click', handle);
   }, []);
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const check = () => setShowArrows(el.scrollWidth > el.clientWidth + 8);
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    check();
+    return () => ro.disconnect();
+  }, [tabs]);
   const active = tabs.find(t => location.pathname.startsWith(t.to))?.label || 'smBank';
   const remove = (e, to) => {
     e.preventDefault();
@@ -33,6 +44,11 @@ export default function TopBar() {
     const isActive = location.pathname.startsWith(to);
     closeTab(to);
     if (isActive) navigate('/dashboard');
+  };
+  const scrollBy = (dx) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dx, behavior: 'smooth' });
   };
   const logout = () => {
     setCurrentUserName('');
@@ -44,13 +60,17 @@ export default function TopBar() {
     <div className="topbar">
       <div style={{ fontWeight: 700 }}>{active}</div>
       <div className="top-right">
-        <div className="top-tabs">
-          {tabs.map(t => (
-            <div key={t.to} className={`tab${location.pathname.startsWith(t.to) ? ' active' : ''}`}>
-              <NavLink to={t.to} style={{ textDecoration: 'none', color: 'inherit' }}>{t.label}</NavLink>
-              <button className="tab-close" onClick={(e) => remove(e, t.to)}>×</button>
-            </div>
-          ))}
+        <div className="tabs-wrap">
+          {showArrows && <button className="tabs-arrow" onClick={() => scrollBy(-180)}>‹</button>}
+          <div className="top-tabs" ref={scrollerRef}>
+            {tabs.map(t => (
+              <div key={t.to} className={`tab${location.pathname.startsWith(t.to) ? ' active' : ''}`}>
+                <NavLink to={t.to} style={{ textDecoration: 'none', color: 'inherit' }}>{t.label}</NavLink>
+                <button className="tab-close" onClick={(e) => remove(e, t.to)}>×</button>
+              </div>
+            ))}
+          </div>
+          {showArrows && <button className="tabs-arrow" onClick={() => scrollBy(180)}>›</button>}
         </div>
         <div className="user" ref={menuRef}>
           <button className="user-btn" onClick={() => setOpen(v => !v)}>
