@@ -1,0 +1,34 @@
+{
+  "appName": "smBank",
+  "footerText": "© smBank",
+  "primary": "#0f172a",
+  "primaryContrast": "#ffffff",
+  "darkMode": false,
+  "defaultLoanRate": "12",
+  "branches": [
+    {
+      "code": "001",
+      "name": "Head Office (Oppong-valley )",
+      "active": true
+    },
+    {
+      "code": "",
+      "name": "",
+      "active": true
+    }
+  ],
+  "accountTypes": [
+    {
+      "code": "10 ",
+      "name": " savings Account",
+      "supportsIndividual": true,
+      "active": true
+    },
+    {
+      "code": "",
+      "name": "",
+      "supportsIndividual": true,
+      "active": true
+    }
+  ]
+}

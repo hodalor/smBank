@@ -1,0 +1,18 @@
+[
+  {
+    "id": "D-430795818668",
+    "kind": "deposit",
+    "status": "Pending",
+    "initiatorName": "superadmin",
+    "initiatedAt": "2026-02-20T13:40:45.471Z",
+    "accountNumber": "8347791248",
+    "amount": 5644,
+    "meta": {
+      "depositorName": "prince",
+      "depositorAddress": "8818jsn",
+      "incomeSource": "Farming",
+      "method": "cash",
+      "notes": "personal use"
+    }
+  }
+]

@@ -1,0 +1,6134 @@
+[
+  {
+    "ts": "2026-02-20T15:42:33.765Z",
+    "actor": "system",
+    "role": "System",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Trae/1.107.1 Chrome/142.0.7444.235 Electron/39.2.7 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T15:42:33.761Z",
+    "actor": "system",
+    "role": "System",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Trae/1.107.1 Chrome/142.0.7444.235 Electron/39.2.7 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T15:42:33.738Z",
+    "actor": "system",
+    "role": "System",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Trae/1.107.1 Chrome/142.0.7444.235 Electron/39.2.7 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T15:42:33.733Z",
+    "actor": "system",
+    "role": "System",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Trae/1.107.1 Chrome/142.0.7444.235 Electron/39.2.7 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T15:13:24.869Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "client.view",
+    "entityType": "client",
+    "entityId": "7372588495",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/clients/7372588495"
+  },
+  {
+    "ts": "2026-02-20T15:13:24.859Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "client.view",
+    "entityType": "client",
+    "entityId": "7372588495",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/clients/7372588495"
+  },
+  {
+    "ts": "2026-02-20T15:13:03.764Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "client.create",
+    "entityType": "client",
+    "entityId": "7372588495",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/clients"
+  },
+  {
+    "ts": "2026-02-20T15:11:10.050Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "config.update",
+    "entityType": "config",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "PUT",
+    "path": "/config"
+  },
+  {
+    "ts": "2026-02-20T15:04:26.236Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T15:04:26.231Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T15:04:26.227Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T15:04:26.221Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T15:04:21.544Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T15:04:21.537Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T15:04:21.530Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T15:04:21.526Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T15:04:19.138Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T15:04:19.135Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T15:04:12.486Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T15:04:12.483Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T15:04:12.477Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T15:04:12.472Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T15:03:32.655Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T15:03:32.650Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T15:03:32.644Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T15:03:32.639Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T14:54:15.825Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "config.update",
+    "entityType": "config",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "PUT",
+    "path": "/config"
+  },
+  {
+    "ts": "2026-02-20T14:40:51.122Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T14:40:51.105Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T14:40:51.102Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T14:40:51.088Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:40:45.472Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "txn.deposit.create",
+    "entityType": "transaction",
+    "entityId": "D-430795818668",
+    "details": {
+      "accountNumber": "8347791248",
+      "amount": 5644
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/transactions/deposit"
+  },
+  {
+    "ts": "2026-02-20T13:38:34.777Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:38:34.772Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:38:34.758Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T13:38:34.632Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:38:34.624Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:38:34.613Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T13:38:18.919Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:38:18.907Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:31:38.535Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:31:38.526Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:31:38.516Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:31:38.507Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:30:09.621Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "loan.approve",
+    "entityType": "loan",
+    "entityId": "L3355456",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/loans/L3355456/approve"
+  },
+  {
+    "ts": "2026-02-20T13:29:31.573Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:29:31.568Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:29:31.562Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:29:31.558Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:29:29.275Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "loan.create",
+    "entityType": "loan",
+    "entityId": "L3355456",
+    "details": {
+      "accountNumber": "8347791248",
+      "amount": 4000
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/loans"
+  },
+  {
+    "ts": "2026-02-20T13:28:49.490Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T13:28:32.512Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:28:32.505Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:28:32.497Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:28:32.492Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:28:24.262Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:28:24.253Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:28:24.247Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:28:24.241Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:28:12.622Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:28:12.613Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:28:12.600Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:28:12.591Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:25:30.353Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:25:28.170Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:25:28.162Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:25:25.296Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:25:25.288Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:25:25.281Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:25:25.277Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:25:18.916Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:25:18.910Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:25:18.903Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:25:18.897Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:25:09.966Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:25:09.953Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:24:35.319Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:24:35.316Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:24:35.306Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T13:24:35.230Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:24:35.224Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:24:35.203Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T13:24:14.922Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:24:14.917Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:24:14.909Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T13:24:14.837Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:24:14.829Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:24:14.818Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T13:23:51.914Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:23:51.903Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:23:51.899Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:23:51.894Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:23:43.116Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:23:43.107Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:23:18.747Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "loan.approve",
+    "entityType": "loan",
+    "entityId": "L6654714",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/loans/L6654714/approve"
+  },
+  {
+    "ts": "2026-02-20T13:22:43.926Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:22:43.922Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:22:43.915Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:22:43.910Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:22:40.097Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:22:40.086Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:22:40.076Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:22:40.070Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:22:16.976Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:22:16.966Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:22:16.960Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:22:16.953Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:22:10.576Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:22:10.571Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:21:46.566Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "loan.reject",
+    "entityType": "loan",
+    "entityId": "L7926341",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/loans/L7926341/reject"
+  },
+  {
+    "ts": "2026-02-20T13:21:31.970Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "loan.create",
+    "entityType": "loan",
+    "entityId": "L7926341",
+    "details": {
+      "accountNumber": "8347791248",
+      "amount": 70000
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/loans"
+  },
+  {
+    "ts": "2026-02-20T13:19:21.810Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T13:17:07.965Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "config.update",
+    "entityType": "config",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "PUT",
+    "path": "/config"
+  },
+  {
+    "ts": "2026-02-20T13:16:44.167Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:16:44.153Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:09:02.136Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:09:02.129Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:09:02.123Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:09:02.118Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:08:57.341Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:08:57.337Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:08:57.331Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:08:57.322Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:08:55.625Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:08:55.616Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:08:55.604Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:08:55.597Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:06:12.179Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:06:12.169Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:06:12.164Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T13:06:12.156Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T13:06:07.083Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "loan.create",
+    "entityType": "loan",
+    "entityId": "L6654714",
+    "details": {
+      "accountNumber": "8347791248",
+      "amount": 2000
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/loans"
+  },
+  {
+    "ts": "2026-02-20T13:04:32.502Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:58:44.858Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:58:44.847Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:58:44.839Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:58:44.832Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:55:56.996Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:55:56.991Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:55:56.984Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:55:56.974Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:55:18.294Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:55:18.287Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:55:18.280Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:55:18.274Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:54:53.506Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:54:53.501Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:53:41.877Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:53:41.870Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:53:41.864Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:53:41.859Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:53:38.002Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:53:37.994Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:53:37.990Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:53:37.984Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:53:02.078Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:53:02.071Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:53:02.062Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:53:02.052Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:35.938Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:52:33.186Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:33.178Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:26.418Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:26.414Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:26.410Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:26.400Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:23.057Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:23.053Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:23.047Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:23.042Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:11.748Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:11.731Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:11.720Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:52:11.702Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:51:35.778Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:51:35.775Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:51:35.771Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:51:35.766Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:51:34.621Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:51:34.616Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:51:34.610Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:51:34.606Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:51:13.942Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:51:13.939Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:51:13.932Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:51:13.928Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:59.376Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:59.373Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:59.366Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:59.361Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:58.458Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:58.448Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:58.445Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:58.441Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:57.175Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:57.170Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:57.166Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:57.161Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:50.613Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:50.609Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:50.601Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:50.593Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:45.118Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:45.111Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:45.107Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:45.103Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:43.485Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:43.475Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:43.464Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:43.457Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:10.230Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:10.222Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:10.215Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:50:10.209Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:48:34.682Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:48:34.676Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:48:20.001Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:48:19.991Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:48:19.987Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:48:19.983Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:48:15.521Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "loan.repay.approve",
+    "entityType": "loan_repay",
+    "entityId": "LRP-1771591643124-923907",
+    "details": {
+      "accountNumber": "8347791248",
+      "amount": 10000
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/loans/repay/pending/LRP-1771591643124-923907/approve"
+  },
+  {
+    "ts": "2026-02-20T12:48:00.847Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:48:00.843Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:48:00.834Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:48:00.830Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:47:39.179Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:47:39.171Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:47:39.166Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:47:39.161Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:47:23.126Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "loan.repay.create",
+    "entityType": "loan_repay",
+    "entityId": "LRP-1771591643124-923907",
+    "details": {
+      "accountNumber": "8347791248",
+      "amount": 10000
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/loans/L-1771589214631-384067/repay"
+  },
+  {
+    "ts": "2026-02-20T12:47:03.702Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:47:03.564Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:47:01.951Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:46:59.761Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:46:57.452Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:46:41.726Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:46:41.721Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:46:28.790Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:46:28.784Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:46:28.781Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:46:28.778Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:46:20.674Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:46:20.667Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:46:20.657Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:46:20.650Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:39:08.205Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:39:08.197Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:39:08.190Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:39:08.180Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:55.777Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:55.773Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:55.766Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:55.761Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:39.899Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:39.893Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:39.889Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:39.886Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:37.988Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:37.983Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:37.980Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:37.977Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:14.812Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:14.807Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:14.801Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:14.797Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:05.396Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:38:05.391Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:37:58.217Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:37:58.203Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:37:58.189Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:37:58.185Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:35:56.384Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:35:56.377Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:35:56.367Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:35:56.359Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:34:09.667Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:34:09.660Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:34:09.655Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:34:09.651Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:32:46.853Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:32:46.845Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:32:46.840Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:32:46.837Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:30:02.624Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:30:02.619Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:30:02.614Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:30:02.609Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:29:57.569Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:29:57.565Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:29:57.559Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:29:57.552Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:28:59.371Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:28:59.367Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:28:59.360Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:28:59.355Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:28:54.164Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:28:54.157Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:28:54.153Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:28:54.149Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:22:23.963Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:22:23.958Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:22:23.955Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:22:23.951Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:18:55.583Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:18:33.804Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:17:22.121Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:17:02.136Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:17:02.074Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:16:49.423Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:16:49.419Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:16:49.412Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:16:49.410Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:16:45.406Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:16:45.399Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:16:45.391Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:16:45.382Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:16:27.322Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:16:27.314Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:16:27.308Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:16:27.302Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:14:29.912Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:14:29.905Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:14:29.902Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:14:29.899Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:13:43.188Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:13:43.094Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:13:26.223Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:13:26.220Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:13:26.212Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:13:26.204Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:13:21.044Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:13:21.037Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:13:21.030Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:13:21.025Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:11:25.491Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:11:25.405Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:10:45.701Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:10:45.571Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:10:32.708Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:10:32.705Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:10:12.358Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:10:11.038Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:10:11.036Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:10:04.701Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:10:04.697Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:10:04.693Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:10:04.688Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:10:02.252Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:10:02.248Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:51.413Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:08:49.387Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:49.380Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:46.537Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:46.530Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:46.526Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:46.522Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:19.287Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:19.280Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:19.276Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:19.272Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:03.270Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:03.263Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:03.252Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:08:03.250Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:07:53.915Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "loan.approve",
+    "entityType": "loan",
+    "entityId": "L-1771589214631-384067",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/loans/L-1771589214631-384067/approve"
+  },
+  {
+    "ts": "2026-02-20T12:06:58.583Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:06:58.576Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:06:58.572Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:06:58.566Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": "loan_disbursement"
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:06:54.633Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "loan.create",
+    "entityType": "loan",
+    "entityId": "L-1771589214631-384067",
+    "details": {
+      "accountNumber": "8347791248",
+      "amount": 70000
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/loans"
+  },
+  {
+    "ts": "2026-02-20T12:05:17.993Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T12:05:11.041Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:05:11.038Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:05:11.032Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:05:11.026Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:01:06.749Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:01:06.743Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:01:06.739Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:01:06.736Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:00:48.770Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:00:48.765Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T12:00:48.761Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T12:00:48.757Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:58:33.896Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:58:33.887Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:58:33.879Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:58:33.871Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:58:18.943Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:58:18.942Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:58:18.937Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:58:18.934Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:58:12.334Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "txn.reject",
+    "entityType": "transaction",
+    "entityId": "P-1771588667574-756173",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/transactions/pending/P-1771588667574-756173/reject"
+  },
+  {
+    "ts": "2026-02-20T11:58:08.815Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:58:08.812Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:58:08.808Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:58:08.806Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:57:47.578Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "txn.withdraw.create",
+    "entityType": "transaction",
+    "entityId": "P-1771588667574-756173",
+    "details": {
+      "accountNumber": "8347791248",
+      "amount": 60
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/transactions/withdraw"
+  },
+  {
+    "ts": "2026-02-20T11:56:59.453Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:56:59.449Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:56:59.435Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T11:56:59.232Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:56:59.229Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:56:59.218Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T11:45:41.424Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "txn.approve",
+    "entityType": "transaction",
+    "entityId": "P-1771587906918-934640",
+    "details": {
+      "accountNumber": "8347791248",
+      "amount": 7000
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/transactions/pending/P-1771587906918-934640/approve"
+  },
+  {
+    "ts": "2026-02-20T11:45:06.920Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "txn.withdraw.create",
+    "entityType": "transaction",
+    "entityId": "P-1771587906918-934640",
+    "details": {
+      "accountNumber": "8347791248",
+      "amount": 7000
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/transactions/withdraw"
+  },
+  {
+    "ts": "2026-02-20T11:43:48.309Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:43:48.305Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:43:48.290Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T11:43:48.204Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:43:48.197Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:43:48.184Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T11:43:23.898Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:43:23.888Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:43:23.882Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:43:23.876Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:43:17.342Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "txn.approve",
+    "entityType": "transaction",
+    "entityId": "P-1771587753264-917145",
+    "details": {
+      "accountNumber": "8347791248",
+      "amount": 455
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/transactions/pending/P-1771587753264-917145/approve"
+  },
+  {
+    "ts": "2026-02-20T11:42:57.062Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "approval.code.invalid",
+    "entityType": "transaction",
+    "entityId": "P-1771587753264-917145",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/transactions/pending/P-1771587753264-917145/approve"
+  },
+  {
+    "ts": "2026-02-20T11:42:33.278Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "txn.deposit.create",
+    "entityType": "transaction",
+    "entityId": "P-1771587753264-917145",
+    "details": {
+      "accountNumber": "8347791248",
+      "amount": 455
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "POST",
+    "path": "/transactions/deposit"
+  },
+  {
+    "ts": "2026-02-20T11:42:10.665Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:42:10.661Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:42:10.650Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T11:42:10.566Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:42:10.561Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "8347791248",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:42:10.552Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "directory.lookup",
+    "entityType": "client",
+    "entityId": "8347791248",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/directory/8347791248"
+  },
+  {
+    "ts": "2026-02-20T11:41:46.743Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:41:46.738Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:41:46.723Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:41:46.714Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:41:32.276Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:41:32.271Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:41:32.250Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:41:32.243Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:41:26.764Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:41:26.762Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:41:26.756Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:41:26.753Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:40:44.841Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:40:44.838Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  },
+  {
+    "ts": "2026-02-20T11:40:44.832Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "loan_repay",
+    "entityId": "",
+    "details": {},
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/loans/repay/posted"
+  },
+  {
+    "ts": "2026-02-20T11:40:44.821Z",
+    "actor": "superadmin",
+    "role": "Super Admin",
+    "action": "statements.view",
+    "entityType": "transactions",
+    "entityId": "",
+    "details": {
+      "type": ""
+    },
+    "ip": "::1",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "method": "GET",
+    "path": "/transactions/posted"
+  }
+]

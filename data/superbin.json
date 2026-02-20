@@ -1,0 +1,48 @@
+[
+  {
+    "id": "BIN-1771593706565-331034",
+    "by": "api",
+    "deletedAt": "2026-02-20T13:21:46.565Z",
+    "kind": "loan",
+    "payload": {
+      "id": "L7926341",
+      "accountNumber": "8347791248",
+      "principal": 70000,
+      "rate": 30,
+      "termMonths": 12,
+      "totalInterest": 21000,
+      "totalDue": 91000,
+      "guarantors": [],
+      "collateral": {
+        "description": "house ",
+        "value": 322222
+      },
+      "attachments": [],
+      "createdAt": "2026-02-20T13:21:31.967Z",
+      "status": "Pending",
+      "reason": ""
+    }
+  },
+  {
+    "id": "BIN-1771588692333-118995",
+    "by": "api",
+    "deletedAt": "2026-02-20T11:58:12.333Z",
+    "kind": "pending_txn",
+    "payload": {
+      "id": "P-1771588667574-756173",
+      "kind": "withdraw",
+      "status": "Pending",
+      "initiatorName": "superadmin",
+      "initiatedAt": "2026-02-20T11:57:47.574Z",
+      "accountNumber": "8347791248",
+      "amount": 60,
+      "meta": {
+        "notes": "investment",
+        "withdrawerIdNumber": "577889799",
+        "withdrawerPhone": "076564696",
+        "withdrawerAddress": "addder"
+      },
+      "reason": ""
+    }
+  }
+]

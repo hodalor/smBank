@@ -1,0 +1,55 @@
+[
+  {
+    "id": "L3355456",
+    "accountNumber": "8347791248",
+    "principal": 4000,
+    "rate": 12,
+    "termMonths": 13,
+    "totalInterest": 520,
+    "totalDue": 4520,
+    "guarantors": [],
+    "collateral": {
+      "description": "house ",
+      "value": 3434343
+    },
+    "attachments": [],
+    "createdAt": "2026-02-20T13:29:29.274Z",
+    "status": "Active",
+    "approvedAt": "2026-02-20T13:30:09.617Z",
+    "approverName": "api"
+  },
+  {
+    "id": "L6654714",
+    "accountNumber": "8347791248",
+    "principal": 2000,
+    "rate": 10,
+    "termMonths": 4,
+    "guarantors": [],
+    "collateral": {
+      "description": "house ",
+      "value": 9000
+    },
+    "attachments": [],
+    "createdAt": "2026-02-20T13:06:07.077Z",
+    "status": "Active",
+    "approvedAt": "2026-02-20T13:23:18.744Z",
+    "approverName": "api"
+  },
+  {
+    "id": "L-1771589214631-384067",
+    "accountNumber": "8347791248",
+    "principal": 70000,
+    "rate": 10,
+    "termMonths": 12,
+    "guarantors": [],
+    "collateral": {
+      "description": "house ",
+      "value": 100000
+    },
+    "attachments": [],
+    "createdAt": "2026-02-20T12:06:54.631Z",
+    "status": "Active",
+    "approvedAt": "2026-02-20T12:07:53.912Z",
+    "approverName": "api"
+  }
+]

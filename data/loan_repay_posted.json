@@ -1,0 +1,14 @@
+[
+  {
+    "id": "LRP-1771591643124-923907",
+    "loanId": "L-1771589214631-384067",
+    "accountNumber": "8347791248",
+    "mode": "partial",
+    "amount": 10000,
+    "initiatorName": "superadmin",
+    "initiatedAt": "2026-02-20T12:47:23.124Z",
+    "status": "Approved",
+    "approvedAt": "2026-02-20T12:48:15.518Z",
+    "approverName": "api"
+  }
+]

@@ -1,0 +1,100 @@
+[
+  {
+    "id": "TX-196196921100",
+    "kind": "loan_disbursement",
+    "status": "Approved",
+    "initiatorName": "api",
+    "initiatedAt": "2026-02-20T13:29:29.274Z",
+    "accountNumber": "8347791248",
+    "amount": 4000,
+    "approverName": "api",
+    "approvedAt": "2026-02-20T13:30:09.617Z",
+    "meta": {
+      "loanId": "L3355456",
+      "rate": 12,
+      "termMonths": 13
+    }
+  },
+  {
+    "id": "TX-808196733717",
+    "kind": "loan_disbursement",
+    "status": "Approved",
+    "initiatorName": "api",
+    "initiatedAt": "2026-02-20T13:06:07.077Z",
+    "accountNumber": "8347791248",
+    "amount": 2000,
+    "approverName": "api",
+    "approvedAt": "2026-02-20T13:23:18.744Z",
+    "meta": {
+      "loanId": "L6654714",
+      "rate": 10,
+      "termMonths": 4
+    }
+  },
+  {
+    "id": "TX-1771589273912-774541",
+    "kind": "loan_disbursement",
+    "status": "Approved",
+    "initiatorName": "api",
+    "initiatedAt": "2026-02-20T12:06:54.631Z",
+    "accountNumber": "8347791248",
+    "amount": 70000,
+    "approverName": "api",
+    "approvedAt": "2026-02-20T12:07:53.912Z",
+    "meta": {
+      "loanId": "L-1771589214631-384067",
+      "rate": 10,
+      "termMonths": 12
+    }
+  },
+  {
+    "id": "P-1771587906918-934640",
+    "kind": "withdraw",
+    "status": "Approved",
+    "initiatorName": "superadmin",
+    "initiatedAt": "2026-02-20T11:45:06.918Z",
+    "accountNumber": "8347791248",
+    "amount": 7000,
+    "meta": {
+      "notes": "personal use"
+    },
+    "approvedAt": "2026-02-20T11:45:41.422Z",
+    "approverName": "api"
+  },
+  {
+    "id": "P-1771587753264-917145",
+    "kind": "deposit",
+    "status": "Approved",
+    "initiatorName": "superadmin",
+    "initiatedAt": "2026-02-20T11:42:33.264Z",
+    "accountNumber": "8347791248",
+    "amount": 455,
+    "meta": {
+      "depositorName": "prince",
+      "depositorAddress": "vvhvkbkbjkhj",
+      "incomeSource": "Business",
+      "method": "cash",
+      "notes": "business"
+    },
+    "approvedAt": "2026-02-20T11:43:17.339Z",
+    "approverName": "api"
+  },
+  {
+    "id": "P-1771571732591-485154",
+    "kind": "deposit",
+    "status": "Approved",
+    "initiatorName": "prince@gmail.com",
+    "initiatedAt": "2026-02-20T07:15:32.591Z",
+    "accountNumber": "8347791248",
+    "amount": 10000,
+    "meta": {
+      "depositorName": "prince",
+      "depositorAddress": "8818jsn",
+      "incomeSource": "Business",
+      "method": "cash",
+      "notes": "investment"
+    },
+    "approvedAt": "2026-02-20T07:16:29.074Z",
+    "approverName": "api"
+  }
+]
