@@ -776,6 +776,21 @@ app.put('/config', async (req, res) => {
     numKeys.forEach(k => {
       if (Object.prototype.hasOwnProperty.call(body, k)) body[k] = Number(body[k] ?? 0);
     });
+    if (Array.isArray(body.accountTypes)) {
+      body.accountTypes = body.accountTypes.map(a => ({
+        code: String(a.code || '').trim(),
+        name: String(a.name || '').trim(),
+        supportsIndividual: a.supportsIndividual !== false,
+        active: a.active !== false,
+      }));
+    }
+    if (Array.isArray(body.branches)) {
+      body.branches = body.branches.map(b => ({
+        code: String(b.code || '').trim(),
+        name: String(b.name || '').trim(),
+        active: b.active !== false,
+      }));
+    }
     const saved = await Config.findOneAndUpdate({}, { $set: body }, { upsert: true, new: true });
     await logActivity(req, 'config.update', 'config', '', {});
     const obj = saved && saved.toObject ? saved.toObject() : saved;
@@ -786,6 +801,21 @@ app.put('/config', async (req, res) => {
   numKeys.forEach(k => {
     if (Object.prototype.hasOwnProperty.call(body, k)) body[k] = Number(body[k] ?? 0);
   });
+  if (Array.isArray(body.accountTypes)) {
+    body.accountTypes = body.accountTypes.map(a => ({
+      code: String(a.code || '').trim(),
+      name: String(a.name || '').trim(),
+      supportsIndividual: a.supportsIndividual !== false,
+      active: a.active !== false,
+    }));
+  }
+  if (Array.isArray(body.branches)) {
+    body.branches = body.branches.map(b => ({
+      code: String(b.code || '').trim(),
+      name: String(b.name || '').trim(),
+      active: b.active !== false,
+    }));
+  }
   config = { ...config, ...body };
   writeJSON(CONFIG_FILE, config);
   await logActivity(req, 'config.update', 'config', '', {});
