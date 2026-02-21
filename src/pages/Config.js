@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getAppConfig, saveAppConfig, hasPermission } from '../state/ops';
 import { fetchConfig, updateConfig } from '../api';
+import { showSuccess, showError } from '../components/Toaster';
 
 export default function Config() {
   const allowed = hasPermission('config.manage');
@@ -23,8 +24,21 @@ export default function Config() {
       const saved = await updateConfig(cfg);
       setCfg(saved);
       saveAppConfig(saved);
+      showSuccess('Configuration saved');
     } catch {
       saveAppConfig(cfg);
+      showError('Failed to save configuration');
+    }
+  };
+  const quickSave = async (next) => {
+    setCfg(next);
+    try {
+      const saved = await updateConfig(next);
+      setCfg(saved);
+      saveAppConfig(saved);
+      showSuccess('Saved');
+    } catch (err) {
+      showError(err?.message || 'Save failed');
     }
   };
   const reset = () => {
@@ -146,20 +160,26 @@ export default function Config() {
         {(cfg.accountTypes || []).map((a, i) => (
           <div key={i} className="row" style={{ gap: 8, marginBottom: 8 }}>
             <input className="input" style={{ width: 100 }} placeholder="Code" value={a.code} pattern="\\d{2}" title="Two digits" maxLength={2} onChange={(e) => {
-              const arr = [...(cfg.accountTypes || [])]; arr[i] = { ...arr[i], code: e.target.value }; setCfg({ ...cfg, accountTypes: arr });
+              const arr = [...(cfg.accountTypes || [])]; arr[i] = { ...arr[i], code: e.target.value };
+              setCfg({ ...cfg, accountTypes: arr });
             }} />
             <input className="input" style={{ flex: 1 }} placeholder="Name" value={a.name} onChange={(e) => {
-              const arr = [...(cfg.accountTypes || [])]; arr[i] = { ...arr[i], name: e.target.value }; setCfg({ ...cfg, accountTypes: arr });
+              const arr = [...(cfg.accountTypes || [])]; arr[i] = { ...arr[i], name: e.target.value };
+              setCfg({ ...cfg, accountTypes: arr });
             }} />
             <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <input type="checkbox" checked={a.supportsIndividual !== false} onChange={(e) => {
-                const arr = [...(cfg.accountTypes || [])]; arr[i] = { ...arr[i], supportsIndividual: e.target.checked }; setCfg({ ...cfg, accountTypes: arr });
+                const arr = [...(cfg.accountTypes || [])];
+                arr[i] = { ...arr[i], supportsIndividual: e.target.checked };
+                quickSave({ ...cfg, accountTypes: arr });
               }} />
               Individual form
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <input type="checkbox" checked={a.active !== false} onChange={(e) => {
-                const arr = [...(cfg.accountTypes || [])]; arr[i] = { ...arr[i], active: e.target.checked }; setCfg({ ...cfg, accountTypes: arr });
+                const arr = [...(cfg.accountTypes || [])];
+                arr[i] = { ...arr[i], active: e.target.checked };
+                quickSave({ ...cfg, accountTypes: arr });
               }} />
               Active
             </label>

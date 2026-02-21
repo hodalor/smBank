@@ -50,6 +50,31 @@ export default function ClientProfile() {
   const [signaturePreview, setSignaturePreview] = useState(null);
   const [attachments, setAttachments] = useState([]);
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const uploadNested = async (collection, idx, field, file) => {
+    if (!file) return;
+    if (!accountNumber) {
+      const arr = [...(form[collection] || [])];
+      const rec = { ...(arr[idx] || {}) };
+      rec[field] = file;
+      arr[idx] = rec;
+      setForm({ ...form, [collection]: arr });
+      return;
+    }
+    try {
+      const up = await uploadMedia(file, { entityType: 'client', entityId: accountNumber, tag: `${collection}_${idx}_${field}` });
+      const arr = [...(form[collection] || [])];
+      const rec = { ...(arr[idx] || {}) };
+      if (field === 'photo') rec.photoUrl = up.url;
+      if (field === 'idFront') rec.idFrontUrl = up.url;
+      if (field === 'idBack') rec.idBackUrl = up.url;
+      arr[idx] = rec;
+      setForm({ ...form, [collection]: arr });
+      setAttachments(a => [up, ...(a || [])]);
+      showSuccess('Uploaded');
+    } catch {
+      showError('Upload failed');
+    }
+  };
   const changeFile = async (e) => {
     const file = e.target.files?.[0] || null;
     setForm({ ...form, photo: file });
@@ -223,6 +248,14 @@ export default function ClientProfile() {
         delete x.photo; delete x.idFront; delete x.idBack; delete x.signature;
         return x;
       });
+    }
+    if (!isIndividual) {
+      payload.fullName = '';
+      payload.nationalId = '';
+      payload.dob = '';
+      payload.phone = payload.contactPhone || payload.phone || '';
+      payload.email = payload.contactEmail || payload.email || '';
+      payload.address = payload.registeredAddress || payload.operatingAddress || payload.address || '';
     }
     try {
       let acct = accountNumber;
@@ -442,7 +475,7 @@ export default function ClientProfile() {
                 <input className="input" name="operatingAddress" value={form.operatingAddress} onChange={change} />
               </label>
             </div>
-            <h3>Company Representative</h3>
+            <h3>Company Contact Person</h3>
             <div className="form-grid">
               <label>
                 Name
@@ -462,200 +495,200 @@ export default function ClientProfile() {
               </label>
             </div>
             <h3>Directors</h3>
-            {form.directors.map((d, i) => (
-              <div key={i} className="form-grid">
+            {(form.directors || []).map((d, i) => (
+              <div key={`dir-${i}`} className="form-grid">
                 <label>
                   Name
                   <input className="input" value={d.name || ''} onChange={(e) => {
-                    const arr = [...form.directors]; arr[i] = { ...arr[i], name: e.target.value }; setForm({ ...form, directors: arr });
+                    const arr = [...(form.directors || [])]; arr[i] = { ...arr[i], name: e.target.value }; setForm({ ...form, directors: arr });
                   }} />
                 </label>
                 <label>
                   Role
                   <input className="input" value={d.role || ''} onChange={(e) => {
-                    const arr = [...form.directors]; arr[i] = { ...arr[i], role: e.target.value }; setForm({ ...form, directors: arr });
+                    const arr = [...(form.directors || [])]; arr[i] = { ...arr[i], role: e.target.value }; setForm({ ...form, directors: arr });
                   }} />
                 </label>
                 <label>
                   National ID
                   <input className="input" value={d.nationalId || ''} onChange={(e) => {
-                    const arr = [...form.directors]; arr[i] = { ...arr[i], nationalId: e.target.value }; setForm({ ...form, directors: arr });
+                    const arr = [...(form.directors || [])]; arr[i] = { ...arr[i], nationalId: e.target.value }; setForm({ ...form, directors: arr });
                   }} />
                 </label>
                 <label>
                   Phone
                   <input className="input" value={d.phone || ''} onChange={(e) => {
-                    const arr = [...form.directors]; arr[i] = { ...arr[i], phone: e.target.value }; setForm({ ...form, directors: arr });
+                    const arr = [...(form.directors || [])]; arr[i] = { ...arr[i], phone: e.target.value }; setForm({ ...form, directors: arr });
                   }} />
                 </label>
                 <label>
                   Email
                   <input className="input" value={d.email || ''} onChange={(e) => {
-                    const arr = [...form.directors]; arr[i] = { ...arr[i], email: e.target.value }; setForm({ ...form, directors: arr });
-                  }} />
-                </label>
-                <label>
-                  ID Front
-                  <input className="input" type="file" accept="image/*" onChange={(e) => {
-                    const arr = [...form.directors]; arr[i] = { ...arr[i], idFront: e.target.files?.[0] || null }; setForm({ ...form, directors: arr });
-                  }} />
-                </label>
-                <label>
-                  ID Back
-                  <input className="input" type="file" accept="image/*" onChange={(e) => {
-                    const arr = [...form.directors]; arr[i] = { ...arr[i], idBack: e.target.files?.[0] || null }; setForm({ ...form, directors: arr });
-                  }} />
-                </label>
-                <label>
-                  Signature
-                  <input className="input" type="file" accept="image/*" onChange={(e) => {
-                    const arr = [...form.directors]; arr[i] = { ...arr[i], signature: e.target.files?.[0] || null }; setForm({ ...form, directors: arr });
+                    const arr = [...(form.directors || [])]; arr[i] = { ...arr[i], email: e.target.value }; setForm({ ...form, directors: arr });
                   }} />
                 </label>
                 <label>
                   Passport Photo
                   <input className="input" type="file" accept="image/*" onChange={(e) => {
-                    const arr = [...form.directors]; arr[i] = { ...arr[i], photo: e.target.files?.[0] || null }; setForm({ ...form, directors: arr });
+                    const file = e.target.files?.[0] || null; if (!file) return;
+                    uploadNested('directors', i, 'photo', file);
                   }} />
+                  {d.photoUrl ? <img alt="" src={d.photoUrl} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, marginTop: 6 }} /> : null}
+                </label>
+                <label>
+                  ID Front
+                  <input className="input" type="file" accept="image/*" onChange={(e) => {
+                    const file = e.target.files?.[0] || null; if (!file) return;
+                    uploadNested('directors', i, 'idFront', file);
+                  }} />
+                  {d.idFrontUrl ? <img alt="" src={d.idFrontUrl} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, marginTop: 6 }} /> : null}
+                </label>
+                <label>
+                  ID Back
+                  <input className="input" type="file" accept="image/*" onChange={(e) => {
+                    const file = e.target.files?.[0] || null; if (!file) return;
+                    uploadNested('directors', i, 'idBack', file);
+                  }} />
+                  {d.idBackUrl ? <img alt="" src={d.idBackUrl} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, marginTop: 6 }} /> : null}
                 </label>
                 <div className="row">
                   <button type="button" className="btn" onClick={() => {
-                    const arr = form.directors.filter((_, idx) => idx !== i); setForm({ ...form, directors: arr });
+                    const arr = (form.directors || []).filter((_, idx) => idx !== i); setForm({ ...form, directors: arr });
                   }}>Remove</button>
                 </div>
               </div>
             ))}
-            <button type="button" className="btn" onClick={() => setForm({ ...form, directors: [...form.directors, { name: '', role: '', nationalId: '', phone: '', email: '' }] })}>Add Director</button>
+            <button type="button" className="btn" onClick={() => setForm({ ...form, directors: [ ...(form.directors || []), { name: '', role: '', nationalId: '', phone: '', email: '' } ] })}>Add Director</button>
             <h3>Shareholders</h3>
-            {form.shareholders.map((s, i) => (
-              <div key={i} className="form-grid">
+            {(form.shareholders || []).map((s, i) => (
+              <div key={`sh-${i}`} className="form-grid">
                 <label>
                   Name
                   <input className="input" value={s.name || ''} onChange={(e) => {
-                    const arr = [...form.shareholders]; arr[i] = { ...arr[i], name: e.target.value }; setForm({ ...form, shareholders: arr });
+                    const arr = [...(form.shareholders || [])]; arr[i] = { ...arr[i], name: e.target.value }; setForm({ ...form, shareholders: arr });
                   }} />
                 </label>
                 <label>
                   National ID
                   <input className="input" value={s.nationalId || ''} onChange={(e) => {
-                    const arr = [...form.shareholders]; arr[i] = { ...arr[i], nationalId: e.target.value }; setForm({ ...form, shareholders: arr });
+                    const arr = [...(form.shareholders || [])]; arr[i] = { ...arr[i], nationalId: e.target.value }; setForm({ ...form, shareholders: arr });
                   }} />
                 </label>
                 <label>
                   Phone
                   <input className="input" value={s.phone || ''} onChange={(e) => {
-                    const arr = [...form.shareholders]; arr[i] = { ...arr[i], phone: e.target.value }; setForm({ ...form, shareholders: arr });
+                    const arr = [...(form.shareholders || [])]; arr[i] = { ...arr[i], phone: e.target.value }; setForm({ ...form, shareholders: arr });
                   }} />
                 </label>
                 <label>
                   Email
                   <input className="input" value={s.email || ''} onChange={(e) => {
-                    const arr = [...form.shareholders]; arr[i] = { ...arr[i], email: e.target.value }; setForm({ ...form, shareholders: arr });
+                    const arr = [...(form.shareholders || [])]; arr[i] = { ...arr[i], email: e.target.value }; setForm({ ...form, shareholders: arr });
                   }} />
                 </label>
                 <label>
                   Shares (%)
                   <input className="input" type="number" value={s.sharesPercent || ''} onChange={(e) => {
-                    const arr = [...form.shareholders]; arr[i] = { ...arr[i], sharesPercent: e.target.value }; setForm({ ...form, shareholders: arr });
-                  }} />
-                </label>
-                <label>
-                  ID Front
-                  <input className="input" type="file" accept="image/*" onChange={(e) => {
-                    const arr = [...form.shareholders]; arr[i] = { ...arr[i], idFront: e.target.files?.[0] || null }; setForm({ ...form, shareholders: arr });
-                  }} />
-                </label>
-                <label>
-                  ID Back
-                  <input className="input" type="file" accept="image/*" onChange={(e) => {
-                    const arr = [...form.shareholders]; arr[i] = { ...arr[i], idBack: e.target.files?.[0] || null }; setForm({ ...form, shareholders: arr });
-                  }} />
-                </label>
-                <label>
-                  Signature
-                  <input className="input" type="file" accept="image/*" onChange={(e) => {
-                    const arr = [...form.shareholders]; arr[i] = { ...arr[i], signature: e.target.files?.[0] || null }; setForm({ ...form, shareholders: arr });
+                    const arr = [...(form.shareholders || [])]; arr[i] = { ...arr[i], sharesPercent: e.target.value }; setForm({ ...form, shareholders: arr });
                   }} />
                 </label>
                 <label>
                   Passport Photo
                   <input className="input" type="file" accept="image/*" onChange={(e) => {
-                    const arr = [...form.shareholders]; arr[i] = { ...arr[i], photo: e.target.files?.[0] || null }; setForm({ ...form, shareholders: arr });
+                    const file = e.target.files?.[0] || null; if (!file) return;
+                    uploadNested('shareholders', i, 'photo', file);
                   }} />
+                  {s.photoUrl ? <img alt="" src={s.photoUrl} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, marginTop: 6 }} /> : null}
+                </label>
+                <label>
+                  ID Front
+                  <input className="input" type="file" accept="image/*" onChange={(e) => {
+                    const file = e.target.files?.[0] || null; if (!file) return;
+                    uploadNested('shareholders', i, 'idFront', file);
+                  }} />
+                  {s.idFrontUrl ? <img alt="" src={s.idFrontUrl} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, marginTop: 6 }} /> : null}
+                </label>
+                <label>
+                  ID Back
+                  <input className="input" type="file" accept="image/*" onChange={(e) => {
+                    const file = e.target.files?.[0] || null; if (!file) return;
+                    uploadNested('shareholders', i, 'idBack', file);
+                  }} />
+                  {s.idBackUrl ? <img alt="" src={s.idBackUrl} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, marginTop: 6 }} /> : null}
                 </label>
                 <div className="row">
                   <button type="button" className="btn" onClick={() => {
-                    const arr = form.shareholders.filter((_, idx) => idx !== i); setForm({ ...form, shareholders: arr });
+                    const arr = (form.shareholders || []).filter((_, idx) => idx !== i); setForm({ ...form, shareholders: arr });
                   }}>Remove</button>
                 </div>
               </div>
             ))}
-            <button type="button" className="btn" onClick={() => setForm({ ...form, shareholders: [...form.shareholders, { name: '', nationalId: '', phone: '', email: '', sharesPercent: '' }] })}>Add Shareholder</button>
+            <button type="button" className="btn" onClick={() => setForm({ ...form, shareholders: [ ...(form.shareholders || []), { name: '', nationalId: '', phone: '', email: '', sharesPercent: '' } ] })}>Add Shareholder</button>
             <h3>Signatory Persons</h3>
-            {form.signatories.map((p, i) => (
-              <div key={i} className="form-grid">
+            {(form.signatories || []).map((p, i) => (
+              <div key={`sig-${i}`} className="form-grid">
                 <label>
                   Name
                   <input className="input" value={p.name || ''} onChange={(e) => {
-                    const arr = [...form.signatories]; arr[i] = { ...arr[i], name: e.target.value }; setForm({ ...form, signatories: arr });
+                    const arr = [...(form.signatories || [])]; arr[i] = { ...arr[i], name: e.target.value }; setForm({ ...form, signatories: arr });
                   }} />
                 </label>
                 <label>
                   Role
                   <input className="input" value={p.role || ''} onChange={(e) => {
-                    const arr = [...form.signatories]; arr[i] = { ...arr[i], role: e.target.value }; setForm({ ...form, signatories: arr });
+                    const arr = [...(form.signatories || [])]; arr[i] = { ...arr[i], role: e.target.value }; setForm({ ...form, signatories: arr });
                   }} />
                 </label>
                 <label>
                   National ID
                   <input className="input" value={p.nationalId || ''} onChange={(e) => {
-                    const arr = [...form.signatories]; arr[i] = { ...arr[i], nationalId: e.target.value }; setForm({ ...form, signatories: arr });
+                    const arr = [...(form.signatories || [])]; arr[i] = { ...arr[i], nationalId: e.target.value }; setForm({ ...form, signatories: arr });
                   }} />
                 </label>
                 <label>
                   Phone
                   <input className="input" value={p.phone || ''} onChange={(e) => {
-                    const arr = [...form.signatories]; arr[i] = { ...arr[i], phone: e.target.value }; setForm({ ...form, signatories: arr });
+                    const arr = [...(form.signatories || [])]; arr[i] = { ...arr[i], phone: e.target.value }; setForm({ ...form, signatories: arr });
                   }} />
                 </label>
                 <label>
                   Email
                   <input className="input" value={p.email || ''} onChange={(e) => {
-                    const arr = [...form.signatories]; arr[i] = { ...arr[i], email: e.target.value }; setForm({ ...form, signatories: arr });
-                  }} />
-                </label>
-                <label>
-                  ID Front
-                  <input className="input" type="file" accept="image/*" onChange={(e) => {
-                    const arr = [...form.signatories]; arr[i] = { ...arr[i], idFront: e.target.files?.[0] || null }; setForm({ ...form, signatories: arr });
-                  }} />
-                </label>
-                <label>
-                  ID Back
-                  <input className="input" type="file" accept="image/*" onChange={(e) => {
-                    const arr = [...form.signatories]; arr[i] = { ...arr[i], idBack: e.target.files?.[0] || null }; setForm({ ...form, signatories: arr });
-                  }} />
-                </label>
-                <label>
-                  Signature
-                  <input className="input" type="file" accept="image/*" onChange={(e) => {
-                    const arr = [...form.signatories]; arr[i] = { ...arr[i], signature: e.target.files?.[0] || null }; setForm({ ...form, signatories: arr });
+                    const arr = [...(form.signatories || [])]; arr[i] = { ...arr[i], email: e.target.value }; setForm({ ...form, signatories: arr });
                   }} />
                 </label>
                 <label>
                   Passport Photo
                   <input className="input" type="file" accept="image/*" onChange={(e) => {
-                    const arr = [...form.signatories]; arr[i] = { ...arr[i], photo: e.target.files?.[0] || null }; setForm({ ...form, signatories: arr });
+                    const file = e.target.files?.[0] || null; if (!file) return;
+                    uploadNested('signatories', i, 'photo', file);
                   }} />
+                  {p.photoUrl ? <img alt="" src={p.photoUrl} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, marginTop: 6 }} /> : null}
+                </label>
+                <label>
+                  ID Front
+                  <input className="input" type="file" accept="image/*" onChange={(e) => {
+                    const file = e.target.files?.[0] || null; if (!file) return;
+                    uploadNested('signatories', i, 'idFront', file);
+                  }} />
+                  {p.idFrontUrl ? <img alt="" src={p.idFrontUrl} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, marginTop: 6 }} /> : null}
+                </label>
+                <label>
+                  ID Back
+                  <input className="input" type="file" accept="image/*" onChange={(e) => {
+                    const file = e.target.files?.[0] || null; if (!file) return;
+                    uploadNested('signatories', i, 'idBack', file);
+                  }} />
+                  {p.idBackUrl ? <img alt="" src={p.idBackUrl} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, marginTop: 6 }} /> : null}
                 </label>
                 <div className="row">
                   <button type="button" className="btn" onClick={() => {
-                    const arr = form.signatories.filter((_, idx) => idx !== i); setForm({ ...form, signatories: arr });
+                    const arr = (form.signatories || []).filter((_, idx) => idx !== i); setForm({ ...form, signatories: arr });
                   }}>Remove</button>
                 </div>
               </div>
             ))}
-            <button type="button" className="btn" onClick={() => setForm({ ...form, signatories: [...form.signatories, { name: '', role: '', nationalId: '', phone: '', email: '' }] })}>Add Signatory</button>
+            <button type="button" className="btn" onClick={() => setForm({ ...form, signatories: [ ...(form.signatories || []), { name: '', role: '', nationalId: '', phone: '', email: '' } ] })}>Add Signatory</button>
           </div>
         )}
         {isIndividual ? (
