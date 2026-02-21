@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { getCurrentUserName } from '../state/ops';
 import { createDeposit, directoryLookup, listClients, listPostedTransactions, listLoanRepayPosted, listLoans } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';

@@ -24,7 +24,7 @@ export default function SuperBin() {
     pull();
     const id = setInterval(pull, 2000);
     return () => clearInterval(id);
-  }, []);
+  }, [navigate]);
   const restore = (id) => {
     restoreSuperBin(id).then(() => {
       listSuperBin().then(setRows).catch((e) => {

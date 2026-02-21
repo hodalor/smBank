@@ -116,7 +116,6 @@ export default function Statements() {
             <input className="input" placeholder="Account / Name / ID" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
             <button className="btn" type="button" onClick={() => {
               const q = accountNumber.trim();
-              let info = null;
               if (/^\\d{10}$/.test(q)) {
                 directoryLookup(q).then(c => { setClient(c); }).catch((e) => { setClient(null); if (e && e.status === 404) showError('Account not found'); else showError('Lookup failed'); });
               } else {

@@ -327,9 +327,9 @@ export function printTxnReceipt(txn, { copies = 2 } = {}) {
                 txn.kind === 'loan_disbursement' ? 'Loan Disbursement Receipt' :
                 (txn.mode === 'writeoff' ? 'Loan Write‑Off Receipt' : txn.loanId ? 'Loan Repayment Receipt' : 'Transaction Receipt');
   const notes = txn.meta && txn.meta.notes ? String(txn.meta.notes) : '';
-  const feeAmount = Number(txn.meta && txn.meta.feeAmount || 0);
-  const baseAmount = Number(txn.meta && txn.meta.baseAmount || 0);
-  const feeRate = Number(txn.meta && txn.meta.feeRate || 0);
+  const feeAmount = Number((txn.meta && txn.meta.feeAmount) || 0);
+  const baseAmount = Number((txn.meta && txn.meta.baseAmount) || 0);
+  const feeRate = Number((txn.meta && txn.meta.feeRate) || 0);
   const hasFees = txn.kind === 'withdraw' && feeAmount > 0;
   const rows = [
     ['Date', txn.approvedAt || txn.initiatedAt || new Date().toISOString()],

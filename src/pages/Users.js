@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getRoles, getAllPermissions, getEffectivePermissions, hasPermission } from '../state/ops';
 import { listUsers, upsertUser, removeUser, changeUserPassword, setUserEnabled } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
@@ -30,7 +30,7 @@ export default function Users() {
   const allPerms = getAllPermissions();
   const baseSet = useMemo(() => getEffectivePermissions({ role: form.role, permsAdd: [], permsRemove: [] }), [form.role]);
   const effectiveSet = useMemo(() => getEffectivePermissions(form), [form]);
-  const reload = async (filters = null) => {
+  const reload = useCallback(async (filters = null) => {
     try {
       const list = await listUsers(filters || {
         department: filterDept || undefined,
@@ -41,8 +41,8 @@ export default function Users() {
     } catch {
       setUsers([]);
     }
-  };
-  useEffect(() => { reload(); }, []);
+  }, [filterDept, filterRole, filterEmp]);
+  useEffect(() => { reload(); }, [reload]);
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const togglePerm = (perm) => {
     const base = baseSet.has(perm);
@@ -232,14 +232,14 @@ export default function Users() {
               <div className="row" style={{ gap: 8, marginTop: 8 }}>
                 <button type="button" className="btn" onClick={async () => {
                   try {
-                    const updated = await setUserEnabled(form.username, true);
+                    await setUserEnabled(form.username, true);
                     setForm({ ...form, enabled: true });
                     await reload();
                   } catch { showError('Failed to enable account'); }
                 }}>Enable</button>
                 <button type="button" className="btn" onClick={async () => {
                   try {
-                    const updated = await setUserEnabled(form.username, false);
+                    await setUserEnabled(form.username, false);
                     setForm({ ...form, enabled: false });
                     await reload();
                   } catch { showError('Failed to disable account'); }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setCurrentUserName, saveUser, getUserByUsername, ROLE_NAMES } from '../state/ops';
+import { setCurrentUserName, saveUser, getUserByUsername } from '../state/ops';
 import { apiLogin } from '../api';
 import logo from '../logo.svg';
 
