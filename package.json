@@ -4,7 +4,11 @@
   "private": true,
   "main": "src/server.js",
   "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
+    "build": "node -e \"console.log('no build step for backend')\"",
     "start": "node src/server.js",
     "dev": "node src/server.js"
   },
