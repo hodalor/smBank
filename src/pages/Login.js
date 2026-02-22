@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setCurrentUserName, saveUser, getUserByUsername } from '../state/ops';
-import { apiLogin } from '../api';
-import logo from '../logo.svg';
+import { setCurrentUserName, saveUser, getUserByUsername, getAppConfig, onConfigUpdate, saveAppConfig } from '../state/ops';
+import { apiLogin, fetchConfig } from '../api';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -12,7 +11,9 @@ export default function Login() {
   const [captcha, setCaptcha] = useState('');
   const [captchaInput, setCaptchaInput] = useState('');
   const [error, setError] = useState('');
+  const [appCfg, setAppCfg] = useState(getAppConfig());
   const canvasRef = useRef(null);
+  const captchaTimerRef = useRef(null);
   const navigate = useNavigate();
   const superCandidate = useMemo(() => {
     const u = (username || '').trim().toLowerCase();
@@ -24,6 +25,11 @@ export default function Login() {
       setUsername(saved);
       setRemember(true);
     }
+  }, []);
+  useEffect(() => {
+    fetchConfig().then(c => { setAppCfg(c); saveAppConfig(c); }).catch(() => {});
+    const off = onConfigUpdate(setAppCfg);
+    return () => off && off();
   }, []);
   const regenerateCaptcha = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -54,6 +60,9 @@ export default function Login() {
   }, [captcha]);
   useEffect(() => {
     regenerateCaptcha();
+    if (captchaTimerRef.current) clearInterval(captchaTimerRef.current);
+    captchaTimerRef.current = setInterval(() => regenerateCaptcha(), 60 * 1000);
+    return () => { if (captchaTimerRef.current) clearInterval(captchaTimerRef.current); };
   }, []);
   const submit = async (e) => {
     e.preventDefault();
@@ -93,8 +102,8 @@ export default function Login() {
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f1f5f9' }}>
       <div className="card" style={{ width: 420, padding: 24, borderRadius: 16, boxShadow: '0 10px 30px rgba(2,6,23,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <img src={logo} alt="smBank" style={{ width: 44, height: 44 }} />
-          <div style={{ fontSize: 26, fontWeight: 800, color: '#16a34a' }}>smBank</div>
+          <img src="/logo512.png" alt={appCfg.appName || 'smBank'} style={{ width: 44, height: 44 }} />
+          <div style={{ fontSize: 26, fontWeight: 800, color: '#16a34a' }}>{appCfg.appName || 'smBank'}</div>
         </div>
         <form onSubmit={submit} className="stack" style={{ display: 'grid', gap: 12 }}>
           <input className="input" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="account" />

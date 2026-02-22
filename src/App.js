@@ -1,5 +1,5 @@
 import './App.css';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -25,12 +25,21 @@ import MediaUpload from './pages/MediaUpload';
 import MyAccount from './pages/MyAccount';
 import LoanStatements from './pages/LoanStatements';
 import LoanDetails from './pages/LoanDetails';
+import { getCurrentUserName } from './state/ops';
 
 export default function App() {
+  const RequireAuth = ({ children }) => {
+    const loc = useLocation();
+    let token = '';
+    try { if (typeof window !== 'undefined' && window.localStorage) token = window.localStorage.getItem('smbank_token') || ''; } catch {}
+    const user = getCurrentUserName();
+    if (!token || !user) return <Navigate to="/login" replace state={{ from: loc }} />;
+    return children;
+  };
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/" element={<Layout />}>
+      <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="my-account" element={<MyAccount />} />

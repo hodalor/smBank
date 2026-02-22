@@ -25,7 +25,10 @@ export default function Layout() {
   return (
     <div className="layout">
       <aside className="sidebar">
-        <div className="brand" onClick={() => navigate('/dashboard')}>{cfg.appName || 'smBank'}</div>
+        <div className="brand" onClick={() => navigate('/dashboard')}>
+          <img src="/logo512.png" alt={cfg.appName || 'smBank'} className="brand-logo" />
+          <span>{cfg.appName || 'smBank'}</span>
+        </div>
         <nav className="nav">
           <NavLink to="/my-account" className="nav-item" onClick={() => addTab({ to: '/my-account', label: 'My Account' })}>My Account</NavLink>
           {hasPermission(PERMISSIONS.DASHBOARD_VIEW) && (

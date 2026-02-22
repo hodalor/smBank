@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getTabs, onTabsUpdate, closeTab } from '../state/tabs';
 import { getCurrentUserName, setCurrentUserName } from '../state/ops';
 import { apiLogout } from '../api';
@@ -13,6 +13,7 @@ export default function TopBar() {
   const menuRef = useRef(null);
   const scrollerRef = useRef(null);
   const [showArrows, setShowArrows] = useState(false);
+  const idleRef = useRef(null);
   useEffect(() => onTabsUpdate(setTabs), []);
   useEffect(() => {
     const onStorage = (e) => {
@@ -38,6 +39,7 @@ export default function TopBar() {
     check();
     return () => ro.disconnect();
   }, [tabs]);
+  
   const active = tabs.find(t => location.pathname.startsWith(t.to))?.label || 'smBank';
   const remove = (e, to) => {
     e.preventDefault();
@@ -51,14 +53,32 @@ export default function TopBar() {
     if (!el) return;
     el.scrollBy({ left: dx, behavior: 'smooth' });
   };
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try { await apiLogout(); } catch {}
     setCurrentUserName('');
     try { if (typeof window !== 'undefined' && window.localStorage) window.localStorage.removeItem('smbank_token'); } catch {}
     setUser(getCurrentUserName());
     setOpen(false);
     navigate('/login');
-  };
+  }, [navigate]);
+  useEffect(() => {
+    const reset = () => {
+      if (idleRef.current) clearTimeout(idleRef.current);
+      idleRef.current = setTimeout(() => {
+        logout();
+      }, 5 * 60 * 1000);
+    };
+    reset();
+    const handlers = ['mousemove'].map(evt => {
+      const h = () => reset();
+      window.addEventListener(evt, h);
+      return [evt, h];
+    });
+    return () => {
+      if (idleRef.current) clearTimeout(idleRef.current);
+      handlers.forEach(([evt, h]) => window.removeEventListener(evt, h));
+    };
+  }, [logout]);
   return (
     <div className="topbar">
       <div style={{ fontWeight: 700 }}>{active}</div>

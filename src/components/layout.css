@@ -20,6 +20,16 @@
   font-weight: 700;
   margin-bottom: 20px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: contain;
+  background: #fff;
 }
 .nav {
   display: grid;

@@ -95,7 +95,6 @@ function seedUsersIfEmpty() {
         { username: 'admin', role: ROLES.ADMIN, permsAdd: [], permsRemove: [] },
       ];
       localStorage.setItem(USERS_KEY, JSON.stringify(seed));
-      if (!localStorage.getItem(USER_KEY)) localStorage.setItem(USER_KEY, 'super');
     }
   } catch {}
 }
@@ -151,9 +150,10 @@ export function getEffectivePermissions(user) {
 
 export function getCurrentUser() {
   const username = getCurrentUserName();
+  if (!username) return { username: '', role: 'Anonymous', permsAdd: [], permsRemove: [] };
   const user = getUserByUsername(username);
   if (user) return user;
-  return { username: username || 'Admin', role: ROLES.ADMIN, permsAdd: [], permsRemove: [] };
+  return { username, role: 'Anonymous', permsAdd: [], permsRemove: [] };
 }
 export function hasPermission(perm) {
   const user = getCurrentUser();
@@ -270,9 +270,9 @@ export function findAccount(term) {
 export function getCurrentUserName() {
   try {
     const v = localStorage.getItem(USER_KEY);
-    return v || 'Admin';
+    return v || '';
   } catch {
-    return 'Admin';
+    return '';
   }
 }
 export function setCurrentUserName(name) {

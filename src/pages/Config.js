@@ -121,7 +121,20 @@ export default function Config() {
           </label>
           <label>
             Bank Code (2 digits)
-            <input className="input" name="bankCode" value={cfg.bankCode || ''} onChange={change} placeholder="e.g. 07" pattern="\\d{2}" title="Two digits" maxLength={2} />
+            <input
+              className="input"
+              name="bankCode"
+              value={cfg.bankCode || ''}
+              onChange={(e) => {
+                const v = (e.target.value || '').replace(/\D/g, '').slice(0, 2);
+                setCfg({ ...cfg, bankCode: v });
+              }}
+              placeholder="e.g. 07"
+              pattern="^[0-9]{2}$"
+              title="Two digits"
+              maxLength={2}
+              inputMode="numeric"
+            />
           </label>
           <label style={{ alignSelf: 'end' }}>
             <input type="checkbox" name="darkMode" checked={!!cfg.darkMode} onChange={change} /> Dark Mode
