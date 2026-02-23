@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getMe, listClients } from '../api';
+import { getMe, listClients, changeOwnPassword } from '../api';
 import { showError } from '../components/Toaster';
 import { hasPermission, PERMISSIONS } from '../state/ops';
 
@@ -10,6 +10,10 @@ export default function MyAccount() {
   const [show, setShow] = useState(false);
   const [managed, setManaged] = useState([]);
   const [loadingManaged, setLoadingManaged] = useState(false);
+  const [oldPwd, setOldPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [newPwd2, setNewPwd2] = useState('');
+  const [mustChangeNotice, setMustChangeNotice] = useState(false);
   useEffect(() => {
     let stop = false;
     (async () => {
@@ -24,6 +28,11 @@ export default function MyAccount() {
       }
     })();
     return () => { stop = true; };
+  }, []);
+  useEffect(() => {
+    if (localStorage.getItem('force_password_change') === '1') {
+      setMustChangeNotice(true);
+    }
   }, []);
   useEffect(() => {
     let stop = false;
@@ -106,6 +115,40 @@ export default function MyAccount() {
               </tbody>
             </table>
           )}
+        </div>
+      )}
+      {me && (
+        <div className="card" style={{ maxWidth: 640 }}>
+          {mustChangeNotice && (
+            <div style={{ background: '#fef3c7', color: '#92400e', padding: 8, borderRadius: 6, marginBottom: 8 }}>
+              Your password was reset. Please set a new personal password now.
+            </div>
+          )}
+          <h3>Change Password</h3>
+          <div className="row" style={{ gap: 8 }}>
+            <input className="input" type="password" placeholder="Current password" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} />
+            <input className="input" type="password" placeholder="New password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
+            <input className="input" type="password" placeholder="Confirm new password" value={newPwd2} onChange={(e) => setNewPwd2(e.target.value)} />
+            <button className="btn" onClick={async () => {
+              try {
+                if (!oldPwd || !newPwd) { showError('Enter all fields'); return; }
+                if (newPwd !== newPwd2) { showError('Passwords do not match'); return; }
+                if (newPwd.length < 10 || !/[A-Z]/.test(newPwd) || !/[a-z]/.test(newPwd) || !/[0-9]/.test(newPwd) || !/[^A-Za-z0-9]/.test(newPwd)) {
+                  showError('Password must be ≥10 chars with upper, lower, digit, special');
+                  return;
+                }
+                await changeOwnPassword(me.username, oldPwd, newPwd);
+                setOldPwd(''); setNewPwd(''); setNewPwd2('');
+                if (localStorage.getItem('force_password_change') === '1') {
+                  localStorage.removeItem('force_password_change');
+                  setMustChangeNotice(false);
+                }
+              } catch (e) {
+                showError(e.message || 'Failed to change password');
+              }
+            }}>Update</button>
+          </div>
+          <div style={{ color: '#64748b', fontSize: 12, marginTop: 6 }}>Passwords expire every 30 days.</div>
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getRoles, getAllPermissions, getEffectivePermissions, hasPermission } from '../state/ops';
-import { listUsers, upsertUser, removeUser, changeUserPassword, setUserEnabled } from '../api';
+import { listUsers, upsertUser, removeUser, resetUserPassword, setUserEnabled } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 import { confirm } from '../components/Confirm';
 import Pager from '../components/Pager';
@@ -26,6 +26,7 @@ export default function Users() {
     password: '',
   });
   const [changingPassword, setChangingPassword] = useState('');
+  const [approvalCode, setApprovalCode] = useState('');
   const roles = getRoles();
   const [filterDept, setFilterDept] = useState('');
   const [filterRole, setFilterRole] = useState('');
@@ -221,14 +222,21 @@ export default function Users() {
               <div style={{ fontWeight: 600, marginBottom: 8 }}>Change Password</div>
               <div className="row" style={{ gap: 8 }}>
                 <input className="input" type="password" placeholder="new password" value={changingPassword} onChange={(e) => setChangingPassword(e.target.value)} style={{ flex: 1 }} />
+                <input className="input" type="text" placeholder="Admin Approval Code" value={approvalCode} onChange={(e) => setApprovalCode(e.target.value)} style={{ width: 180 }} />
                 <button type="button" className="btn" onClick={async () => {
                   if (!changingPassword) { showWarning('Enter a new password'); return; }
+                  if (!approvalCode) { showWarning('Enter your approval code'); return; }
+                  if (changingPassword.length < 10 || !/[A-Z]/.test(changingPassword) || !/[a-z]/.test(changingPassword) || !/[0-9]/.test(changingPassword) || !/[^A-Za-z0-9]/.test(changingPassword)) {
+                    showWarning('Password must be ≥10 chars with upper, lower, digit, special');
+                    return;
+                  }
                   try {
-                    await changeUserPassword(form.username, changingPassword);
+                    await resetUserPassword(form.username, changingPassword, approvalCode);
                     setChangingPassword('');
-                    showSuccess('Password updated');
-                  } catch {
-                    showError('Failed to update password');
+                    setApprovalCode('');
+                    showSuccess('Password reset; user must change at next login');
+                  } catch (e) {
+                    showError(e.message || 'Failed to reset password');
                   }
                 }}>Update</button>
               </div>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setCurrentUserName, saveUser, getUserByUsername, getAppConfig, onConfigUpdate, saveAppConfig } from '../state/ops';
-import { apiLogin, fetchConfig } from '../api';
+import { apiLogin, fetchConfig, publicChangePassword, publicAdminResetPassword } from '../api';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -10,6 +10,16 @@ export default function Login() {
   const [captcha, setCaptcha] = useState('');
   const [captchaInput, setCaptchaInput] = useState('');
   const [error, setError] = useState('');
+  const [expired, setExpired] = useState(false);
+  const [oldPwd, setOldPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [newPwd2, setNewPwd2] = useState('');
+  const [resetOpen, setResetOpen] = useState(false);
+  const [adminU, setAdminU] = useState('');
+  const [adminCode, setAdminCode] = useState('');
+  const [resetUser, setResetUser] = useState('');
+  const [resetPwd, setResetPwd] = useState('');
+  const [resetPwd2, setResetPwd2] = useState('');
   const [appCfg, setAppCfg] = useState(getAppConfig());
   const canvasRef = useRef(null);
   const captchaTimerRef = useRef(null);
@@ -62,6 +72,7 @@ export default function Login() {
   const submit = async (e) => {
     e.preventDefault();
     setError('');
+    setExpired(false);
     if (!captchaInput || captchaInput.toLowerCase() !== captcha.toLowerCase()) {
       setError('Invalid captcha');
       regenerateCaptcha();
@@ -73,7 +84,7 @@ export default function Login() {
       return;
     }
     try {
-      const { role, token } = await apiLogin(uname, password);
+      const { role, token, passwordChangeRequired } = await apiLogin(uname, password);
       if (token && typeof window !== 'undefined' && window.localStorage) {
         window.localStorage.setItem('smbank_token', token);
       }
@@ -83,15 +94,27 @@ export default function Login() {
       } else if (existing.role !== role) {
         saveUser({ ...existing, role });
       }
+      if (passwordChangeRequired) {
+        localStorage.setItem('force_password_change', '1');
+      } else {
+        localStorage.removeItem('force_password_change');
+      }
     } catch (e) {
-      setError('Invalid username or password');
+      const msg = String(e && e.message || '').toLowerCase();
+      if (msg.includes('password_expired')) {
+        setExpired(true);
+        setError('Password expired — change required');
+      } else {
+        setError('Invalid username or password');
+      }
       regenerateCaptcha();
       return;
     }
     setCurrentUserName(uname);
     if (remember) localStorage.setItem('remember_username', uname);
     else localStorage.removeItem('remember_username');
-    navigate('/dashboard');
+    if (localStorage.getItem('force_password_change') === '1') navigate('/my-account');
+    else navigate('/dashboard');
   };
   return (
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f1f5f9' }}>
@@ -114,6 +137,60 @@ export default function Login() {
           {error && <div style={{ color: '#dc2626', fontSize: 12 }}>{error}</div>}
           <button type="submit" className="btn btn-primary" style={{ background: '#16a34a', borderColor: '#16a34a' }}>Login In</button>
         </form>
+        <div className="row" style={{ justifyContent: 'flex-end', marginTop: 8 }}>
+          <button className="btn" onClick={() => setResetOpen(s => !s)}>{resetOpen ? 'Hide Reset' : 'Reset Password (Admin)'}</button>
+        </div>
+        {resetOpen && (
+          <div className="stack" style={{ marginTop: 8, padding: 12, border: '1px solid #e2e8f0', borderRadius: 8, gap: 8 }}>
+            <div style={{ fontWeight: 600 }}>Reset with Admin Approval</div>
+            <input className="input" placeholder="Admin username" value={adminU} onChange={(e) => setAdminU(e.target.value)} />
+            <input className="input" placeholder="Admin approval code" value={adminCode} onChange={(e) => setAdminCode(e.target.value)} />
+            <input className="input" placeholder="Your username" value={resetUser} onChange={(e) => setResetUser(e.target.value)} />
+            <input className="input" type="password" placeholder="New password" value={resetPwd} onChange={(e) => setResetPwd(e.target.value)} />
+            <input className="input" type="password" placeholder="Confirm new password" value={resetPwd2} onChange={(e) => setResetPwd2(e.target.value)} />
+            <button className="btn" onClick={async () => {
+              try {
+                if (!adminU || !adminCode || !resetUser || !resetPwd) { setError('Fill all reset fields'); return; }
+                if (resetPwd !== resetPwd2) { setError('Passwords do not match'); return; }
+                if (resetPwd.length < 10 || !/[A-Z]/.test(resetPwd) || !/[a-z]/.test(resetPwd) || !/[0-9]/.test(resetPwd) || !/[^A-Za-z0-9]/.test(resetPwd)) {
+                  setError('Password must be ≥10 chars with upper, lower, digit, special');
+                  return;
+                }
+                await publicAdminResetPassword({ adminUsername: adminU, approvalCode: adminCode, username: resetUser, newPassword: resetPwd });
+                setError('Password reset. Login and change to your personal password.');
+                setResetOpen(false);
+                setAdminU(''); setAdminCode(''); setResetUser(''); setResetPwd(''); setResetPwd2('');
+              } catch (e3) {
+                setError((e3 && e3.message) || 'Reset failed');
+              }
+            }}>Reset Password</button>
+            <div style={{ color: '#64748b', fontSize: 12 }}>Ask an Admin to provide the daily approval code.</div>
+          </div>
+        )}
+        {expired && (
+          <div className="stack" style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #e2e8f0', gap: 8 }}>
+            <div style={{ fontWeight: 600 }}>Reset Expired Password</div>
+            <input className="input" type="password" placeholder="Current password" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} />
+            <input className="input" type="password" placeholder="New password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
+            <input className="input" type="password" placeholder="Confirm new password" value={newPwd2} onChange={(e) => setNewPwd2(e.target.value)} />
+            <button className="btn" onClick={async () => {
+              try {
+                if (!username || !oldPwd || !newPwd) { setError('Fill all fields'); return; }
+                if (newPwd !== newPwd2) { setError('Passwords do not match'); return; }
+                if (newPwd.length < 10 || !/[A-Z]/.test(newPwd) || !/[a-z]/.test(newPwd) || !/[0-9]/.test(newPwd) || !/[^A-Za-z0-9]/.test(newPwd)) {
+                  setError('Password must be ≥10 chars with upper, lower, digit, special');
+                  return;
+                }
+                await publicChangePassword(username, oldPwd, newPwd);
+                setError('Password updated. Please login.');
+                setExpired(false);
+                setOldPwd(''); setNewPwd(''); setNewPwd2('');
+              } catch (e2) {
+                setError((e2 && e2.message) || 'Failed to update password');
+              }
+            }}>Update Password</button>
+          </div>
+        )}
       </div>
     </div>
   );

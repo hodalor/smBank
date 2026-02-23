@@ -102,7 +102,20 @@ export async function removeUser(username) {
   return apiFetch(`/users/${encodeURIComponent(username)}`, { method: 'DELETE' });
 }
 export async function changeUserPassword(username, password) {
-  return apiFetch(`/users/${encodeURIComponent(username)}/password`, { method: 'POST', body: JSON.stringify({ password }) });
+  // Deprecated: use changeOwnPassword or resetUserPassword
+  return apiFetch(`/users/${encodeURIComponent(username)}/password`, { method: 'POST', body: JSON.stringify({ newPassword: password, oldPassword: '' }) });
+}
+export async function changeOwnPassword(username, oldPassword, newPassword) {
+  return apiFetch(`/users/${encodeURIComponent(username)}/password`, { method: 'POST', body: JSON.stringify({ oldPassword, newPassword }) });
+}
+export async function resetUserPassword(username, newPassword, approvalCode) {
+  return apiFetch(`/users/${encodeURIComponent(username)}/password/reset`, { method: 'POST', body: JSON.stringify({ newPassword, approvalCode }) });
+}
+export async function publicChangePassword(username, oldPassword, newPassword) {
+  return apiFetch('/auth/password/change', { method: 'POST', body: JSON.stringify({ username, oldPassword, newPassword }) });
+}
+export async function publicAdminResetPassword({ adminUsername, approvalCode, username, newPassword }) {
+  return apiFetch('/auth/password/reset-by-admin', { method: 'POST', body: JSON.stringify({ adminUsername, approvalCode, username, newPassword }) });
 }
 export async function setUserEnabled(username, enabled) {
   const path = enabled ? 'enable' : 'disable';
