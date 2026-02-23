@@ -34,7 +34,8 @@ export default function Notifications() {
       setLoading(false);
     }
   }
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []);
   async function resend(id) {
     try {
       await resendNotification(id);

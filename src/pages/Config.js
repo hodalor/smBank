@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { getAppConfig, saveAppConfig, hasPermission } from '../state/ops';
+import { getAppConfig, saveAppConfig, hasPermission, PERMISSIONS } from '../state/ops';
 import { fetchConfig, updateConfig } from '../api';
 import { showSuccess, showError } from '../components/Toaster';
 
 export default function Config() {
-  const allowed = hasPermission('config.manage');
+  const allowed = hasPermission(PERMISSIONS.CONFIG_MANAGE);
   const [cfg, setCfg] = useState(getAppConfig());
   useEffect(() => {
     fetchConfig().then(data => {

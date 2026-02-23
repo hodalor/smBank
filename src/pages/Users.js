@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getRoles, getAllPermissions, getEffectivePermissions, hasPermission, getCurrentUser } from '../state/ops';
+import { getRoles, getAllPermissions, getEffectivePermissions, hasPermission, getCurrentUser, PERMISSIONS } from '../state/ops';
 import { listUsers, upsertUser, removeUser, resetUserPassword, setUserEnabled } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 import { confirm } from '../components/Confirm';
 import Pager from '../components/Pager';
 
 export default function Users() {
-  const allowed = hasPermission('users.manage');
+  const allowed = hasPermission(PERMISSIONS.USERS_MANAGE);
+  const viewer = getCurrentUser();
+  const viewerRole = viewer.role || '';
   const [users, setUsers] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -33,6 +35,11 @@ export default function Users() {
   const [filterAutoDisabled, setFilterAutoDisabled] = useState(false);
   const [filterEmp, setFilterEmp] = useState('');
   const allPerms = getAllPermissions();
+  const viewerPerms = useMemo(() => getEffectivePermissions(viewer), [viewer]);
+  const manageablePerms = useMemo(() => {
+    if (viewer.role === 'Super Admin') return allPerms;
+    return allPerms.filter(p => viewerPerms.has(p));
+  }, [allPerms, viewer, viewerPerms]);
   const baseSet = useMemo(() => getEffectivePermissions({ role: form.role, permsAdd: [], permsRemove: [] }), [form.role]);
   const effectiveSet = useMemo(() => getEffectivePermissions(form), [form]);
   const reload = useCallback(async (filters = null) => {
@@ -48,8 +55,6 @@ export default function Users() {
     }
   }, [filterDept, filterRole, filterEmp]);
   useEffect(() => { reload(); }, [reload]);
-  const viewer = getCurrentUser();
-  const viewerRole = viewer.role || '';
   const isAdminOrSuper = viewerRole === 'Admin' || viewerRole === 'Super Admin';
   const roleOrder = ['Customer Service', 'Teller', 'Account Manager', 'Loan Officer', 'Loan Manager', 'Admin', 'Super Admin'];
   const canSeeRole = (r) => {
@@ -240,7 +245,7 @@ export default function Users() {
           {isAdminOrSuper && <div>
             <div style={{ color: '#64748b', fontSize: 12, marginBottom: 6 }}>Permissions</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 8 }}>
-              {allPerms.map(p => (
+              {manageablePerms.map(p => (
                 <label key={p} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <input type="checkbox" checked={effectiveSet.has(p)} onChange={() => togglePerm(p)} />
                   <span>{p}</span>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { hasPermission, PERMISSIONS } from '../state/ops';
 import { approveLoanRepayPending, listLoanRepayPending, rejectLoanRepayPending, getMe } from '../api';
 import { printTxnReceipt } from '../state/ops';
 import { showError, showSuccess } from '../components/Toaster';
@@ -7,6 +8,7 @@ import Pager from '../components/Pager';
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
 export default function LoanRepayApprovals() {
+  const allowed = hasPermission(PERMISSIONS.LOANS_REPAY_APPROVALS_VIEW);
   const [rows, setRows] = useState([]);
   const [askCodeFor, setAskCodeFor] = useState(null);
   const [code, setCode] = useState('');
@@ -20,8 +22,8 @@ export default function LoanRepayApprovals() {
       setRows([]);
     }
   };
-  useEffect(() => { load(); }, []);
-  useEffect(() => { (async () => { try { setMy(await getMe()); } catch {} })(); }, []);
+  useEffect(() => { if (!allowed) return; load(); }, [allowed]);
+  useEffect(() => { if (!allowed) return; (async () => { try { setMy(await getMe()); } catch {} })(); }, [allowed]);
   const repayRows = useMemo(() => rows, [rows]);
   const approve = async (id) => { setAskCodeFor(id); setCode(''); setShow(false); };
   const reject = async (id) => {
@@ -33,6 +35,7 @@ export default function LoanRepayApprovals() {
   const [pageSize, setPageSize] = useState(10);
   const start = (page - 1) * pageSize;
   const pageRows = repayRows.slice(start, start + pageSize);
+  if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Repay Loan Approvals</h1>

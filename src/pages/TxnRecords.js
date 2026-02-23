@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
+import { hasPermission, PERMISSIONS } from '../state/ops';
 import { listTxnRecords, listPostedTransactions, directoryLookup } from '../api';
 import { displayUserName } from '../state/ops';
 import Pager from '../components/Pager';
 
 export default function TxnRecords() {
+  const allowed = hasPermission(PERMISSIONS.TXN_RECORDS_VIEW);
   const [rows, setRows] = useState([]);
   const [status, setStatus] = useState('All');
   const [kind, setKind] = useState('All');
@@ -12,6 +14,7 @@ export default function TxnRecords() {
   const [selected, setSelected] = useState(null);
   const [client, setClient] = useState(null);
   useEffect(() => {
+    if (!allowed) return;
     const run = async () => {
       try {
         const q = {};
@@ -44,8 +47,9 @@ export default function TxnRecords() {
       }
     };
     run();
-  }, [status, kind, accountNumber, txnId]);
+  }, [allowed, status, kind, accountNumber, txnId]);
   useEffect(() => {
+    if (!allowed) return;
     (async () => {
       if (!selected || !selected.accountNumber) { setClient(null); return; }
       try {
@@ -55,7 +59,7 @@ export default function TxnRecords() {
         setClient(null);
       }
     })();
-  }, [selected]);
+  }, [allowed, selected]);
   const view = useMemo(() => {
     const mapped = rows.map(r => ({
       id: r.id,
@@ -96,6 +100,7 @@ export default function TxnRecords() {
   const [pageSize, setPageSize] = useState(10);
   const start = (page - 1) * pageSize;
   const pageRows = view.slice(start, start + pageSize);
+  if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Transaction Records</h1>

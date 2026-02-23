@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
+import { hasPermission, PERMISSIONS } from '../state/ops';
 import { createLoan, directoryLookup, listClients, listLoans, fetchConfig } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 import Pager from '../components/Pager';
 
 export default function Loans() {
+  const canView = hasPermission(PERMISSIONS.LOANS_VIEW);
+  const canCreate = hasPermission(PERMISSIONS.LOANS_CREATE);
   const [form, setForm] = useState({
     accountNumber: '',
     principal: '',
@@ -42,6 +45,10 @@ export default function Loans() {
   const submit = async (e) => {
     e.preventDefault();
     try {
+      if (!canCreate) {
+        showError('Not authorized to create loans');
+        return;
+      }
       await createLoan({
         accountNumber: form.accountNumber,
         principal: Number(form.principal),
@@ -62,9 +69,11 @@ export default function Loans() {
   const [rows, setRows] = useState([]);
   const [loanIdFilter, setLoanIdFilter] = useState('');
   useEffect(() => {
+    if (!canView) return;
     listLoans({}).then(setRows).catch(() => setRows([]));
-  }, []);
+  }, [canView]);
   useEffect(() => {
+    if (!canView) return;
     fetchConfig().then(cfg => {
       setCfg({
         defaultLoanRate: Number(cfg.defaultLoanRate ?? 0),
@@ -74,7 +83,7 @@ export default function Loans() {
       });
       setForm(f => ({ ...f, interestRate: f.interestRate || String(Number(cfg.defaultLoanRate ?? 0)) }));
     }).catch(() => {});
-  }, []);
+  }, [canView]);
   const interestCalc = useMemo(() => {
     const p = Number(form.principal || 0);
     const r = Number(form.interestRate || 0) / 100;
@@ -121,10 +130,11 @@ export default function Loans() {
   const [pageSize, setPageSize] = useState(10);
   const start = (page - 1) * pageSize;
   const pageRows = listFiltered.slice(start, start + pageSize);
+  if (!canView) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Loans</h1>
-      <section className="card">
+      {canCreate && <section className="card">
         <h3>New Loan</h3>
         <form onSubmit={submit} className="form" style={{ maxWidth: 520 }}>
           <label>
@@ -215,7 +225,7 @@ export default function Loans() {
           </div>
           <button className="btn btn-primary" type="submit">Create Loan</button>
         </form>
-      </section>
+      </section>}
       <section className="card">
         <h3>Loans List</h3>
         <div style={{ marginBottom: 12, maxWidth: 320 }}>

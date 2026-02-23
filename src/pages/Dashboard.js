@@ -1,14 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
+import { hasPermission, PERMISSIONS } from '../state/ops';
 import { Link } from 'react-router-dom';
 import { SavingsLine, LoansBar, LoanStatusDoughnut } from '../components/Charts';
 import { listLoanRepayPosted, listLoans, listPostedTransactions } from '../api';
 
 export default function Dashboard() {
+  const canView = hasPermission(PERMISSIONS.DASHBOARD_VIEW);
+  const canClients = hasPermission(PERMISSIONS.CLIENTS_VIEW);
+  const canDeposit = hasPermission(PERMISSIONS.DEPOSIT_CREATE);
+  const canWithdraw = hasPermission(PERMISSIONS.WITHDRAW_CREATE);
+  const canLoans = hasPermission(PERMISSIONS.LOANS_VIEW);
   const [acct, setAcct] = useState('');
   const [posted, setPosted] = useState([]);
   const [repays, setRepays] = useState([]);
   const [loans, setLoans] = useState([]);
   useEffect(() => {
+    if (!canView) return;
     const run = async () => {
       try {
         const [tx, rp, ls] = await Promise.all([
@@ -38,7 +45,7 @@ export default function Dashboard() {
       }
     };
     run();
-  }, []);
+  }, [canView]);
   const transactions = useMemo(() => [...posted, ...repays], [posted, repays]);
   const mainTotals = useMemo(() => {
     const rows = posted.filter(t => (!acct || t.account === acct) && (t.type === 'Deposit' || t.type === 'Withdrawal'));
@@ -113,25 +120,26 @@ export default function Dashboard() {
     return counts;
   }, [loans]);
   const currency = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
+  if (!canView) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Dashboard</h1>
       <div className="stack" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', display: 'grid', gap: 16 }}>
-        <div className="card">
+        {canClients && <div className="card">
           <h3>Clients</h3>
           <Link to="/clients">Manage</Link>
-        </div>
-        <div className="card">
+        </div>}
+        {(canDeposit || canWithdraw) && <div className="card">
           <h3>Savings</h3>
           <div className="row">
-            <Link to="/transactions/deposit">Deposit</Link>
-            <Link to="/transactions/withdraw">Withdraw</Link>
+            {canDeposit && <Link to="/transactions/deposit">Deposit</Link>}
+            {canWithdraw && <Link to="/transactions/withdraw">Withdraw</Link>}
           </div>
-        </div>
-        <div className="card">
+        </div>}
+        {canLoans && <div className="card">
           <h3>Loans</h3>
           <Link to="/loans">Manage</Link>
-        </div>
+        </div>}
         <div className="card">
           <h3>Savings Trend</h3>
           <SavingsLine series={savingsSeries} />

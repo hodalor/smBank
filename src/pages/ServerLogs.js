@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { listServerLogs, getServerLog } from '../api';
-import { hasPermission } from '../state/ops';
+import { hasPermission, PERMISSIONS } from '../state/ops';
 import { showError } from '../components/Toaster';
 import Pager from '../components/Pager';
 
 export default function ServerLogs() {
-  const allowed = hasPermission('serverlogs.view');
+  const allowed = hasPermission(PERMISSIONS.SERVERLOGS_VIEW);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);

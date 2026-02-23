@@ -137,6 +137,7 @@ export default function Promotions() {
       showError(e && e.message ? e.message : 'Test failed');
     }
   };
+  if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack" style={{ maxWidth: 820 }}>
       <h1>Promotions</h1>

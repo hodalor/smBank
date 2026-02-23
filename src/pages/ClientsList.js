@@ -7,9 +7,11 @@ import Pager from '../components/Pager';
 
 export default function ClientsList() {
   const navigate = useNavigate();
+  const allowed = hasPermission(PERMISSIONS.CLIENTS_VIEW);
   const [query, setQuery] = useState({ type: 'account', value: '' });
   const [data, setData] = useState([]);
   useEffect(() => {
+    if (!allowed) return;
     let mounted = true;
     const run = async () => {
       try {
@@ -32,7 +34,7 @@ export default function ClientsList() {
     };
     run();
     return () => { mounted = false; };
-  }, [query]);
+  }, [allowed, query]);
   const filtered = useMemo(() => {
     return data.map(c => {
       const name = c.fullName || c.companyName || '';
@@ -46,6 +48,7 @@ export default function ClientsList() {
   const [pageSize, setPageSize] = useState(10);
   const start = (page - 1) * pageSize;
   const pageRows = filtered.slice(start, start + pageSize);
+  if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <div className="row" style={{ justifyContent: 'space-between' }}>

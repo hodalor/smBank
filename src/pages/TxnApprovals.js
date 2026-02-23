@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { hasPermission, PERMISSIONS } from '../state/ops';
 import { approvePendingTransaction, listPendingTransactions, rejectPendingTransaction, getMe } from '../api';
 import { printTxnReceipt } from '../state/ops';
 import { showError, showSuccess } from '../components/Toaster';
@@ -7,6 +8,7 @@ import Pager from '../components/Pager';
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
 export default function TxnApprovals() {
+  const allowed = hasPermission(PERMISSIONS.TXN_APPROVALS_VIEW);
   const [rows, setRows] = useState([]);
   const [askCodeFor, setAskCodeFor] = useState(null);
   const [code, setCode] = useState('');
@@ -20,8 +22,8 @@ export default function TxnApprovals() {
       setRows([]);
     }
   };
-  useEffect(() => { load(); }, []);
-  useEffect(() => { (async () => { try { setMy(await getMe()); } catch {} })(); }, []);
+  useEffect(() => { if (!allowed) return; load(); }, [allowed]);
+  useEffect(() => { if (!allowed) return; (async () => { try { setMy(await getMe()); } catch {} })(); }, [allowed]);
   const approve = async (id) => { setAskCodeFor(id); setCode(''); setShow(false); };
   const reject = async (id) => {
     try { await rejectPendingTransaction(id, {}); showSuccess('Transaction rejected'); }
@@ -33,6 +35,7 @@ export default function TxnApprovals() {
   const [pageSize, setPageSize] = useState(10);
   const start = (page - 1) * pageSize;
   const pageRows = filtered.slice(start, start + pageSize);
+  if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Deposit & Withdrawal Approvals</h1>

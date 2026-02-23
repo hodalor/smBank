@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { directoryLookup, listClients, listLoanRepayPosted, listPostedTransactions } from '../api';
-import { displayUserName } from '../state/ops';
+import { displayUserName, hasPermission, PERMISSIONS } from '../state/ops';
 import { showError, showWarning } from '../components/Toaster';
 import Pager from '../components/Pager';
 
@@ -131,6 +131,7 @@ export default function LoanStatements() {
   const [pageSize, setPageSize] = useState(10);
   const start = (page - 1) * pageSize;
   const pageRows = rows.slice(start, start + pageSize);
+  if (!hasPermission(PERMISSIONS.LOANS_REPAYMENTS_VIEW)) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Loan Statements</h1>

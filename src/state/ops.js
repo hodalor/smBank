@@ -19,6 +19,7 @@ const PERMS = {
   DASHBOARD_VIEW: 'dashboard.view',
   CLIENTS_VIEW: 'clients.view',
   CLIENTS_CREATE: 'clients.create',
+  LOANS_CREATE: 'loans.create',
   DEPOSIT_CREATE: 'deposit.create',
   WITHDRAW_CREATE: 'withdraw.create',
   TXN_APPROVALS_VIEW: 'txn.approvals.view',
@@ -49,17 +50,7 @@ const ROLE_PERMISSIONS = {
   [ROLES.LOAN_MANAGER]: [
     PERMS.DASHBOARD_VIEW,
     PERMS.LOANS_VIEW,
-    PERMS.LOANS_APPROVALS_VIEW,
-    PERMS.LOANS_RECORDS_VIEW,
-    PERMS.LOANS_REPAYMENTS_VIEW,
-    PERMS.LOANS_REPAY_CREATE,
-    PERMS.LOANS_REPAY_APPROVALS_VIEW,
-    PERMS.REPORTS_VIEW,
-    PERMS.USERS_MANAGE,
-  ],
-  [ROLES.LOAN_MANAGER]: [
-    PERMS.DASHBOARD_VIEW,
-    PERMS.LOANS_VIEW,
+    PERMS.LOANS_CREATE,
     PERMS.LOANS_APPROVALS_VIEW,
     PERMS.LOANS_RECORDS_VIEW,
     PERMS.LOANS_REPAYMENTS_VIEW,
@@ -70,6 +61,7 @@ const ROLE_PERMISSIONS = {
   [ROLES.LOAN_OFFICER]: [
     PERMS.DASHBOARD_VIEW,
     PERMS.LOANS_VIEW,
+    // intentionally no loans.create by default
     PERMS.LOANS_RECORDS_VIEW,
     PERMS.LOANS_REPAYMENTS_VIEW,
     PERMS.LOANS_REPAY_CREATE,
@@ -86,7 +78,6 @@ const ROLE_PERMISSIONS = {
     PERMS.CLIENT_MANAGER_MANAGE,
     PERMS.ASSETS_VIEW,
     PERMS.REPORTS_VIEW,
-    PERMS.USERS_MANAGE,
   ],
   [ROLES.TELLER]: [
     PERMS.CLIENTS_VIEW,
@@ -167,6 +158,10 @@ export function getEffectivePermissions(user) {
   if (user.role !== ROLES.SUPER_ADMIN) {
     base.delete(PERMS.SUPERBIN_VIEW);
     base.delete(PERMS.SERVERLOGS_VIEW);
+  }
+  // Enforce: only Admin and Super Admin can manage Users regardless of overrides
+  if (user.role !== ROLES.ADMIN && user.role !== ROLES.SUPER_ADMIN) {
+    base.delete(PERMS.USERS_MANAGE);
   }
   return base;
 }

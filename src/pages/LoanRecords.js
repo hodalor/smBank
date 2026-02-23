@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { hasPermission, PERMISSIONS } from '../state/ops';
 import { Link } from 'react-router-dom';
 import { directoryLookup, listClients, listLoans } from '../api';
 import { showError, showWarning } from '../components/Toaster';
@@ -7,11 +8,13 @@ import Pager from '../components/Pager';
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
 export default function LoanRecords() {
+  const allowed = hasPermission(PERMISSIONS.LOANS_RECORDS_VIEW);
   const [account, setAccount] = useState('');
   const [loanId, setLoanId] = useState('');
   const [client, setClient] = useState(null);
   const [rows, setRows] = useState([]);
   useEffect(() => {
+    if (!allowed) return;
     const run = async () => {
       try {
         const q = {};
@@ -23,7 +26,7 @@ export default function LoanRecords() {
       }
     };
     run();
-  }, [account]);
+  }, [allowed, account]);
 
   const loans = useMemo(() => {
     const plusMonths = (dateStr, m) => {
@@ -79,6 +82,7 @@ export default function LoanRecords() {
   const [pageSize, setPageSize] = useState(10);
   const start = (page - 1) * pageSize;
   const pageRows = filtered.slice(start, start + pageSize);
+  if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Loan Records</h1>

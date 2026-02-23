@@ -95,6 +95,7 @@ export default function Assets() {
     }
   };
 
+  if (!hasPermission(PERMISSIONS.ASSETS_VIEW)) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Assets Registry</h1>

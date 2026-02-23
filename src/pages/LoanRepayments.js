@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { hasPermission, PERMISSIONS } from '../state/ops';
 import { directoryLookup, listClients, listLoanRepayPosted } from '../api';
 import { showError, showWarning } from '../components/Toaster';
 
@@ -41,6 +42,7 @@ export default function LoanRepayments() {
     return map;
   }, [filtered]);
 
+  if (!hasPermission(PERMISSIONS.LOANS_REPAYMENTS_VIEW)) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Loan Repayment Records</h1>

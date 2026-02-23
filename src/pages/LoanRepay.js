@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { getCurrentUserName } from '../state/ops';
+import { getCurrentUserName, hasPermission, PERMISSIONS } from '../state/ops';
 import { createLoanRepayment, directoryLookup, listClients, listLoanRepayPosted, listLoans } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
 export default function LoanRepay() {
+  const allowed = hasPermission(PERMISSIONS.LOANS_REPAY_CREATE);
   const [account, setAccount] = useState('');
   const [loanId, setLoanId] = useState('');
   const [mode, setMode] = useState('full'); // full | partial | writeoff
@@ -81,6 +82,10 @@ export default function LoanRepay() {
   };
   const submit = (e) => {
     e.preventDefault();
+    if (!allowed) {
+      showError('Not authorized to create loan repayments');
+      return;
+    }
     if (!loanId || !account) {
       showWarning('Enter account and loan ID');
       return;
@@ -98,6 +103,7 @@ export default function LoanRepay() {
     setAmount('');
   };
 
+  if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Repay Loan</h1>

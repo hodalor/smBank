@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { hasPermission, PERMISSIONS } from '../state/ops';
 import { approveLoan, listLoanApprovals, rejectLoan, getMe } from '../api';
 import { printLoanDisbursementReceipt } from '../state/ops';
 import { showError, showSuccess } from '../components/Toaster';
 import Pager from '../components/Pager';
 
 export default function LoanApprovals() {
+  const allowed = hasPermission(PERMISSIONS.LOANS_APPROVALS_VIEW);
   const [rows, setRows] = useState([]);
   const [loanFilter, setLoanFilter] = useState('');
   const [askCodeFor, setAskCodeFor] = useState(null);
@@ -19,8 +21,8 @@ export default function LoanApprovals() {
       setRows([]);
     }
   };
-  useEffect(() => { load(); }, []);
-  useEffect(() => { (async () => { try { setMy(await getMe()); } catch {} })(); }, []);
+  useEffect(() => { if (!allowed) return; load(); }, [allowed]);
+  useEffect(() => { if (!allowed) return; (async () => { try { setMy(await getMe()); } catch {} })(); }, [allowed]);
   const approve = async (id) => { setAskCodeFor(id); setCode(''); setShow(false); };
   const reject = async (id) => {
     try { await rejectLoan(id, {}); showSuccess('Loan rejected'); }
@@ -35,6 +37,7 @@ export default function LoanApprovals() {
   const [dSize, setDSize] = useState(10);
   const pRows = pending.slice((pPage-1)*pSize, (pPage-1)*pSize + pSize);
   const dRows = processed.slice((dPage-1)*dSize, (dPage-1)*dSize + dSize);
+  if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Loan Approvals</h1>

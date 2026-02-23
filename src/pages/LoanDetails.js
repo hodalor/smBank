@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getLoan } from '../api';
-import { displayUserName } from '../state/ops';
+import { displayUserName, hasPermission, PERMISSIONS } from '../state/ops';
 import { showError } from '../components/Toaster';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
 export default function LoanDetails() {
+  const allowed = hasPermission(PERMISSIONS.LOANS_RECORDS_VIEW);
   const { id } = useParams();
   const [data, setData] = useState(null);
   useEffect(() => {
-    if (!id) return;
+    if (!allowed || !id) return;
     getLoan(id).then(setData).catch(() => showError('Failed to load loan'));
-  }, [id]);
+  }, [allowed, id]);
+  if (!allowed) return <div className="card">Not authorized.</div>;
   if (!data) return <div className="card">Loading…</div>;
   const { loan, client, repayments, summary } = data;
   const fees = (loan.totalFees ?? 0);

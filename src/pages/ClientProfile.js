@@ -8,6 +8,8 @@ import { hasPermission, PERMISSIONS } from '../state/ops';
 export default function ClientProfile() {
   const { accountNumber } = useParams();
   const navigate = useNavigate();
+  const canView = hasPermission(PERMISSIONS.CLIENTS_VIEW);
+  const canEdit = hasPermission(PERMISSIONS.CLIENTS_CREATE);
   const [form, setForm] = useState({
     branchCode: '',
     accountTypeCode: '',
@@ -318,6 +320,7 @@ export default function ClientProfile() {
       }
     }
   };
+  if (!canView) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>{accountNumber ? 'Client Profile' : 'New Client'}</h1>
@@ -914,7 +917,7 @@ export default function ClientProfile() {
           </div>
         )}
         <div className="row">
-          <button className="btn btn-primary" type="submit">Save</button>
+          {canEdit && <button className="btn btn-primary" type="submit">Save</button>}
           <button className="btn" type="button" onClick={() => navigate('/clients')}>Cancel</button>
         </div>
       </form>

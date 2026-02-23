@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { getCurrentUserName } from '../state/ops';
+import { getCurrentUserName, hasPermission, PERMISSIONS } from '../state/ops';
 import { createDeposit, directoryLookup, listClients, listPostedTransactions, listLoanRepayPosted, listLoans } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 
 export default function Deposit() {
+  const allowed = hasPermission(PERMISSIONS.DEPOSIT_CREATE);
   const [form, setForm] = useState({
     accountNumber: '',
     depositorName: '',
@@ -85,6 +86,10 @@ export default function Deposit() {
     e.preventDefault();
     (async () => {
       try {
+        if (!allowed) {
+          showError('Not authorized to create deposits');
+          return;
+        }
         if (!form.accountNumber || !form.amount) {
           showWarning('Enter account and amount');
           return;
@@ -113,6 +118,7 @@ export default function Deposit() {
     setForm({ accountNumber: '', depositorName: '', depositorAddress: '', incomeSource: '', amount: '', date: '', method: 'cash', notes: '' });
     setClient(null);
   };
+  if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Deposit</h1>

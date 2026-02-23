@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { getCurrentUserName } from '../state/ops';
+import { getCurrentUserName, hasPermission, PERMISSIONS } from '../state/ops';
 import { createWithdraw, directoryLookup, listClients, listPostedTransactions, listLoanRepayPosted, listLoans, fetchConfig } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 
 export default function Withdraw() {
+  const allowed = hasPermission(PERMISSIONS.WITHDRAW_CREATE);
   const [form, setForm] = useState({
     accountNumber: '',
     amount: '',
@@ -99,6 +100,10 @@ export default function Withdraw() {
     e.preventDefault();
     (async () => {
       try {
+        if (!allowed) {
+          showError('Not authorized to create withdrawals');
+          return;
+        }
         if (!form.accountNumber || !form.amount) {
           showWarning('Enter account and amount');
           return;
@@ -142,6 +147,7 @@ export default function Withdraw() {
     setLoanBal(0);
     setWithdrawer({ idNumber: '', phone: '', address: '' });
   };
+  if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Withdraw</h1>

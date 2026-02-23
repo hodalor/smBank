@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSuperBin, restoreFromSuperBin, purgeFromSuperBin } from '../state/ops';
+import { getSuperBin, restoreFromSuperBin, purgeFromSuperBin, hasPermission, PERMISSIONS } from '../state/ops';
 import { listSuperBin, restoreSuperBin, deleteSuperBin } from '../api';
 import { confirm } from '../components/Confirm';
 import { showWarning } from '../components/Toaster';
@@ -73,7 +73,7 @@ export default function SuperBin() {
     a.click();
     URL.revokeObjectURL(url);
   };
-  if (forbidden) return <div className="card">Not authorized.</div>;
+  if (!hasPermission(PERMISSIONS.SUPERBIN_VIEW) || forbidden) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Super Bin</h1>

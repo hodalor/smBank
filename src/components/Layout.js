@@ -80,7 +80,7 @@ export default function Layout() {
           {hasPermission(PERMISSIONS.ASSETS_VIEW) && (
             <NavLink to="/assets" className="nav-item" onClick={() => addTab({ to: '/assets', label: 'Assets Reg' })}>Assets Reg</NavLink>
           )}
-          {hasPermission('config.manage') && (
+          {hasPermission(PERMISSIONS.CONFIG_MANAGE) && (
             <NavLink to="/config" className="nav-item" onClick={() => addTab({ to: '/config', label: 'Config' })}>Config</NavLink>
           )}
           {hasPermission(PERMISSIONS.USERS_MANAGE) && (

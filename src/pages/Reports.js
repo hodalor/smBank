@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
+import { hasPermission, PERMISSIONS } from '../state/ops';
 import { listClients, listLoans, listLoanRepayPosted, listPostedTransactions } from '../api';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
 export default function Reports() {
+  const allowed = hasPermission(PERMISSIONS.REPORTS_VIEW);
   const [reportType, setReportType] = useState('All Clients');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -12,6 +14,7 @@ export default function Reports() {
   const [posted, setPosted] = useState([]);
   const [repays, setRepays] = useState([]);
   useEffect(() => {
+    if (!allowed) return;
     const run = async () => {
       try {
         const [cs, ls, tx, rp] = await Promise.all([
@@ -32,7 +35,7 @@ export default function Reports() {
       }
     };
     run();
-  }, []);
+  }, [allowed]);
 
   const balancesByAccount = useMemo(() => {
     const map = new Map();
@@ -133,6 +136,7 @@ export default function Reports() {
     w.print();
   };
 
+  if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
       <h1>Reports</h1>
