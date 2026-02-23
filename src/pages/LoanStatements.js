@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { directoryLookup, listClients, listLoanRepayPosted, listPostedTransactions } from '../api';
 import { displayUserName } from '../state/ops';
 import { showError, showWarning } from '../components/Toaster';
+import Pager from '../components/Pager';
 
 function toCurrency(n) {
   const num = Number(n || 0);
@@ -126,6 +127,10 @@ export default function LoanStatements() {
     w.print();
   };
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const start = (page - 1) * pageSize;
+  const pageRows = rows.slice(start, start + pageSize);
   return (
     <div className="stack">
       <h1>Loan Statements</h1>
@@ -219,7 +224,7 @@ export default function LoanStatements() {
               </tr>
             </thead>
             <tbody>
-              {rows.map(r => (
+              {pageRows.map(r => (
                 <tr key={r.id}>
                   <td>{r.id}</td>
                   <td>{r.type}</td>
@@ -232,6 +237,7 @@ export default function LoanStatements() {
               ))}
             </tbody>
           </table>
+          <Pager total={rows.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
         </div>
       </div>
     </div>

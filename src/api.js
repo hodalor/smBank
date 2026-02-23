@@ -1,4 +1,25 @@
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+let inflight = 0;
+const loadingBus = new EventTarget();
+function emitLoading() {
+  try {
+    const ev = new CustomEvent('api:loading', { detail: { inflight } });
+    loadingBus.dispatchEvent(ev);
+  } catch {
+    const ev = new Event('api:loading');
+    ev.detail = { inflight };
+    loadingBus.dispatchEvent(ev);
+  }
+}
+export function onApiLoading(cb) {
+  const handler = (e) => {
+    const n = (e && e.detail && typeof e.detail.inflight === 'number') ? e.detail.inflight : inflight;
+    cb(n > 0, n);
+  };
+  loadingBus.addEventListener('api:loading', handler);
+  cb(inflight > 0, inflight);
+  return () => loadingBus.removeEventListener('api:loading', handler);
+}
 
 async function apiFetch(path, opts = {}) {
   const h = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
@@ -6,20 +27,31 @@ async function apiFetch(path, opts = {}) {
     const tok = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('smbank_token') : '';
     if (tok) h['Authorization'] = `Bearer ${tok}`;
   } catch {}
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: h,
-    credentials: 'include',
-    ...opts,
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    const err = new Error(text || `HTTP ${res.status}`);
-    err.status = res.status;
-    throw err;
+  inflight += 1;
+  emitLoading();
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: h,
+      credentials: 'include',
+      ...opts,
+    });
+    if (!res.ok) {
+      let text = await res.text();
+      try {
+        const obj = JSON.parse(text);
+        text = obj && (obj.details || obj.error || text);
+      } catch {}
+      const err = new Error(text || `HTTP ${res.status}`);
+      err.status = res.status;
+      throw err;
+    }
+    const ct = res.headers.get('content-type') || '';
+    if (ct.includes('application/json')) return res.json();
+    return res.text();
+  } finally {
+    inflight = Math.max(0, inflight - 1);
+    emitLoading();
   }
-  const ct = res.headers.get('content-type') || '';
-  if (ct.includes('application/json')) return res.json();
-  return res.text();
 }
 function superBinHeaders() { return {}; }
 
@@ -98,6 +130,9 @@ export async function deleteClient(id) {
 export async function directoryLookup(accountNumber) {
   return apiFetch(`/directory/${accountNumber}`, { method: 'GET' });
 }
+export async function updateClientStatus(id, payload) {
+  return apiFetch(`/clients/${id}/status`, { method: 'POST', body: JSON.stringify(payload) });
+}
 
 export async function createDeposit(payload) {
   return apiFetch('/transactions/deposit', { method: 'POST', body: JSON.stringify(payload) });
@@ -118,6 +153,15 @@ export async function listPostedTransactions(params = {}) {
   if (params.to) q.set('to', params.to);
   if (params.id) q.set('id', params.id);
   return apiFetch(`/transactions/posted?${q.toString()}`, { method: 'GET' });
+}
+export async function listTxnRecords(params = {}) {
+  const q = new URLSearchParams();
+  if (params.accountNumber) q.set('accountNumber', params.accountNumber);
+  if (params.kind) q.set('kind', params.kind);
+  if (params.status) q.set('status', params.status);
+  if (params.id) q.set('id', params.id);
+  if (params.initiator) q.set('initiator', params.initiator);
+  return apiFetch(`/transactions/records?${q.toString()}`, { method: 'GET' });
 }
 export async function approvePendingTransaction(id, payload = {}) {
   return apiFetch(`/transactions/pending/${id}/approve`, { method: 'POST', body: JSON.stringify(payload) });

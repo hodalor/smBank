@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createClient, getClient, updateClient, fetchConfig, uploadMedia } from '../api';
+import { createClient, getClient, updateClient, fetchConfig, uploadMedia, updateClientStatus } from '../api';
 import { showError, showSuccess } from '../components/Toaster';
 import { confirm } from '../components/Confirm';
 
@@ -49,6 +49,9 @@ export default function ClientProfile() {
   const [idBackPreview, setIdBackPreview] = useState(null);
   const [signaturePreview, setSignaturePreview] = useState(null);
   const [attachments, setAttachments] = useState([]);
+  const [statusHistory, setStatusHistory] = useState([]);
+  const [newStatus, setNewStatus] = useState('Active');
+  const [statusRemarks, setStatusRemarks] = useState('');
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const uploadNested = async (collection, idx, field, file) => {
     if (!file) return;
@@ -199,6 +202,8 @@ export default function ClientProfile() {
           nok2Email: c.nok2Email || '',
           nok2Address: c.nok2Address || '',
         });
+        setStatusHistory(Array.isArray(c.statusHistory) ? c.statusHistory : []);
+        setNewStatus(c.status || 'Active');
         const catts = Array.isArray(c.attachments) ? c.attachments : (Array.isArray(c.data && c.data.attachments) ? c.data.attachments : []);
         setAttachments(catts);
       } catch {}
@@ -387,10 +392,7 @@ export default function ClientProfile() {
           </label>
           <label>
             Status
-            <select className="input" name="status" value={form.status} onChange={change}>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
+            <input className="input" value={form.status} readOnly />
           </label>
           {isIndividual && (
             <>
@@ -450,6 +452,60 @@ export default function ClientProfile() {
             )}
           </div>
         )}
+        <div className="stack">
+          <h3>Change Account Status</h3>
+          <div className="form-grid">
+            <label>
+              New Status
+              <select className="input" value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Dormant">Dormant</option>
+                <option value="NDS">NDS (Non‑Debit)</option>
+              </select>
+            </label>
+            <label>
+              Remarks
+              <input className="input" value={statusRemarks} onChange={(e) => setStatusRemarks(e.target.value)} placeholder="Required" />
+            </label>
+          </div>
+          <div className="row">
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={async () => {
+                try {
+                  if (!statusRemarks.trim()) { showError('Enter remarks'); return; }
+                  await updateClientStatus(accountNumber, { status: newStatus, remarks: statusRemarks.trim() });
+                  showSuccess('Status updated');
+                  const c = await getClient(accountNumber);
+                  setForm(f => ({ ...f, status: c.status || 'Active' }));
+                  setStatusHistory(Array.isArray(c.statusHistory) ? c.statusHistory : []);
+                  setNewStatus(c.status || 'Active');
+                  setStatusRemarks('');
+                } catch {
+                  showError('Failed to update status');
+                }
+              }}
+            >
+              Change Status
+            </button>
+          </div>
+          {statusHistory && statusHistory.length > 0 && (
+            <div className="card">
+              <div style={{ fontWeight: 600, marginBottom: 8 }}>Status History</div>
+              <div className="stack">
+                {statusHistory.slice(0,5).map((h, i) => (
+                  <div key={`h-${i}`} className="row" style={{ justifyContent: 'space-between' }}>
+                    <div>{h.status}</div>
+                    <div style={{ color: '#64748b', fontSize: 12 }}>{h.by || h.via} • {h.at}</div>
+                    <div style={{ color: '#64748b', fontSize: 12 }}>{h.remarks || ''}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
         {!isIndividual && (
           <div className="stack">
             <h3>Company Info</h3>

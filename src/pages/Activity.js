@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { listActivity, getClient, listUsers, listPostedTransactions, listLoans, listLoanRepayPosted } from '../api';
 import { hasPermission, PERMISSIONS, displayUserName } from '../state/ops';
 import { showError } from '../components/Toaster';
+import Pager from '../components/Pager';
 
 export default function Activity() {
   const navigate = useNavigate();
@@ -33,6 +34,8 @@ export default function Activity() {
     if (debouncedQuick) return { q: debouncedQuick, limit: 200 };
     return advParams;
   }, [debouncedQuick, advParams]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   useEffect(() => {
     if (!canView) return;
     let stopped = false;
@@ -263,7 +266,7 @@ export default function Activity() {
             <tbody>
               {loading && <tr><td colSpan={9}>Loading…</td></tr>}
               {!loading && rows.length === 0 && <tr><td colSpan={9}>No activity.</td></tr>}
-              {!loading && rows.map((r, i) => (
+              {!loading && rows.slice(((page-1)*pageSize), ((page-1)*pageSize)+pageSize).map((r, i) => (
                 <tr key={`${r._id || i}-${r.ts}`}>
                   <td style={{ whiteSpace: 'nowrap' }}>{formatTs(r.ts)}</td>
                   <td>{r.actor}</td>
@@ -284,6 +287,7 @@ export default function Activity() {
           </table>
         </div>
       </div>
+      <Pager total={rows.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
       {open && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,6,23,0.35)', display: 'grid', placeItems: 'center', zIndex: 50 }} onClick={() => setOpen(false)}>
           <div ref={modalRef} className="card" style={{ width: 720, maxWidth: '90vw', maxHeight: '80vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>

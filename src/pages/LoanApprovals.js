@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { approveLoan, listLoanApprovals, rejectLoan, getMe } from '../api';
 import { printLoanDisbursementReceipt } from '../state/ops';
 import { showError, showSuccess } from '../components/Toaster';
+import Pager from '../components/Pager';
 
 export default function LoanApprovals() {
   const [rows, setRows] = useState([]);
@@ -28,6 +29,12 @@ export default function LoanApprovals() {
   };
   const pending = rows.filter(r => r.status === 'Pending' && (!loanFilter || String(r.id || '').includes(loanFilter.trim())));
   const processed = rows.filter(r => r.status !== 'Pending' && (!loanFilter || String(r.id || '').includes(loanFilter.trim())));
+  const [pPage, setPPage] = useState(1);
+  const [pSize, setPSize] = useState(10);
+  const [dPage, setDPage] = useState(1);
+  const [dSize, setDSize] = useState(10);
+  const pRows = pending.slice((pPage-1)*pSize, (pPage-1)*pSize + pSize);
+  const dRows = processed.slice((dPage-1)*dSize, (dPage-1)*dSize + dSize);
   return (
     <div className="stack">
       <h1>Loan Approvals</h1>
@@ -51,7 +58,7 @@ export default function LoanApprovals() {
             </tr>
           </thead>
           <tbody>
-            {pending.map(r => (
+            {pRows.map(r => (
               <tr key={r.id}>
                 <td>{r.id}</td>
                 <td>{r.accountNumber}</td>
@@ -69,6 +76,7 @@ export default function LoanApprovals() {
             )}
           </tbody>
         </table>
+        <Pager total={pending.length} page={pPage} pageSize={pSize} onPageChange={setPPage} onPageSizeChange={(n) => { setPSize(n); setPPage(1); }} />
       </div>
       <div className="card">
         <h3>Processed</h3>
@@ -82,7 +90,7 @@ export default function LoanApprovals() {
             </tr>
           </thead>
           <tbody>
-            {processed.map(r => (
+            {dRows.map(r => (
               <tr key={r.id}>
                 <td>{r.id}</td>
                 <td>{r.accountNumber}</td>
@@ -95,6 +103,7 @@ export default function LoanApprovals() {
             )}
           </tbody>
         </table>
+        <Pager total={processed.length} page={dPage} pageSize={dSize} onPageChange={setDPage} onPageSizeChange={(n) => { setDSize(n); setDPage(1); }} />
       </div>
       {askCodeFor && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,6,23,0.35)', display: 'grid', placeItems: 'center', zIndex: 50 }} onClick={() => setAskCodeFor(null)}>

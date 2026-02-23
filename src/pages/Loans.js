@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createLoan, directoryLookup, listClients, listLoans, fetchConfig } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
+import Pager from '../components/Pager';
 
 export default function Loans() {
   const [form, setForm] = useState({
@@ -116,6 +117,10 @@ export default function Loans() {
     });
   }, [rows]);
   const listFiltered = withComputed.filter(r => !loanIdFilter || String(r.id || '').includes(loanIdFilter.trim()));
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const start = (page - 1) * pageSize;
+  const pageRows = listFiltered.slice(start, start + pageSize);
   return (
     <div className="stack">
       <h1>Loans</h1>
@@ -233,7 +238,7 @@ export default function Loans() {
             </tr>
           </thead>
           <tbody>
-            {listFiltered.map(r => (
+            {pageRows.map(r => (
               <tr key={r.id} style={{ background: (r._overdueDays || 0) > 0 ? '#fff1f2' : undefined }}>
                 <td>{r.id}</td>
                 <td>{r.accountNumber}</td>
@@ -248,6 +253,7 @@ export default function Loans() {
             {!listFiltered.length && <tr><td colSpan="6">No loans loaded.</td></tr>}
           </tbody>
         </table>
+        <Pager total={listFiltered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
       </section>
     </div>
   );

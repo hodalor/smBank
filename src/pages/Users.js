@@ -3,10 +3,13 @@ import { getRoles, getAllPermissions, getEffectivePermissions, hasPermission } f
 import { listUsers, upsertUser, removeUser, changeUserPassword, setUserEnabled } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 import { confirm } from '../components/Confirm';
+import Pager from '../components/Pager';
 
 export default function Users() {
   const allowed = hasPermission('users.manage');
   const [users, setUsers] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [form, setForm] = useState({
     fullName: '',
     username: '',
@@ -263,7 +266,7 @@ export default function Users() {
               </tr>
             </thead>
             <tbody>
-              {users.map(u => (
+              {users.slice(((page||1)-1)*(pageSize||10), ((page||1)-1)*(pageSize||10) + (pageSize||10)).map(u => (
                 <tr key={u.username}>
                   <td>{u.username}</td>
                   <td>{u.fullName || '-'}</td>
@@ -279,6 +282,7 @@ export default function Users() {
               ))}
             </tbody>
           </table>
+          <Pager total={users.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
         </div>
       </div>
     </div>

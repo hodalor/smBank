@@ -15,6 +15,7 @@ import LoanRecords from './pages/LoanRecords';
 import LoanRepayments from './pages/LoanRepayments';
 import LoanRepay from './pages/LoanRepay';
 import TxnApprovals from './pages/TxnApprovals';
+import TxnRecords from './pages/TxnRecords';
 import LoanRepayApprovals from './pages/LoanRepayApprovals';
 import Users from './pages/Users';
 import SuperBin from './pages/SuperBin';
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="transactions/deposit" element={<Deposit />} />
         <Route path="transactions/withdraw" element={<Withdraw />} />
         <Route path="transactions/approvals" element={<TxnApprovals />} />
+        <Route path="transactions/records" element={<TxnRecords />} />
         <Route path="statements" element={<Statements />} />
         <Route path="loans" element={<Loans />} />
         <Route path="loans/approvals" element={<LoanApprovals />} />

@@ -21,6 +21,7 @@ export default function Withdraw() {
     phone: '',
     address: '',
   });
+  const [accountStatus, setAccountStatus] = useState('Active');
   const toCurrency = (n) => {
     const num = Number(n || 0);
     try { return num.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' }); } catch { return `GHS ${num.toFixed(2)}`; }
@@ -67,6 +68,7 @@ export default function Withdraw() {
         if (/^\d{10}$/.test(q)) {
           const info = await directoryLookup(q);
           setClient(info);
+          setAccountStatus(info.status || 'Active');
           await computeBalances(q);
           return;
         }
@@ -76,6 +78,7 @@ export default function Withdraw() {
           setForm(f => ({ ...f, accountNumber: acct }));
           const info = await directoryLookup(acct);
           setClient(info);
+          setAccountStatus(info.status || 'Active');
           await computeBalances(acct);
           return;
         }
@@ -98,6 +101,11 @@ export default function Withdraw() {
       try {
         if (!form.accountNumber || !form.amount) {
           showWarning('Enter account and amount');
+          return;
+        }
+        if (accountStatus === 'Inactive' || accountStatus === 'Dormant' || accountStatus === 'NDS') {
+          const msg = accountStatus === 'NDS' ? 'Account is Non‑Debit. Cannot withdraw.' : `Account is ${accountStatus}. Cannot withdraw.`;
+          showError(msg);
           return;
         }
         if (!withdrawer.idNumber || !withdrawer.phone || !withdrawer.address) {
@@ -151,6 +159,14 @@ export default function Withdraw() {
             <div><div style={{ color: '#64748b', fontSize: 12 }}>National ID</div><div>{client.nationalId}</div></div>
             <div><div style={{ color: '#64748b', fontSize: 12 }}>DOB</div><div>{client.dob}</div></div>
             <div><div style={{ color: '#64748b', fontSize: 12 }}>Phone</div><div>{client.phone}</div></div>
+          </div>
+        )}
+        {client && (
+          <div className="row" style={{ gap: 24 }}>
+            <div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>Account Status</div>
+              <div style={{ fontWeight: 600 }}>{accountStatus}</div>
+            </div>
           </div>
         )}
         {client && (

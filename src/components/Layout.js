@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import TopBar from './TopBar';
+import LoadingBar from './LoadingBar';
 import Toaster from './Toaster';
 import './layout.css';
 import { addTab } from '../state/tabs';
@@ -45,6 +46,9 @@ export default function Layout() {
           )}
           {hasPermission(PERMISSIONS.TXN_APPROVALS_VIEW) && (
             <NavLink to="/transactions/approvals" className="nav-item" onClick={() => addTab({ to: '/transactions/approvals', label: 'Txn Approvals' })}>Txn Approvals</NavLink>
+          )}
+          {hasPermission(PERMISSIONS.TXN_RECORDS_VIEW) && (
+            <NavLink to="/transactions/records" className="nav-item" onClick={() => addTab({ to: '/transactions/records', label: 'Txn Records' })}>Txn Records</NavLink>
           )}
           {hasPermission(PERMISSIONS.STATEMENTS_VIEW) && (
             <NavLink to="/statements" className="nav-item" onClick={() => addTab({ to: '/statements', label: 'Statements' })}>Statements</NavLink>
@@ -94,6 +98,7 @@ export default function Layout() {
         </nav>
       </aside>
       <TopBar />
+      <LoadingBar />
       <main className="content" ref={contentRef}>
         <div className="container fade-in">
           <Outlet />

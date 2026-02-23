@@ -36,6 +36,7 @@ const PERMS = {
   ACTIVITY_VIEW: 'activity.view',
   SERVERLOGS_VIEW: 'serverlogs.view',
   MEDIA_UPLOAD: 'media.upload',
+  TXN_RECORDS_VIEW: 'txn.records.view',
 };
 
 const ROLE_PERMISSIONS = {
@@ -66,12 +67,14 @@ const ROLE_PERMISSIONS = {
     PERMS.WITHDRAW_CREATE,
     PERMS.TXN_APPROVALS_VIEW,
     PERMS.STATEMENTS_VIEW,
+    PERMS.TXN_RECORDS_VIEW,
     PERMS.REPORTS_VIEW,
   ],
   [ROLES.TELLER]: [
     PERMS.CLIENTS_VIEW,
     PERMS.DEPOSIT_CREATE,
     PERMS.WITHDRAW_CREATE,
+    PERMS.TXN_RECORDS_VIEW,
   ],
   [ROLES.CUSTOMER_SERVICE]: [
     PERMS.CLIENTS_VIEW,
@@ -289,14 +292,14 @@ function currencyGH(n) {
   try { return num.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' }); } catch { return `GHS ${num.toFixed(2)}`; }
 }
 
-function openPrint(html) {
+function openPrint(html, title = 'Receipt') {
   const w = window.open('', '_blank', 'width=400,height=600');
   if (!w) return;
   w.document.write(`<!doctype html>
   <html>
   <head>
     <meta charset="utf-8"/>
-    <title>Receipt</title>
+    <title>${title}</title>
     <style>
       @page { margin: 6mm; }
       body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-size: 12px; color: #0f172a; width: 260px; }
@@ -326,6 +329,7 @@ export function printTxnReceipt(txn, { copies = 2 } = {}) {
                 txn.kind === 'withdraw' ? 'Withdrawal Receipt' :
                 txn.kind === 'loan_disbursement' ? 'Loan Disbursement Receipt' :
                 (txn.mode === 'writeoff' ? 'Loan Write‑Off Receipt' : txn.loanId ? 'Loan Repayment Receipt' : 'Transaction Receipt');
+  const fileTitle = `${txn.accountNumber || 'receipt'} - ${title}`;
   const notes = txn.meta && txn.meta.notes ? String(txn.meta.notes) : '';
   const feeAmount = Number((txn.meta && txn.meta.feeAmount) || 0);
   const baseAmount = Number((txn.meta && txn.meta.baseAmount) || 0);
@@ -385,13 +389,14 @@ export function printTxnReceipt(txn, { copies = 2 } = {}) {
       </div>
     </div>`;
   const html = Array.from({ length: Math.max(1, copies) }).map((_, i) => block(i === 0 ? 'Customer Copy' : 'Records Copy')).join('<div class="hr"></div>');
-  openPrint(html);
+  openPrint(html, fileTitle);
 }
 
 export function printLoanDisbursementReceipt(loan, { copies = 2 } = {}) {
   if (!loan) return;
   const app = getAppConfig();
   const title = 'Loan Disbursement Receipt';
+  const fileTitle = `${loan.accountNumber || 'receipt'} - ${title}`;
   const rows = [
     ['Date', loan.approvedAt || loan.createdAt || new Date().toISOString()],
     ['Loan ID', loan.id || '—'],
@@ -422,7 +427,7 @@ export function printLoanDisbursementReceipt(loan, { copies = 2 } = {}) {
       </div>
     </div>`;
   const html = Array.from({ length: Math.max(1, copies) }).map((_, i) => block(i === 0 ? 'Customer Copy' : 'Records Copy')).join('<div class="hr"></div>');
-  openPrint(html);
+  openPrint(html, fileTitle);
 }
 
 export function addToSuperBin(entry) {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { approvePendingTransaction, listPendingTransactions, rejectPendingTransaction, getMe } from '../api';
 import { printTxnReceipt } from '../state/ops';
 import { showError, showSuccess } from '../components/Toaster';
+import Pager from '../components/Pager';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
@@ -28,6 +29,10 @@ export default function TxnApprovals() {
     await load();
   };
   const filtered = rows;
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const start = (page - 1) * pageSize;
+  const pageRows = filtered.slice(start, start + pageSize);
   return (
     <div className="stack">
       <h1>Deposit & Withdrawal Approvals</h1>
@@ -47,7 +52,7 @@ export default function TxnApprovals() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(r => (
+            {pageRows.map(r => (
               <tr key={r.id}>
                 <td>{r.id}</td>
                 <td>{r.kind === 'deposit' ? 'Deposit' : 'Withdrawal'}</td>
@@ -70,6 +75,7 @@ export default function TxnApprovals() {
             )}
           </tbody>
         </table>
+        <Pager total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
       </div>
       <div className="card">
         <p>This queue covers Deposits and Withdrawals only. Loan repayments are handled in Loans → Repay Approvals.</p>

@@ -19,6 +19,7 @@ export default function Deposit() {
   const [accountBal, setAccountBal] = useState(0);
   const [loanBal, setLoanBal] = useState(0);
   const [initiatedAt] = useState(new Date().toLocaleString());
+  const [accountStatus, setAccountStatus] = useState('Active');
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const toCurrency = (n) => {
     const num = Number(n || 0);
@@ -53,9 +54,10 @@ export default function Deposit() {
     if (!q) return;
     (async () => {
       try {
-        if (/^\d{10}$/.test(q)) {
+        if (/^\\d{10}$/.test(q)) {
           const info = await directoryLookup(q);
           setClient(info);
+          setAccountStatus(info.status || 'Active');
           await computeBalances(q);
           return;
         }
@@ -65,19 +67,17 @@ export default function Deposit() {
           setForm(f => ({ ...f, accountNumber: acct }));
           const info = await directoryLookup(acct);
           setClient(info);
+          setAccountStatus(info.status || 'Active');
           await computeBalances(acct);
           return;
         }
         setClient(null);
         setAccountBal(0);
         setLoanBal(0);
-        showWarning('No matching client found');
-      } catch (e) {
+      } catch {
         setClient(null);
         setAccountBal(0);
         setLoanBal(0);
-        if (e && e.status === 404) showError('Account not found');
-        else showError('Lookup failed');
       }
     })();
   };
@@ -87,6 +87,10 @@ export default function Deposit() {
       try {
         if (!form.accountNumber || !form.amount) {
           showWarning('Enter account and amount');
+          return;
+        }
+        if (accountStatus === 'Inactive') {
+          showError('Account is Inactive. Cannot deposit.');
           return;
         }
         await createDeposit({
@@ -126,6 +130,14 @@ export default function Deposit() {
             <div><div style={{ color: '#64748b', fontSize: 12 }}>National ID</div><div>{client.nationalId}</div></div>
             <div><div style={{ color: '#64748b', fontSize: 12 }}>DOB</div><div>{client.dob}</div></div>
             <div><div style={{ color: '#64748b', fontSize: 12 }}>Phone</div><div>{client.phone}</div></div>
+          </div>
+        )}
+        {client && (
+          <div className="row" style={{ gap: 24 }}>
+            <div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>Account Status</div>
+              <div style={{ fontWeight: 600 }}>{accountStatus}</div>
+            </div>
           </div>
         )}
         {client && (

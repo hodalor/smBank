@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setCurrentUserName, saveUser, getUserByUsername, getAppConfig, onConfigUpdate, saveAppConfig } from '../state/ops';
 import { apiLogin, fetchConfig } from '../api';
@@ -7,7 +7,6 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(true);
-  const [marchCode, setMarchCode] = useState('');
   const [captcha, setCaptcha] = useState('');
   const [captchaInput, setCaptchaInput] = useState('');
   const [error, setError] = useState('');
@@ -15,10 +14,6 @@ export default function Login() {
   const canvasRef = useRef(null);
   const captchaTimerRef = useRef(null);
   const navigate = useNavigate();
-  const superCandidate = useMemo(() => {
-    const u = (username || '').trim().toLowerCase();
-    return u === 'super' || u === 'superadmin';
-  }, [username]);
   useEffect(() => {
     const saved = localStorage.getItem('remember_username');
     if (saved) {
@@ -112,17 +107,11 @@ export default function Login() {
             <input className="input" value={captchaInput} onChange={(e) => setCaptchaInput(e.target.value)} placeholder="captcha" style={{ flex: 1 }} />
             <canvas ref={canvasRef} width={100} height={40} style={{ border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer' }} onClick={regenerateCaptcha} />
           </div>
-          <input className="input" value={marchCode} onChange={(e) => setMarchCode(e.target.value)} placeholder="march code" />
           <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
             <span>remember password</span>
           </label>
           {error && <div style={{ color: '#dc2626', fontSize: 12 }}>{error}</div>}
-          {superCandidate ? (
-            <div style={{ fontSize: 12, color: '#0ea5e9' }}>Super Admin login</div>
-          ) : (
-            <div style={{ fontSize: 12, color: '#64748b' }}>Tip: use “super” or “superadmin” for Super Admin</div>
-          )}
           <button type="submit" className="btn btn-primary" style={{ background: '#16a34a', borderColor: '#16a34a' }}>Login In</button>
         </form>
       </div>

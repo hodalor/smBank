@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import SearchByAccount from '../components/SearchByAccount';
 import { hasPermission, PERMISSIONS } from '../state/ops';
 import { listClients } from '../api';
+import Pager from '../components/Pager';
 
 export default function ClientsList() {
   const navigate = useNavigate();
@@ -41,6 +42,10 @@ export default function ClientsList() {
     });
   }, [data]);
   const onSearch = ({ type, value }) => setQuery({ type, value });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const start = (page - 1) * pageSize;
+  const pageRows = filtered.slice(start, start + pageSize);
   return (
     <div className="stack">
       <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -65,7 +70,7 @@ export default function ClientsList() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(row => (
+            {pageRows.map(row => (
               <tr key={row.accountNumber}>
                 <td>{row.accountNumber}</td>
                 <td>{row.name}</td>
@@ -79,6 +84,7 @@ export default function ClientsList() {
             ))}
           </tbody>
         </table>
+        <Pager total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
       </div>
     </div>
   );

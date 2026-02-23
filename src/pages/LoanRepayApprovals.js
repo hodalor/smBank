@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { approveLoanRepayPending, listLoanRepayPending, rejectLoanRepayPending, getMe } from '../api';
 import { printTxnReceipt } from '../state/ops';
 import { showError, showSuccess } from '../components/Toaster';
+import Pager from '../components/Pager';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
@@ -28,6 +29,10 @@ export default function LoanRepayApprovals() {
     catch { showError('Reject failed'); }
     await load();
   };
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const start = (page - 1) * pageSize;
+  const pageRows = repayRows.slice(start, start + pageSize);
   return (
     <div className="stack">
       <h1>Repay Loan Approvals</h1>
@@ -48,7 +53,7 @@ export default function LoanRepayApprovals() {
             </tr>
           </thead>
           <tbody>
-            {repayRows.map(r => (
+            {pageRows.map(r => (
               <tr key={r.id}>
                 <td>{r.id}</td>
                 <td>{r.loanId}</td>
@@ -72,6 +77,7 @@ export default function LoanRepayApprovals() {
             )}
           </tbody>
         </table>
+        <Pager total={repayRows.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
       </div>
       <div className="card">
         <p>Approving Full or Partial repayments posts revenue. Approving Write‑Off posts a non‑revenue write‑off entry.</p>

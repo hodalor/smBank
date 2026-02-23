@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { listServerLogs, getServerLog } from '../api';
 import { hasPermission } from '../state/ops';
 import { showError } from '../components/Toaster';
+import Pager from '../components/Pager';
 
 export default function ServerLogs() {
   const allowed = hasPermission('serverlogs.view');
@@ -26,6 +27,8 @@ export default function ServerLogs() {
     const id = setTimeout(() => setDebouncedQuick(quick.trim()), 350);
     return () => clearTimeout(id);
   }, [quick]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const queryParams = useMemo(() => {
     const base = { limit: 200 };
     if (debouncedQuick) return { ...base, q: debouncedQuick };
@@ -156,7 +159,7 @@ export default function ServerLogs() {
             <tbody>
               {loading && <tr><td colSpan={9}>Loading…</td></tr>}
               {!loading && rows.length === 0 && <tr><td colSpan={9}>No logs.</td></tr>}
-              {!loading && rows.map((r, i) => (
+              {!loading && rows.slice(((page-1)*pageSize), ((page-1)*pageSize)+pageSize).map((r, i) => (
                 <tr key={`${r.id || i}-${r.ts}`} onClick={() => openDetails(r)} style={{ cursor: 'pointer', background: r.level === 'error' ? '#fff1f2' : undefined }}>
                   <td style={{ whiteSpace: 'nowrap' }}>{formatTs(r.ts)}</td>
                   <td>{r.level}</td>
@@ -173,6 +176,7 @@ export default function ServerLogs() {
           </table>
         </div>
       </div>
+      <Pager total={rows.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
       {open && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,6,23,0.35)', display: 'grid', placeItems: 'center', zIndex: 50 }} onClick={() => setOpen(false)}>
           <div ref={modalRef} className="card" style={{ width: 720, maxWidth: '90vw', maxHeight: '80vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>

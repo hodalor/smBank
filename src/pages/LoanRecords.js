@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { directoryLookup, listClients, listLoans } from '../api';
 import { showError, showWarning } from '../components/Toaster';
+import Pager from '../components/Pager';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
@@ -74,6 +75,10 @@ export default function LoanRecords() {
     return map;
   }, [filtered]);
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const start = (page - 1) * pageSize;
+  const pageRows = filtered.slice(start, start + pageSize);
   return (
     <div className="stack">
       <h1>Loan Records</h1>
@@ -139,7 +144,7 @@ export default function LoanRecords() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(l => (
+            {pageRows.map(l => (
               <tr key={l.id} style={{ background: l.overdueDays > 0 ? '#fff1f2' : undefined }}>
                 <td><Link to={`/loans/${l.id}`}>{l.id}</Link></td>
                 <td>{l.account}</td>
@@ -157,6 +162,7 @@ export default function LoanRecords() {
             ))}
           </tbody>
         </table>
+        <Pager total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
       </div>
     </div>
   );
