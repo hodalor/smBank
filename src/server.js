@@ -267,6 +267,28 @@ let serverLogs = readJSON(SERVER_LOGS_FILE, []);
 function newId(prefix) {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6).toString().padStart(6, '0')}`;
 }
+const PASSWORD_MIN_LENGTH = 10;
+const PASSWORD_GRACE_DAYS = 3;
+function validatePasswordPolicy(pw) {
+  const s = String(pw || '');
+  if (s.length < PASSWORD_MIN_LENGTH) return { ok: false, code: 'too_short', details: String(PASSWORD_MIN_LENGTH) };
+  if (!/[A-Z]/.test(s)) return { ok: false, code: 'no_upper' };
+  if (!/[a-z]/.test(s)) return { ok: false, code: 'no_lower' };
+  if (!/[0-9]/.test(s)) return { ok: false, code: 'no_digit' };
+  if (!/[^A-Za-z0-9]/.test(s)) return { ok: false, code: 'no_special' };
+  return { ok: true };
+}
+async function isPasswordReused(newPw, doc) {
+  if (!doc) return false;
+  const hashes = [];
+  if (doc.passwordHash) hashes.push(doc.passwordHash);
+  const hist = Array.isArray(doc.passwordHistory) ? doc.passwordHistory : [];
+  for (const h of hist.slice(0, 5)) hashes.push(h);
+  for (const h of hashes) {
+    try { if (await bcrypt.compare(String(newPw), h)) return true; } catch {}
+  }
+  return false;
+}
 function randomDigits(n) {
   let s = '';
   while (s.length < n) s += Math.floor(Math.random() * 10);
@@ -578,12 +600,35 @@ app.post('/auth/login', async (req, res) => {
     }
     const ok = await bcrypt.compare(String(password), existing.passwordHash);
     if (!ok) return res.status(401).json({ error: 'invalid_credentials' });
+    // Password expiry and must-change enforcement with grace
+    const nowDate = new Date();
+    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+    const pwdAt = existing.passwordUpdatedAt ? new Date(existing.passwordUpdatedAt) : null;
+    const mustChange = !!existing.passwordMustChange;
+    let mustChangeFlag = null;
+    if (mustChange) {
+      await logActivity({ ...req, user: { username: uname, role: existing.role || 'Admin' } }, 'login.password_must_change', 'auth', uname, { mustChange: true });
+      mustChangeFlag = { passwordChangeRequired: true };
+    }
+    let grace = null;
+    if (pwdAt) {
+      const expiresAt = new Date(pwdAt.getTime() + thirtyDaysMs);
+      const graceUntil = new Date(expiresAt.getTime() + PASSWORD_GRACE_DAYS * 24 * 60 * 60 * 1000);
+      if (nowDate > expiresAt) {
+        if (nowDate <= graceUntil) {
+          grace = { passwordGrace: true, passwordGraceUntil: graceUntil.toISOString(), passwordChangeRequired: true };
+        } else {
+          await logActivity({ ...req, user: { username: uname, role: existing.role || 'Admin' } }, 'login.password_expired', 'auth', uname, { expired: true });
+          return res.status(403).json({ error: 'password_expired' });
+        }
+      }
+    }
     const role = existing.role || 'Admin';
     const now = Date.now();
     const token = createToken({ username: uname, role, iat: now, exp: now + 7 * 24 * 60 * 60 * 1000 }, process.env.JWT_SECRET || 'change-me');
     res.setHeader('Set-Cookie', `smbank_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
     await logActivity({ ...req, user: { username: uname, role } }, 'login', 'auth', uname, {});
-    return res.json({ username: uname, role, token });
+    return res.json({ username: uname, role, token, ...(grace || {}), ...(mustChangeFlag || {}) });
   }
   // Non-strict fallback (file store) – dev only when DB disabled
   const candidate = users.find(u => u.username === uname);
@@ -669,6 +714,8 @@ app.post('/users', async (req, res) => {
         };
         if (!payload.password) return res.status(400).json({ error: 'password_required' });
         toCreate.passwordHash = await bcrypt.hash(String(payload.password), 10);
+        toCreate.passwordUpdatedAt = new Date();
+        toCreate.passwordMustChange = false;
         try {
           created = await User.create(toCreate);
         } catch (e) {
@@ -686,6 +733,8 @@ app.post('/users', async (req, res) => {
       // Update fields; update password if provided
       if (payload.password) {
         doc.passwordHash = await bcrypt.hash(String(payload.password), 10);
+        doc.passwordUpdatedAt = new Date();
+        doc.passwordMustChange = false;
       }
       Object.assign(doc, base);
       await doc.save();
@@ -705,16 +754,110 @@ app.post('/users', async (req, res) => {
 });
 app.post('/users/:username/password', async (req, res) => {
   const uname = req.params.username;
-  const { password } = req.body || {};
-  if (!password) return res.status(400).json({ error: 'password_required' });
+  const { oldPassword, newPassword } = req.body || {};
   if (!isConnected()) return res.status(503).json({ error: 'db_unavailable' });
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (req.user.username !== uname) return res.status(403).json({ error: 'forbidden' });
+  if (!oldPassword || !newPassword) return res.status(400).json({ error: 'old_and_new_required' });
   const { User } = getModels();
   const doc = await User.findOne({ username: uname });
-  if (!doc) return res.status(404).json({ error: 'not_found' });
-  doc.passwordHash = await bcrypt.hash(String(password), 10);
+  if (!doc || !doc.passwordHash) return res.status(404).json({ error: 'not_found' });
+  const ok = await bcrypt.compare(String(oldPassword), doc.passwordHash);
+  if (!ok) return res.status(401).json({ error: 'invalid_old_password' });
+  const policy = validatePasswordPolicy(newPassword);
+  if (!policy.ok) return res.status(400).json({ error: 'weak_password', details: policy.code, minLen: PASSWORD_MIN_LENGTH });
+  if (await isPasswordReused(newPassword, doc)) return res.status(400).json({ error: 'password_reused' });
+  // push old hash to history, cap at 5
+  const hist = Array.isArray(doc.passwordHistory) ? doc.passwordHistory : [];
+  if (doc.passwordHash) hist.unshift(doc.passwordHash);
+  doc.passwordHistory = hist.slice(0, 5);
+  doc.passwordHash = await bcrypt.hash(String(newPassword), 10);
+  doc.passwordUpdatedAt = new Date();
+  doc.passwordMustChange = false;
   await doc.save();
-  await logActivity(req, 'user.password_change', 'user', uname, {});
+  await logActivity(req, 'user.password_change', 'user', uname, { self: true });
   return res.json({ ok: true });
+});
+
+// Admin reset another user's password (requires admin approval code). Forces user to change on next login.
+app.post('/users/:username/password/reset', async (req, res) => {
+  if (!isConnected()) return res.status(503).json({ error: 'db_unavailable' });
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  const role = String(req.user.role || '');
+  if (!(role === 'Admin' || role === 'Super Admin')) return res.status(403).json({ error: 'forbidden' });
+  const target = req.params.username;
+  const { newPassword, approvalCode } = req.body || {};
+  if (!newPassword) return res.status(400).json({ error: 'password_required' });
+  if (!approvalCode) return res.status(400).json({ error: 'approval_code_required' });
+  if (!verifyApprovalCode(req.user.username, approvalCode)) return res.status(401).json({ error: 'approval_code_invalid' });
+  const { User } = getModels();
+  const doc = await User.findOne({ username: target });
+  if (!doc) return res.status(404).json({ error: 'not_found' });
+  const policy = validatePasswordPolicy(newPassword);
+  if (!policy.ok) return res.status(400).json({ error: 'weak_password', details: policy.code, minLen: PASSWORD_MIN_LENGTH });
+  if (await isPasswordReused(newPassword, doc)) return res.status(400).json({ error: 'password_reused' });
+  // history
+  const hist = Array.isArray(doc.passwordHistory) ? doc.passwordHistory : [];
+  if (doc.passwordHash) hist.unshift(doc.passwordHash);
+  doc.passwordHistory = hist.slice(0, 5);
+  doc.passwordHash = await bcrypt.hash(String(newPassword), 10);
+  doc.passwordUpdatedAt = new Date();
+  doc.passwordMustChange = true;
+  await doc.save();
+  await logActivity(req, 'user.password_reset', 'user', target, { by: req.user.username });
+  return res.json({ ok: true });
+});
+
+// Public endpoint to change own password using old password (for expired password cases)
+app.post('/auth/password/change', async (req, res) => {
+  if (!isConnected()) return res.status(503).json({ error: 'db_unavailable' });
+  const { username, oldPassword, newPassword } = req.body || {};
+  if (!username || !oldPassword || !newPassword) return res.status(400).json({ error: 'username_old_new_required' });
+  const { User } = getModels();
+  const doc = await User.findOne({ username: String(username).trim() });
+  if (!doc || !doc.passwordHash) return res.status(404).json({ error: 'not_found' });
+  const ok = await bcrypt.compare(String(oldPassword), doc.passwordHash);
+  if (!ok) return res.status(401).json({ error: 'invalid_old_password' });
+  const policy = validatePasswordPolicy(newPassword);
+  if (!policy.ok) return res.status(400).json({ error: 'weak_password', details: policy.code, minLen: PASSWORD_MIN_LENGTH });
+  if (await isPasswordReused(newPassword, doc)) return res.status(400).json({ error: 'password_reused' });
+  // history
+  const hist = Array.isArray(doc.passwordHistory) ? doc.passwordHistory : [];
+  if (doc.passwordHash) hist.unshift(doc.passwordHash);
+  doc.passwordHistory = hist.slice(0, 5);
+  doc.passwordHash = await bcrypt.hash(String(newPassword), 10);
+  doc.passwordUpdatedAt = new Date();
+  doc.passwordMustChange = false;
+  await doc.save();
+  await logActivity(req, 'auth.password_change', 'user', String(username), { via: 'public' });
+  res.json({ ok: true });
+});
+
+// Public admin-assisted reset for locked-out users from the login page
+app.post('/auth/password/reset-by-admin', async (req, res) => {
+  if (!isConnected()) return res.status(503).json({ error: 'db_unavailable' });
+  const { adminUsername, approvalCode, username, newPassword } = req.body || {};
+  if (!adminUsername || !approvalCode || !username || !newPassword) return res.status(400).json({ error: 'fields_required' });
+  const { User } = getModels();
+  const adminDoc = await User.findOne({ username: String(adminUsername).trim() });
+  if (!adminDoc) return res.status(404).json({ error: 'admin_not_found' });
+  const role = String(adminDoc.role || '');
+  if (!(role === 'Admin' || role === 'Super Admin')) return res.status(403).json({ error: 'forbidden' });
+  if (!verifyApprovalCode(adminUsername, approvalCode)) return res.status(401).json({ error: 'approval_code_invalid' });
+  const doc = await User.findOne({ username: String(username).trim() });
+  if (!doc) return res.status(404).json({ error: 'not_found' });
+  const policy = validatePasswordPolicy(newPassword);
+  if (!policy.ok) return res.status(400).json({ error: 'weak_password', details: policy.code, minLen: PASSWORD_MIN_LENGTH });
+  if (await isPasswordReused(newPassword, doc)) return res.status(400).json({ error: 'password_reused' });
+  const hist = Array.isArray(doc.passwordHistory) ? doc.passwordHistory : [];
+  if (doc.passwordHash) hist.unshift(doc.passwordHash);
+  doc.passwordHistory = hist.slice(0, 5);
+  doc.passwordHash = await bcrypt.hash(String(newPassword), 10);
+  doc.passwordUpdatedAt = new Date();
+  doc.passwordMustChange = true;
+  await doc.save();
+  await logActivity({ ...req, user: { username: adminUsername, role } }, 'auth.password_reset_public', 'user', String(username), { admin: adminUsername });
+  res.json({ ok: true });
 });
 app.post('/users/:username/enable', async (req, res) => {
   if (!isConnected()) return res.status(503).json({ error: 'db_unavailable' });

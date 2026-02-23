@@ -15,6 +15,9 @@ async function connect(uri) {
   const UserSchema = new Schema({
     username: { type: String, unique: true, index: true },
     passwordHash: String,
+    passwordUpdatedAt: { type: Date },
+    passwordMustChange: { type: Boolean, default: false },
+    passwordHistory: [String],
     role: String,
     enabled: { type: Boolean, default: true },
     // HR fields
