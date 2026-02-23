@@ -29,6 +29,7 @@ import LoanDetails from './pages/LoanDetails';
 import Assets from './pages/Assets';
 import Promotions from './pages/Promotions';
 import Notifications from './pages/Notifications';
+import Docs from './pages/Docs';
 import { getCurrentUserName } from './state/ops';
 
 export default function App() {
@@ -73,6 +74,7 @@ export default function App() {
         <Route path="super-bin" element={<SuperBin />} />
         <Route path="config" element={<Config />} />
         <Route path="assets" element={<Assets />} />
+        <Route path="docs" element={<Docs />} />
       </Route>
     </Routes>
   );

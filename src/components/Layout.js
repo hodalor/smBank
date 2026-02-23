@@ -110,6 +110,7 @@ export default function Layout() {
           {hasPermission(PERMISSIONS.SUPERBIN_VIEW) && (
             <NavLink to="/super-bin" className="nav-item" onClick={() => addTab({ to: '/super-bin', label: 'Super Bin' })}>Super Bin</NavLink>
           )}
+          <NavLink to="/docs" className="nav-item" onClick={() => addTab({ to: '/docs', label: 'Docs' })}>Docs</NavLink>
         </nav>
       </aside>
       <div className={`sidebar-backdrop${sidebarOpen ? ' show' : ''}`} onClick={() => setSidebarOpen(false)} />
@@ -130,7 +131,10 @@ export default function Layout() {
           <Outlet />
         </div>
         <div className="app-footer">
-          <div className="container">{cfg.footerText || ''}</div>
+          <div className="container">
+            <span>{cfg.footerText || ''}</span>
+            <span style={{ float: 'right' }}><a className="nav-item" href="/docs" onClick={(e) => { e.preventDefault(); navigate('/docs'); }}>Docs</a></span>
+          </div>
         </div>
       </main>
       <Toaster />
