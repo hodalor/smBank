@@ -251,6 +251,10 @@ let config = readJSON(CONFIG_FILE, {
     { code: '22', name: 'Mmofra Daakye Account', supportsIndividual: true, active: true },
     { code: '60', name: 'Business Account', supportsIndividual: false, active: true },
   ],
+  smsSenderIds: [],
+  defaultSmsSenderId: '',
+  emailFromAddresses: [],
+  defaultEmailFrom: '',
   lastCustomerSerial: 0,
 });
 
@@ -272,6 +276,25 @@ function newId(prefix) {
 }
 const PASSWORD_MIN_LENGTH = 10;
 const PASSWORD_GRACE_DAYS = 3;
+const ROLE_RANK = {
+  'Super Admin': 6,
+  'Admin': 5,
+  'Loan Manager': 4,
+  'Loan Officer': 3,
+  'Account Manager': 2,
+  'Teller': 1,
+  'Customer Service': 1,
+};
+function roleRank(r) {
+  return ROLE_RANK[String(r) || ''] || 0;
+}
+function canViewRole(viewerRole, targetRole) {
+  return roleRank(targetRole) <= roleRank(viewerRole);
+}
+function isAdminRole(role) {
+  const r = String(role || '');
+  return r === 'Admin' || r === 'Super Admin';
+}
 function validatePasswordPolicy(pw) {
   const s = String(pw || '');
   if (s.length < PASSWORD_MIN_LENGTH) return { ok: false, code: 'too_short', details: String(PASSWORD_MIN_LENGTH) };
@@ -309,6 +332,23 @@ function newTxnId(kind) {
 function newRepayId() {
   return `LRP-${randomDigits(12)}`;
 }
+function tenDigit() {
+  let s = '';
+  if (!isConnected()) return;
+  try {
+    const { User } = getModels();
+    const nowD = new Date();
+    const docs = await User.find({ enabled: true, contractEndDate: { $exists: true, $ne: null } }, { username: 1, contractEndDate: 1 }).lean();
+    for (const u of docs) {
+      const ced = new Date(u.contractEndDate);
+      if (ced.toString() !== 'Invalid Date' && nowD > ced) {
+        await User.updateOne({ _id: u._id }, { $set: { enabled: false } });
+        await logActivity(null, 'user.auto_disable', 'user', String(u.username || ''), { reason: 'contract_end' });
+      }
+    }
+  } catch {}
+}
+setInterval(() => { autoDisableExpiredContractsOnce().catch(() => {}); }, 60 * 60 * 1000);
 function tenDigit() {
   let s = '';
   while (s.length < 10) s += Math.floor(Math.random() * 10);
@@ -408,17 +448,33 @@ function normalizePhone(p) {
   }
   return s;
 }
-async function sendSMS(to, text) {
+async function sendSMS(to, text, senderOverride = '') {
   const provider = String(process.env.SMS_PROVIDER || '').toLowerCase();
   const dest = normalizePhone(to);
   if (!dest || !text) return { ok: false, skipped: true };
   if (provider === 'twilio') {
     const sid = String(process.env.TWILIO_ACCOUNT_SID || '').trim();
     const token = String(process.env.TWILIO_AUTH_TOKEN || '').trim();
-    const from = String(process.env.TWILIO_FROM || '').trim();
-    if (!sid || !token || !from) return { ok: false, error: 'twilio_env_missing' };
+    const svcSid = String(process.env.TWILIO_MESSAGING_SERVICE_SID || '').trim();
+    let alphaFrom = String(senderOverride || '').trim() || String(process.env.SMS_SENDER_ID || '').trim();
+    if (!svcSid && !alphaFrom) {
+      if (isConnected()) {
+        try {
+          const { Config } = getModels();
+          const cfg = await Config.findOne().lean();
+          alphaFrom = (cfg && (cfg.defaultSmsSenderId || (Array.isArray(cfg.smsSenderIds) ? cfg.smsSenderIds[0] : ''))) || '';
+        } catch {}
+      } else {
+        alphaFrom = config.defaultSmsSenderId || (Array.isArray(config.smsSenderIds) ? config.smsSenderIds[0] : '');
+      }
+    }
+    const numberFrom = String(process.env.TWILIO_FROM || '').trim();
+    if (!sid || !token || (!svcSid && !alphaFrom && !numberFrom)) return { ok: false, error: 'twilio_env_missing' };
     const auth = Buffer.from(`${sid}:${token}`).toString('base64');
-    const body = new URLSearchParams({ From: from, To: dest, Body: String(text) }).toString();
+    const params = new URLSearchParams({ To: dest, Body: String(text) });
+    if (svcSid) params.append('MessagingServiceSid', svcSid);
+    else params.append('From', alphaFrom || numberFrom);
+    const body = params.toString();
     try {
       const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
         method: 'POST',
@@ -440,7 +496,7 @@ async function sendBulkSMS(numbers, message, opts = {}) {
   const results = [];
   for (const n of numbers) {
     try {
-      const r = await sendSMS(n, message);
+      const r = await sendSMS(n, message, String(opts.senderId || '').trim());
       results.push({ to: n, ...r });
       try {
         await logNotification({
@@ -510,13 +566,25 @@ async function logNotification(item) {
   writeJSON(NOTIFICATIONS_FILE, notifications);
   return record;
 }
-async function sendEmail(to, subject, text) {
+async function sendEmail(to, subject, text, fromOverride = '') {
   const host = String(process.env.SMTP_HOST || '').trim();
   const port = Number(process.env.SMTP_PORT || 0);
   const secure = String(process.env.SMTP_SECURE || '').toLowerCase() === 'true';
   const user = String(process.env.SMTP_USER || '').trim();
   const pass = String(process.env.SMTP_PASS || '').trim();
-  const from = String(process.env.EMAIL_FROM || '').trim() || 'no-reply@smbank.local';
+  let from = String(fromOverride || '').trim();
+  if (!from) {
+    if (isConnected()) {
+      try {
+        const { Config } = getModels();
+        const cfg = await Config.findOne().lean();
+        from = (cfg && (cfg.defaultEmailFrom || (Array.isArray(cfg.emailFromAddresses) ? cfg.emailFromAddresses[0] : ''))) || '';
+      } catch {}
+    } else {
+      from = config.defaultEmailFrom || (Array.isArray(config.emailFromAddresses) ? config.emailFromAddresses[0] : '');
+    }
+  }
+  from = from || (String(process.env.EMAIL_FROM || '').trim() || 'no-reply@smbank.local');
   if (!host || !port || !user || !pass) return { ok: false, error: 'smtp_env_missing' };
   try {
     const nodemailer = require('nodemailer');
@@ -531,7 +599,7 @@ async function sendBulkEmail(addresses, subject, text, opts = {}) {
   const out = [];
   for (const a of addresses) {
     try {
-      const r = await sendEmail(a, subject, text);
+      const r = await sendEmail(a, subject, text, opts.from || '');
       out.push({ to: a, ...r });
       try {
         await logNotification({
@@ -773,6 +841,16 @@ app.post('/auth/login', async (req, res) => {
     }
     const { User } = getModels();
     const existing = await User.findOne({ username: uname }).lean();
+    try {
+      if (existing && existing.contractEndDate) {
+        const nowD = new Date();
+        const ced = new Date(existing.contractEndDate);
+        if (ced.toString() !== 'Invalid Date' && nowD > ced && existing.enabled !== false) {
+          await User.updateOne({ _id: existing._id }, { $set: { enabled: false } });
+          await logActivity(req, 'user.auto_disable', 'user', uname, { reason: 'contract_end' });
+        }
+      }
+    } catch {}
     if (!existing || !existing.enabled || !existing.passwordHash) {
       return res.status(401).json({ error: 'invalid_credentials' });
     }
@@ -810,7 +888,7 @@ app.post('/auth/login', async (req, res) => {
   }
   // Non-strict fallback (file store) – dev only when DB disabled
   const candidate = users.find(u => u.username === uname);
-  if (!candidate) return res.status(401).json({ error: 'invalid_credentials' });
+  if (!candidate || candidate.enabled === false) return res.status(401).json({ error: 'invalid_credentials' });
   const role = candidate.role || 'Admin';
   const now = Date.now();
   const token = createToken({ username: uname, role, iat: now, exp: now + 7 * 24 * 60 * 60 * 1000 }, process.env.JWT_SECRET || 'change-me');
@@ -831,6 +909,10 @@ app.post('/auth/logout', async (req, res) => {
 
 // Users
 app.get('/users', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  const viewerRole = String(req.user.role || '');
+  const allowedViewerRoles = ['Super Admin', 'Admin', 'Loan Manager', 'Account Manager'];
+  if (!allowedViewerRoles.includes(viewerRole)) return res.status(403).json({ error: 'forbidden' });
   if (isConnected()) {
     const { department, role, empno, q } = req.query;
     const { User } = getModels();
@@ -848,16 +930,20 @@ app.get('/users', async (req, res) => {
       ];
     }
     const list = await User.find(filter).sort({ username: 1 }).lean();
-    const redacted = list.map(u => {
+    const filtered = list.filter(u => canViewRole(viewerRole, u.role || ''));
+    const redacted = filtered.map(u => {
       const { passwordHash, ...rest } = u;
       return rest;
     });
     return res.json(redacted);
   }
-  return res.json(users);
+  const filtered = users.filter(u => canViewRole(viewerRole, u.role || ''));
+  return res.json(filtered);
 });
 app.post('/users', async (req, res) => {
   const payload = req.body || {};
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!isAdminRole(req.user.role)) return res.status(403).json({ error: 'forbidden' });
   if (isConnected()) {
     const { User } = getModels();
     const uname = String(payload.username || '').trim();
@@ -1038,21 +1124,33 @@ app.post('/auth/password/reset-by-admin', async (req, res) => {
   res.json({ ok: true });
 });
 app.post('/users/:username/enable', async (req, res) => {
-  if (!isConnected()) return res.status(503).json({ error: 'db_unavailable' });
-  const { User } = getModels();
-  const doc = await User.findOneAndUpdate({ username: req.params.username }, { $set: { enabled: true } }, { new: true }).lean();
-  if (!doc) return res.status(404).json({ error: 'not_found' });
-  const { passwordHash, ...rest } = doc;
-  await logActivity(req, 'user.enable', 'user', String(req.params.username), {});
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!isAdminRole(req.user.role)) return res.status(403).json({ error: 'forbidden' });
+  const remarks = (req.body && req.body.remarks) ? String(req.body.remarks) : '';
+  if (isConnected()) {
+    const { User } = getModels();
+    const doc = await User.findOneAndUpdate({ username: req.params.username }, { $set: { enabled: true } }, { new: true }).lean();
+    if (!doc) return res.status(404).json({ error: 'not_found' });
+    const { passwordHash, ...rest } = doc;
+    await logActivity(req, 'user.enable', 'user', String(req.params.username), { remarks });
+    return res.json(rest);
+  }
+  const uname = String(req.params.username);
+  const idx = users.findIndex(u => u.username === uname);
+  if (idx < 0) return res.status(404).json({ error: 'not_found' });
+  users[idx] = { ...users[idx], enabled: true };
+  writeJSON(USERS_FILE, users);
+  await logActivity(req, 'user.enable', 'user', uname, { remarks });
+  const { passwordHash, ...rest } = users[idx];
   return res.json(rest);
 });
 app.post('/notify/test-sms', async (req, res) => {
   if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
   const role = String(req.user.role || '');
   if (!(role === 'Admin' || role === 'Super Admin')) return res.status(403).json({ error: 'forbidden' });
-  const { to, message } = req.body || {};
+  const { to, message, senderId } = req.body || {};
   if (!to || !message) return res.status(400).json({ error: 'to_and_message_required' });
-  const r = await sendSMS(to, message);
+  const r = await sendSMS(to, message, String(senderId || '').trim());
   try {
     await logNotification({
       channel: 'sms',
@@ -1075,9 +1173,9 @@ app.post('/notify/email/test', async (req, res) => {
   if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
   const role = String(req.user.role || '');
   if (!(role === 'Admin' || role === 'Super Admin')) return res.status(403).json({ error: 'forbidden' });
-  const { to, subject, text } = req.body || {};
+  const { to, subject, text, from, senderId } = req.body || {};
   if (!to || !subject || !text) return res.status(400).json({ error: 'to_subject_text_required' });
-  const r = await sendEmail(to, subject, text);
+  const r = await sendEmail(to, subject, text, String(from || senderId || '').trim());
   try {
     await logNotification({
       channel: 'email',
@@ -1100,7 +1198,7 @@ app.post('/notify/promotions', async (req, res) => {
   if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
   const role = String(req.user.role || '');
   if (!(role === 'Admin' || role === 'Super Admin')) return res.status(403).json({ error: 'forbidden' });
-  const { message, numbers, segment, filters } = req.body || {};
+  const { message, numbers, segment, filters, senderId } = req.body || {};
   if (!message) return res.status(400).json({ error: 'message_required' });
   let dest = [];
   if (Array.isArray(numbers) && numbers.length) {
@@ -1182,7 +1280,7 @@ app.post('/notify/promotions', async (req, res) => {
   }
   dest = Array.from(new Set(dest.map(n => String(n || '').trim()).filter(Boolean)));
   if (dest.length === 0) return res.status(400).json({ error: 'no_recipients' });
-  const results = await sendBulkSMS(dest, String(message), { sender: (req.user && req.user.username) || 'api', type: 'promotion', entityType: 'notify' });
+  const results = await sendBulkSMS(dest, String(message), { sender: (req.user && req.user.username) || 'api', type: 'promotion', entityType: 'notify', senderId: String(senderId || '') });
   const ok = results.filter(r => r.ok).length;
   const fail = results.length - ok;
   await logActivity(req, 'notify.sms.promotions', 'notify', '', { recipients: results.length, ok, fail });
@@ -1192,7 +1290,7 @@ app.post('/notify/email/promotions', async (req, res) => {
   if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
   const role = String(req.user.role || '');
   if (!(role === 'Admin' || role === 'Super Admin')) return res.status(403).json({ error: 'forbidden' });
-  const { subject, text, emails, segment, filters } = req.body || {};
+  const { subject, text, emails, segment, filters, from, senderId } = req.body || {};
   if (!subject || !text) return res.status(400).json({ error: 'subject_text_required' });
   let dest = [];
   if (Array.isArray(emails) && emails.length) {
@@ -1271,19 +1369,31 @@ app.post('/notify/email/promotions', async (req, res) => {
   }
   dest = Array.from(new Set(dest.filter(Boolean)));
   if (dest.length === 0) return res.status(400).json({ error: 'no_recipients' });
-  const results = await sendBulkEmail(dest, String(subject), String(text), { sender: (req.user && req.user.username) || 'api', type: 'promotion', entityType: 'notify' });
+  const results = await sendBulkEmail(dest, String(subject), String(text), { sender: (req.user && req.user.username) || 'api', type: 'promotion', entityType: 'notify', from: String(from || senderId || '') });
   const ok = results.filter(r => r.ok).length;
   const fail = results.length - ok;
   await logActivity(req, 'notify.email.promotions', 'notify', '', { recipients: results.length, ok, fail });
   res.json({ ok: true, recipients: results.length, sent: ok, failed: fail });
 });
 app.post('/users/:username/disable', async (req, res) => {
-  if (!isConnected()) return res.status(503).json({ error: 'db_unavailable' });
-  const { User } = getModels();
-  const doc = await User.findOneAndUpdate({ username: req.params.username }, { $set: { enabled: false } }, { new: true }).lean();
-  if (!doc) return res.status(404).json({ error: 'not_found' });
-  const { passwordHash, ...rest } = doc;
-  await logActivity(req, 'user.disable', 'user', String(req.params.username), {});
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!isAdminRole(req.user.role)) return res.status(403).json({ error: 'forbidden' });
+  const remarks = (req.body && req.body.remarks) ? String(req.body.remarks) : '';
+  if (isConnected()) {
+    const { User } = getModels();
+    const doc = await User.findOneAndUpdate({ username: req.params.username }, { $set: { enabled: false } }, { new: true }).lean();
+    if (!doc) return res.status(404).json({ error: 'not_found' });
+    const { passwordHash, ...rest } = doc;
+    await logActivity(req, 'user.disable', 'user', String(req.params.username), { remarks });
+    return res.json(rest);
+  }
+  const uname = String(req.params.username);
+  const idx = users.findIndex(u => u.username === uname);
+  if (idx < 0) return res.status(404).json({ error: 'not_found' });
+  users[idx] = { ...users[idx], enabled: false };
+  writeJSON(USERS_FILE, users);
+  await logActivity(req, 'user.disable', 'user', uname, { remarks });
+  const { passwordHash, ...rest } = users[idx];
   return res.json(rest);
 });
 app.delete('/users/:username', async (req, res) => {

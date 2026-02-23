@@ -60,6 +60,10 @@ async function connect(uri) {
       supportsIndividual: { type: Boolean, default: true },
       active: { type: Boolean, default: true },
     }],
+    smsSenderIds: [String],
+    defaultSmsSenderId: { type: String, default: '' },
+    emailFromAddresses: [String],
+    defaultEmailFrom: { type: String, default: '' },
     lastCustomerSerial: { type: Number, default: 0 }, // global running serial
   }, { timestamps: true });
 
