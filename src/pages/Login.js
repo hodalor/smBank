@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setCurrentUserName, saveUser, getUserByUsername, getAppConfig, onConfigUpdate, saveAppConfig } from '../state/ops';
 import { apiLogin, fetchConfig, publicChangePassword, publicAdminResetPassword } from '../api';
-import { IconLogIn, IconSliders, IconX, IconSave } from '../components/Icons';
+import { IconLogIn, IconSliders, IconX, IconSave, IconRotateCcw } from '../components/Icons';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -25,6 +25,7 @@ export default function Login() {
   const canvasRef = useRef(null);
   const captchaTimerRef = useRef(null);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     const saved = localStorage.getItem('remember_username');
     if (saved) {
@@ -84,6 +85,7 @@ export default function Login() {
       setError('Enter account and password');
       return;
     }
+    setLoading(true);
     try {
       const { role, token, passwordChangeRequired } = await apiLogin(uname, password);
       if (token && typeof window !== 'undefined' && window.localStorage) {
@@ -101,6 +103,7 @@ export default function Login() {
         localStorage.removeItem('force_password_change');
       }
     } catch (e) {
+      setLoading(false);
       const msg = String((e && e.message) ? e.message : '').toLowerCase();
       if (msg.includes('password_expired')) {
         setExpired(true);
@@ -114,6 +117,7 @@ export default function Login() {
     setCurrentUserName(uname);
     if (remember) localStorage.setItem('remember_username', uname);
     else localStorage.removeItem('remember_username');
+    setLoading(false);
     if (localStorage.getItem('force_password_change') === '1') navigate('/my-account');
     else navigate('/dashboard');
   };
@@ -136,7 +140,9 @@ export default function Login() {
             <span>remember password</span>
           </label>
           {error && <div style={{ color: '#dc2626', fontSize: 12 }}>{error}</div>}
-          <button type="submit" className="btn btn-primary" style={{ background: '#16a34a', borderColor: '#16a34a' }}><IconLogIn /><span>Login In</span></button>
+          <button type="submit" className="btn btn-primary" style={{ background: '#16a34a', borderColor: '#16a34a' }} disabled={loading}>
+            {loading ? (<><IconRotateCcw /><span>Logging in…</span></>) : (<><IconLogIn /><span>Login In</span></>)}
+          </button>
         </form>
         <div className="row" style={{ justifyContent: 'flex-end', marginTop: 8 }}>
           <button className="btn" onClick={() => setResetOpen(s => !s)}>{resetOpen ? (<><IconX /><span>Hide Reset</span></>) : (<><IconSliders /><span>Reset Password (Admin)</span></>)}</button>
