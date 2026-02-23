@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { hasPermission, PERMISSIONS } from '../state/ops';
+import { IconDownload, IconFile } from '../components/Icons';
 import { listClients, listLoans, listLoanRepayPosted, listPostedTransactions } from '../api';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
@@ -162,8 +163,8 @@ export default function Reports() {
           </label>
         </div>
         <div className="row" style={{ marginTop: 8 }}>
-          <button className="btn btn-primary" onClick={() => downloadCSV(reportType.replace(/\\s+/g,'_'), rows)}>Download CSV</button>
-          <button className="btn" onClick={printTable}>Download PDF</button>
+          <button className="btn btn-primary" onClick={() => downloadCSV(reportType.replace(/\s+/g,'_'), rows)}><IconDownload /><span>Download CSV</span></button>
+          <button className="btn" onClick={printTable}><IconFile /><span>Download PDF</span></button>
         </div>
       </div>
       <div className="card">

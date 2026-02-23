@@ -1,5 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { IconX, IconCheck } from './Icons';
 
 export function confirm(message) {
   return new Promise((resolve) => {
@@ -18,8 +19,8 @@ export function confirm(message) {
         <div className="card" style={{ maxWidth: 420, padding: 16, display: 'grid', gap: 12 }}>
           <div>{message}</div>
           <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
-            <button className="btn" onClick={() => close(false)}>Cancel</button>
-            <button className="btn btn-primary" onClick={() => close(true)}>Confirm</button>
+            <button className="btn" onClick={() => close(false)}><IconX /><span>Cancel</span></button>
+            <button className="btn btn-primary" onClick={() => close(true)}><IconCheck /><span>Confirm</span></button>
           </div>
         </div>
       </div>

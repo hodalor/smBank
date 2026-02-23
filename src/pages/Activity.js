@@ -4,6 +4,7 @@ import { listActivity, getClient, listUsers, listPostedTransactions, listLoans, 
 import { hasPermission, PERMISSIONS, displayUserName } from '../state/ops';
 import { showError } from '../components/Toaster';
 import Pager from '../components/Pager';
+import { IconX, IconExternal, IconDownload } from '../components/Icons';
 
 export default function Activity() {
   const navigate = useNavigate();
@@ -36,6 +37,30 @@ export default function Activity() {
   }, [debouncedQuick, advParams]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const exportCSV = () => {
+    const cols = ['time','actor','role','action','entity','entityId','path','method'];
+    const header = cols.join(',');
+    const data = rows.map(r => {
+      const row = {
+        time: formatTs(r.ts),
+        actor: r.actor || '',
+        role: r.role || '',
+        action: r.action || '',
+        entity: r.entityType || '',
+        entityId: r.entityId || '',
+        path: r.path || '',
+        method: r.method || '',
+      };
+      return cols.map(c => JSON.stringify(row[c] ?? '')).join(',');
+    }).join('\n');
+    const blob = new Blob([header + '\n' + data], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'activity_export.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   useEffect(() => {
     if (!canView) return;
     let stopped = false;
@@ -248,6 +273,9 @@ export default function Activity() {
         )}
       </div>
       <div className="card">
+        <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 8 }}>
+          <button className="btn" onClick={exportCSV}><IconDownload /><span>Export CSV</span></button>
+        </div>
         <div style={{ overflowX: 'auto' }}>
           <table className="table">
             <thead>
@@ -293,7 +321,7 @@ export default function Activity() {
           <div ref={modalRef} className="card" style={{ width: 720, maxWidth: '90vw', maxHeight: '80vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <div style={{ fontWeight: 700, fontSize: 18 }}>{viewTitle}</div>
-              <button className="btn" onClick={() => setOpen(false)}>Close</button>
+              <button className="btn" onClick={() => setOpen(false)}><IconX /><span>Close</span></button>
             </div>
             {viewLoading && <div>Loading…</div>}
             {viewError && <div style={{ color: '#dc2626' }}>{viewError}</div>}
@@ -343,7 +371,7 @@ function ModalLinks({ sections, navigate }) {
   return (
     <>
       {rows.map(([label, action]) => (
-        <button key={label} className="btn" onClick={action}>{label}</button>
+        <button key={label} className="btn" onClick={action}><IconExternal /><span>{label}</span></button>
       ))}
     </>
   );

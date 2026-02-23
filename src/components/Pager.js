@@ -1,4 +1,5 @@
 import React from 'react';
+import { IconArrowLeft, IconArrowRight } from './Icons';
 
 export default function Pager({ total = 0, page = 1, pageSize = 10, onPageChange, onPageSizeChange }) {
   const pages = Math.max(1, Math.ceil(total / Math.max(1, pageSize)));
@@ -19,8 +20,8 @@ export default function Pager({ total = 0, page = 1, pageSize = 10, onPageChange
             <option value={100}>100</option>
           </select>
         </label>
-        <button className="btn" onClick={prev} disabled={page <= 1}>Prev</button>
-        <button className="btn" onClick={next} disabled={page >= pages}>Next</button>
+        <button className="btn" onClick={prev} disabled={page <= 1}><IconArrowLeft /><span>Prev</span></button>
+        <button className="btn" onClick={next} disabled={page >= pages}><IconArrowRight /><span>Next</span></button>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getAppConfig, saveAppConfig, hasPermission, PERMISSIONS } from '../state/ops';
 import { fetchConfig, updateConfig } from '../api';
 import { showSuccess, showError } from '../components/Toaster';
+import { IconSave, IconRotateCcw, IconTrash, IconPlus } from '../components/Icons';
 
 export default function Config() {
   const allowed = hasPermission(PERMISSIONS.CONFIG_MANAGE);
@@ -141,8 +142,8 @@ export default function Config() {
           </label>
         </div>
         <div className="row">
-          <button className="btn btn-primary" type="submit">Save</button>
-          <button className="btn" type="button" onClick={reset}>Reset</button>
+          <button className="btn btn-primary" type="submit"><IconSave /><span>Save</span></button>
+          <button className="btn" type="button" onClick={reset}><IconRotateCcw /><span>Reset</span></button>
         </div>
       </form>
       <div className="card">
@@ -163,10 +164,10 @@ export default function Config() {
             </label>
             <button className="btn" onClick={() => {
               const arr = (cfg.branches || []).filter((_, idx) => idx !== i); setCfg({ ...cfg, branches: arr });
-            }}>Remove</button>
+            }}><IconTrash /><span>Remove</span></button>
           </div>
         ))}
-        <button className="btn" onClick={() => setCfg({ ...cfg, branches: [ ...(cfg.branches || []), { code: '', name: '', active: true } ] })}>Add Branch</button>
+        <button className="btn" onClick={() => setCfg({ ...cfg, branches: [ ...(cfg.branches || []), { code: '', name: '', active: true } ] })}><IconPlus /><span>Add Branch</span></button>
       </div>
       <div className="card">
         <h3>SMS Sender IDs</h3>
@@ -196,12 +197,12 @@ export default function Config() {
               let nextDefault = cfg.defaultSmsSenderId;
               if (s === nextDefault) nextDefault = arr[0] || '';
               quickSave({ ...cfg, smsSenderIds: arr, defaultSmsSenderId: nextDefault });
-            }}>Remove</button>
+            }}><IconTrash /><span>Remove</span></button>
           </div>
         ))}
         <div className="row" style={{ gap: 8 }}>
-          <button className="btn" onClick={() => setCfg({ ...cfg, smsSenderIds: [ ...(cfg.smsSenderIds || []), '' ] })}>Add Sender ID</button>
-          <button className="btn" onClick={() => quickSave({ ...cfg })}>Save</button>
+          <button className="btn" onClick={() => setCfg({ ...cfg, smsSenderIds: [ ...(cfg.smsSenderIds || []), '' ] })}><IconPlus /><span>Add Sender ID</span></button>
+          <button className="btn" onClick={() => quickSave({ ...cfg })}><IconSave /><span>Save</span></button>
         </div>
       </div>
       <div className="card">
@@ -232,12 +233,12 @@ export default function Config() {
               let nextDefault = cfg.defaultEmailFrom;
               if (s === nextDefault) nextDefault = arr[0] || '';
               quickSave({ ...cfg, emailFromAddresses: arr, defaultEmailFrom: nextDefault });
-            }}>Remove</button>
+            }}><IconTrash /><span>Remove</span></button>
           </div>
         ))}
         <div className="row" style={{ gap: 8 }}>
-          <button className="btn" onClick={() => setCfg({ ...cfg, emailFromAddresses: [ ...(cfg.emailFromAddresses || []), '' ] })}>Add From</button>
-          <button className="btn" onClick={() => quickSave({ ...cfg })}>Save</button>
+          <button className="btn" onClick={() => setCfg({ ...cfg, emailFromAddresses: [ ...(cfg.emailFromAddresses || []), '' ] })}><IconPlus /><span>Add From</span></button>
+          <button className="btn" onClick={() => quickSave({ ...cfg })}><IconSave /><span>Save</span></button>
         </div>
       </div>
       <div className="card">
@@ -270,10 +271,10 @@ export default function Config() {
             </label>
             <button className="btn" onClick={() => {
               const arr = (cfg.accountTypes || []).filter((_, idx) => idx !== i); setCfg({ ...cfg, accountTypes: arr });
-            }}>Remove</button>
+            }}><IconTrash /><span>Remove</span></button>
           </div>
         ))}
-        <button className="btn" onClick={() => setCfg({ ...cfg, accountTypes: [ ...(cfg.accountTypes || []), { code: '', name: '', supportsIndividual: true, active: true } ] })}>Add Account Type</button>
+        <button className="btn" onClick={() => setCfg({ ...cfg, accountTypes: [ ...(cfg.accountTypes || []), { code: '', name: '', supportsIndividual: true, active: true } ] })}><IconPlus /><span>Add Account Type</span></button>
       </div>
       <div className="card">
         <div className="row" style={{ alignItems: 'center', gap: 12 }}>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { listNotifications, resendNotification } from '../api';
 import { hasPermission, PERMISSIONS } from '../state/ops';
 import { showError, showSuccess } from '../components/Toaster';
+import { IconX, IconFilter, IconRotateCcw, IconSend } from '../components/Icons';
 
 export default function Notifications() {
   const allowed = hasPermission(PERMISSIONS.NOTIFY_SEND);
@@ -52,9 +53,9 @@ export default function Notifications() {
       <div className="card" style={{ marginBottom: 16, display: 'grid', gap: 12 }}>
         <div className="row" style={{ gap: 8 }}>
           <input className="input" value={quick} onChange={e => setQuick(e.target.value)} placeholder="Quick search: receiver, subject, message" style={{ flex: 1 }} />
-          <button className="btn" onClick={() => setQuick('')}>Clear</button>
-          <button className="btn" onClick={() => setShowAdvanced(v => !v)}>{showAdvanced ? 'Hide Advanced' : 'Advanced'}</button>
-          <button className="btn btn-primary" onClick={load} disabled={loading}>{loading ? 'Loading...' : 'Fetch'}</button>
+          <button className="btn" onClick={() => setQuick('')}><IconX /><span>Clear</span></button>
+          <button className="btn" onClick={() => setShowAdvanced(v => !v)}>{showAdvanced ? (<><IconX /><span>Hide Advanced</span></>) : (<><IconFilter /><span>Advanced</span></>)}</button>
+          <button className="btn btn-primary" onClick={load} disabled={loading}>{loading ? (<><IconRotateCcw /><span>Loading...</span></>) : (<><IconRotateCcw /><span>Fetch</span></>)}</button>
         </div>
         {showAdvanced && (
           <div className="form-row">
@@ -127,7 +128,7 @@ export default function Notifications() {
                 <td>{it.status}</td>
                 <td>
                   {(it.status === 'failed' || it.status === 'skipped') && (
-                    <button className="btn" onClick={() => resend(it.id)}>Resend</button>
+                    <button className="btn" onClick={() => resend(it.id)}><IconSend /><span>Resend</span></button>
                   )}
                 </td>
               </tr>

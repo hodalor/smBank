@@ -50,10 +50,22 @@
   text-decoration: none;
   padding: 10px 12px;
   border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .nav-item.active {
   background: #1e293b;
   color: #fff;
+}
+.nav-item svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  opacity: .9;
+}
+.nav-item.active svg {
+  opacity: 1;
 }
 .topbar {
   position: fixed;

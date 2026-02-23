@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { getCurrentUserName, hasPermission, PERMISSIONS } from '../state/ops';
 import { createWithdraw, directoryLookup, listClients, listPostedTransactions, listLoanRepayPosted, listLoans, fetchConfig } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
+import { IconSearch, IconSend } from '../components/Icons';
 
 export default function Withdraw() {
   const allowed = hasPermission(PERMISSIONS.WITHDRAW_CREATE);
@@ -156,7 +157,7 @@ export default function Withdraw() {
           Account Number
           <div className="row">
             <input className="input" name="accountNumber" value={form.accountNumber} onChange={change} onBlur={lookup} placeholder="Account / Name / ID" required />
-            <button className="btn" type="button" onClick={lookup}>Lookup</button>
+            <button className="btn" type="button" onClick={lookup}><IconSearch /><span>Lookup</span></button>
           </div>
         </label>
         {client && (
@@ -225,7 +226,7 @@ export default function Withdraw() {
           Notes
           <input className="input" name="notes" value={form.notes} onChange={change} placeholder="Notes (optional)" />
         </label>
-        <button className="btn btn-primary" type="submit">Submit for Approval</button>
+        <button className="btn btn-primary" type="submit"><IconSend /><span>Submit for Approval</span></button>
       </form>
     </div>
   );

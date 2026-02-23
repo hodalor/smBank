@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { fetchConfig } from '../api';
 import { getAppConfig, onConfigUpdate } from '../state/ops';
 import { useState } from 'react';
+import { IconFile } from '../components/Icons';
 
 export default function Docs() {
   const [cfg, setCfg] = useState(getAppConfig());
@@ -31,7 +32,7 @@ export default function Docs() {
       </style>
       <div className="row print-hide" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>System Documentation</h1>
-        <button className="btn btn-primary" onClick={onPrint}>Download PDF</button>
+        <button className="btn btn-primary" onClick={onPrint}><IconFile /><span>Download PDF</span></button>
       </div>
       <div style={{ color: '#64748b', marginTop: -6 }} className="print-hide">Generated: {now}</div>
       <div className="doc stack card" style={{ padding: 16 }}>

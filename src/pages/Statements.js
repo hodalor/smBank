@@ -4,6 +4,7 @@ import { directoryLookup, listClients, listPostedTransactions } from '../api';
 import { displayUserName, hasPermission, PERMISSIONS } from '../state/ops';
 import { showError, showWarning } from '../components/Toaster';
 import Pager from '../components/Pager';
+import { IconSearch, IconDownload, IconX, IconFile } from '../components/Icons';
 
 function toCurrency(n) {
   const num = Number(n || 0);
@@ -133,7 +134,7 @@ export default function Statements() {
                   else showWarning('No matching client found');
                 }).catch(() => { showError('Lookup failed'); });
               }
-            }}>Lookup</button>
+            }}><IconSearch /><span>Lookup</span></button>
           </div>
         </label>
         <label>
@@ -167,8 +168,8 @@ export default function Statements() {
           </label>
         </div>
         <div className="row">
-          <button className="btn btn-primary" onClick={() => setAccountNumber(accountNumber)}>Load</button>
-          <button className="btn" onClick={() => { setAccountNumber(''); }}>Clear</button>
+          <button className="btn btn-primary" onClick={() => setAccountNumber(accountNumber)}><IconDownload /><span>Load</span></button>
+          <button className="btn" onClick={() => { setAccountNumber(''); }}><IconX /><span>Clear</span></button>
         </div>
       </div>
 
@@ -183,8 +184,8 @@ export default function Statements() {
             <div style={{ fontSize: 22, fontWeight: 700 }}>{toCurrency(balance)}</div>
           </div>
           <div className="row">
-            <button className="btn" onClick={() => downloadCSV(`transactions_${accountNumber || 'all'}.csv`, rows, ['id','account','type','amount','date','initiator','approver','notes'])}>Download CSV</button>
-            <button className="btn btn-primary" onClick={printTables}>Download PDF</button>
+            <button className="btn" onClick={() => downloadCSV(`transactions_${accountNumber || 'all'}.csv`, rows, ['id','account','type','amount','date','initiator','approver','notes'])}><IconDownload /><span>Download CSV</span></button>
+            <button className="btn btn-primary" onClick={printTables}><IconFile /><span>Download PDF</span></button>
           </div>
         </div>
       </div>

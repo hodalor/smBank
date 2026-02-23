@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getCurrentUserName, hasPermission, PERMISSIONS } from '../state/ops';
 import { createLoanRepayment, directoryLookup, listClients, listLoanRepayPosted, listLoans } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
+import { IconSearch, IconSend } from '../components/Icons';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
@@ -113,7 +114,7 @@ export default function LoanRepay() {
             Account Number
             <div className="row">
               <input className="input" value={account} onChange={(e) => setAccount(e.target.value)} onBlur={lookup} placeholder="Account / Name / ID" required />
-              <button className="btn" type="button" onClick={lookup}>Lookup</button>
+              <button className="btn" type="button" onClick={lookup}><IconSearch /><span>Lookup</span></button>
             </div>
           </label>
           <label>
@@ -156,7 +157,7 @@ export default function LoanRepay() {
           <textarea className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" />
         </label>
         <div className="row">
-          <button className="btn btn-primary" type="submit">Submit for Approval</button>
+          <button className="btn btn-primary" type="submit"><IconSend /><span>Submit for Approval</span></button>
         </div>
       </form>
       <div className="card">

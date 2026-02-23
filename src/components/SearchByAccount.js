@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { IconSearch } from './Icons';
 
 export default function SearchByAccount({ onSearch }) {
   const [value, setValue] = useState('');
@@ -21,7 +22,7 @@ export default function SearchByAccount({ onSearch }) {
         className="btn btn-primary"
         onClick={() => onSearch && onSearch({ type, value })}
       >
-        Search
+        <IconSearch /><span>Search</span>
       </button>
     </div>
   );

@@ -3,6 +3,7 @@ import { createAsset, listAssets, listUsers, updateAssetStatus } from '../api';
 import { hasPermission, PERMISSIONS } from '../state/ops';
 import { showError, showSuccess } from '../components/Toaster';
 import Pager from '../components/Pager';
+import { IconPlus, IconSave } from '../components/Icons';
 
 const CONDITIONS = ['New', 'Refurbished', 'Used'];
 const STATUSES = ['Available', 'In Use', 'Damaged', 'Repair', 'Retired'];
@@ -175,7 +176,7 @@ export default function Assets() {
             </label>
           </div>
           <div className="row">
-            <button className="btn btn-primary" type="submit" disabled={!canSubmit}>Register</button>
+            <button className="btn btn-primary" type="submit" disabled={!canSubmit}><IconPlus /><span>Register</span></button>
           </div>
         </form>
       )}
@@ -256,7 +257,7 @@ function InlineUpdate({ asset, users, onDone }) {
           setSaving(false);
           showError('Failed');
         }
-      }}>Save</button>
+      }}><IconSave /><span>Save</span></button>
     </div>
   );
 }

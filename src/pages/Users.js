@@ -4,6 +4,7 @@ import { listUsers, upsertUser, removeUser, resetUserPassword, setUserEnabled } 
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 import { confirm } from '../components/Confirm';
 import Pager from '../components/Pager';
+import { IconFilter, IconX, IconSave, IconEdit, IconTrash, IconCheck, IconDownload } from '../components/Icons';
 
 export default function Users() {
   const allowed = hasPermission(PERMISSIONS.USERS_MANAGE);
@@ -12,6 +13,7 @@ export default function Users() {
   const [users, setUsers] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [exportCols, setExportCols] = useState({ username: true, fullName: false, email: false, phone: false, department: false, role: true, enabled: false });
   const [form, setForm] = useState({
     fullName: '',
     username: '',
@@ -72,6 +74,31 @@ export default function Users() {
       if (d.toString() !== 'Invalid Date') return (new Date() > d);
     }
     return false;
+  };
+  const toggleExportCol = (k) => setExportCols(prev => ({ ...prev, [k]: !prev[k] }));
+  const downloadCSV = () => {
+    const cols = Object.keys(exportCols).filter(k => exportCols[k]);
+    if (cols.length === 0) return;
+    const header = cols.join(',');
+    const eligible = users.filter(u => viewerCanSeeRow(u)).filter(u => !filterAutoDisabled || isAutoDisabled(u));
+    const data = eligible.map(u => {
+      const row = {};
+      row.username = u.username || '';
+      row.fullName = u.fullName || '';
+      row.email = u.email || '';
+      row.phone = u.phone || '';
+      row.department = u.department || '';
+      row.role = u.role || '';
+      row.enabled = typeof u.enabled === 'boolean' ? (u.enabled ? 'Enabled' : 'Disabled') : '';
+      return cols.map(c => JSON.stringify(row[c] ?? '')).join(',');
+    }).join('\n');
+    const blob = new Blob([header + '\n' + data], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'users_export.csv';
+    a.click();
+    URL.revokeObjectURL(url);
   };
   const assignableRoles = Object.values(roles).filter(r => isAdminOrSuper ? r !== roles.SUPER_ADMIN : canSeeRole(r) && r !== roles.SUPER_ADMIN && r !== roles.ADMIN);
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -180,8 +207,21 @@ export default function Users() {
             <span>Auto-disabled</span>
           </label>
         )}
-        <button className="btn" onClick={() => reload()}>Filter</button>
-        <button className="btn" onClick={() => { setFilterDept(''); setFilterRole(''); setFilterEmp(''); reload({}); }}>Clear</button>
+        <button className="btn" onClick={() => reload()}><IconFilter /><span>Filter</span></button>
+        <button className="btn" onClick={() => { setFilterDept(''); setFilterRole(''); setFilterEmp(''); reload({}); }}><IconX /><span>Clear</span></button>
+      </div>
+      <div className="card" style={{ padding: 12, marginTop: 8 }}>
+        <div className="row" style={{ gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ color: '#64748b' }}>Export columns</div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={exportCols.username} onChange={() => toggleExportCol('username')} /> Username</label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={exportCols.fullName} onChange={() => toggleExportCol('fullName')} /> Name</label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={exportCols.email} onChange={() => toggleExportCol('email')} /> Email</label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={exportCols.phone} onChange={() => toggleExportCol('phone')} /> Phone</label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={exportCols.department} onChange={() => toggleExportCol('department')} /> Dept</label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={exportCols.role} onChange={() => toggleExportCol('role')} /> Role</label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={exportCols.enabled} onChange={() => toggleExportCol('enabled')} /> Status</label>
+          <button className="btn btn-primary" onClick={downloadCSV}><IconDownload /><span>Export CSV</span></button>
+        </div>
       </div>
       <div className="row" style={{ gap: 16 }}>
         <form onSubmit={submit} className="card" style={{ padding: 16, minWidth: 420, display: 'grid', gap: 12 }}>
@@ -253,7 +293,7 @@ export default function Users() {
               ))}
             </div>
           </div>}
-          {isAdminOrSuper && <button className="btn btn-primary" type="submit">Save</button>}
+          {isAdminOrSuper && <button className="btn btn-primary" type="submit"><IconSave /><span>Save</span></button>}
           {form.username && isAdminOrSuper && (
             <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
               <div style={{ fontWeight: 600, marginBottom: 8 }}>Change Password</div>
@@ -275,7 +315,7 @@ export default function Users() {
                   } catch (e) {
                     showError(e.message || 'Failed to reset password');
                   }
-                }}>Update</button>
+                }}><IconSave /><span>Update</span></button>
               </div>
               <div className="row" style={{ gap: 8, marginTop: 8 }}>
                 <button type="button" className="btn" onClick={async () => {
@@ -286,14 +326,14 @@ export default function Users() {
                     setForm({ ...form, enabled: true });
                     await reload();
                   } catch { showError('Failed to enable account'); }
-                }}>Enable</button>
+                }}><IconCheck /><span>Enable</span></button>
                 <button type="button" className="btn" onClick={async () => {
                   try {
                     await setUserEnabled(form.username, false);
                     setForm({ ...form, enabled: false });
                     await reload();
                   } catch { showError('Failed to disable account'); }
-                }}>Disable</button>
+                }}><IconX /><span>Disable</span></button>
               </div>
             </div>
           )}
@@ -333,8 +373,8 @@ export default function Users() {
                   </td>
                   <td>{u.role}</td>
                   {isAdminOrSuper && <td>
-                    <button className="btn" onClick={() => editUser(u)}>Edit</button>{' '}
-                    <button className="btn" onClick={() => remove(u)}>Delete</button>{' '}
+                    <button className="btn" onClick={() => editUser(u)}><IconEdit /><span>Edit</span></button>{' '}
+                    <button className="btn" onClick={() => remove(u)}><IconTrash /><span>Delete</span></button>{' '}
                     <button className="btn" onClick={async () => {
                       try {
                         let remarks = '';
@@ -347,7 +387,7 @@ export default function Users() {
                       } catch {
                         showError('Failed to update status');
                       }
-                    }}>{u.enabled ? 'Disable' : 'Enable'}</button>
+                    }}>{u.enabled ? (<><IconX /><span>Disable</span></>) : (<><IconCheck /><span>Enable</span></>)}</button>
                   </td>}
                 </tr>
               ))}

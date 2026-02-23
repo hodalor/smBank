@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setCurrentUserName, saveUser, getUserByUsername, getAppConfig, onConfigUpdate, saveAppConfig } from '../state/ops';
 import { apiLogin, fetchConfig, publicChangePassword, publicAdminResetPassword } from '../api';
+import { IconLogIn, IconSliders, IconX, IconSave } from '../components/Icons';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -135,10 +136,10 @@ export default function Login() {
             <span>remember password</span>
           </label>
           {error && <div style={{ color: '#dc2626', fontSize: 12 }}>{error}</div>}
-          <button type="submit" className="btn btn-primary" style={{ background: '#16a34a', borderColor: '#16a34a' }}>Login In</button>
+          <button type="submit" className="btn btn-primary" style={{ background: '#16a34a', borderColor: '#16a34a' }}><IconLogIn /><span>Login In</span></button>
         </form>
         <div className="row" style={{ justifyContent: 'flex-end', marginTop: 8 }}>
-          <button className="btn" onClick={() => setResetOpen(s => !s)}>{resetOpen ? 'Hide Reset' : 'Reset Password (Admin)'}</button>
+          <button className="btn" onClick={() => setResetOpen(s => !s)}>{resetOpen ? (<><IconX /><span>Hide Reset</span></>) : (<><IconSliders /><span>Reset Password (Admin)</span></>)}</button>
         </div>
         {resetOpen && (
           <div className="stack" style={{ marginTop: 8, padding: 12, border: '1px solid #e2e8f0', borderRadius: 8, gap: 8 }}>
@@ -163,7 +164,7 @@ export default function Login() {
               } catch (e3) {
                 setError(((e3 && e3.message) ? e3.message : 'Reset failed'));
               }
-            }}>Reset Password</button>
+            }}><IconSave /><span>Reset Password</span></button>
             <div style={{ color: '#64748b', fontSize: 12 }}>Ask an Admin to provide the daily approval code.</div>
           </div>
         )}
@@ -188,7 +189,7 @@ export default function Login() {
               } catch (e2) {
                 setError(((e2 && e2.message) ? e2.message : 'Failed to update password'));
               }
-            }}>Update Password</button>
+            }}><IconSave /><span>Update Password</span></button>
           </div>
         )}
       </div>

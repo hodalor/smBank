@@ -4,6 +4,7 @@ import { createClient, getClient, updateClient, fetchConfig, uploadMedia, update
 import { showError, showSuccess } from '../components/Toaster';
 import { confirm } from '../components/Confirm';
 import { hasPermission, PERMISSIONS } from '../state/ops';
+import { IconFile, IconTrash, IconSave, IconX } from '../components/Icons';
 
 export default function ClientProfile() {
   const { accountNumber } = useParams();
@@ -343,9 +344,9 @@ export default function ClientProfile() {
             <div style={{ fontSize: 18, fontWeight: 600 }}>{form.status}</div>
           </div>
           <div className="row">
-            <button className="btn" onClick={() => navigate(`/statements?account=${accountNumber}`)}>View Statement</button>
+            <button className="btn" onClick={() => navigate(`/statements?account=${accountNumber}`)}><IconFile /><span>View Statement</span></button>
             <button className="btn btn-primary" onClick={retire} disabled={form.status === 'Inactive'}>
-              {form.status === 'Inactive' ? 'Retired' : 'Retire Account'}
+              {form.status === 'Inactive' ? (<><IconX /><span>Retired</span></>) : (<><IconTrash /><span>Retire Account</span></>)}
             </button>
           </div>
         </div>
@@ -476,7 +477,7 @@ export default function ClientProfile() {
                   }
                 }}
               >
-                {managerSelect ? (manager ? 'Reassign Manager' : 'Assign Manager') : 'Unassign Manager'}
+                {managerSelect ? (manager ? (<><IconSave /><span>Reassign Manager</span></>) : (<><IconSave /><span>Assign Manager</span></>)) : (<><IconX /><span>Unassign Manager</span></>)}
               </button>
             </div>
             {managerHistory && managerHistory.length > 0 && (
@@ -917,8 +918,8 @@ export default function ClientProfile() {
           </div>
         )}
         <div className="row">
-          {canEdit && <button className="btn btn-primary" type="submit">Save</button>}
-          <button className="btn" type="button" onClick={() => navigate('/clients')}>Cancel</button>
+          {canEdit && <button className="btn btn-primary" type="submit"><IconSave /><span>Save</span></button>}
+          <button className="btn" type="button" onClick={() => navigate('/clients')}><IconX /><span>Cancel</span></button>
         </div>
       </form>
     </div>

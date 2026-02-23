@@ -4,6 +4,7 @@ import { approveLoan, listLoanApprovals, rejectLoan, getMe } from '../api';
 import { printLoanDisbursementReceipt } from '../state/ops';
 import { showError, showSuccess } from '../components/Toaster';
 import Pager from '../components/Pager';
+import { IconCheck, IconX, IconEye } from '../components/Icons';
 
 export default function LoanApprovals() {
   const allowed = hasPermission(PERMISSIONS.LOANS_APPROVALS_VIEW);
@@ -69,8 +70,8 @@ export default function LoanApprovals() {
                 <td>{r.rate}</td>
                 <td>{r.termMonths}</td>
                 <td>
-                  <button className="btn btn-primary" onClick={() => approve(r.id)}>Approve</button>{' '}
-                  <button className="btn" onClick={() => reject(r.id)}>Reject</button>
+                  <button className="btn btn-primary" onClick={() => approve(r.id)}><IconCheck /><span>Approve</span></button>{' '}
+                  <button className="btn" onClick={() => reject(r.id)}><IconX /><span>Reject</span></button>
                 </td>
               </tr>
             ))}
@@ -113,17 +114,17 @@ export default function LoanApprovals() {
           <div className="card" style={{ width: 420, maxWidth: '90vw' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontWeight: 600 }}>Enter Approval Code</div>
-              <button className="btn" onClick={() => setAskCodeFor(null)}>Close</button>
+              <button className="btn" onClick={() => setAskCodeFor(null)}><IconX /><span>Close</span></button>
             </div>
             <div style={{ marginTop: 12 }}>
               <div style={{ fontSize: 12, color: '#64748b', marginBottom: 6 }}>Approval code is 6 digits. It renews daily at 00:00 UTC.</div>
               <div className="row" style={{ gap: 8 }}>
                 <input className="input" type={show ? 'text' : 'password'} value={code} onChange={e => setCode(e.target.value)} maxLength={6} placeholder="******" style={{ flex: 1 }} />
-                <button className="btn" onClick={() => setShow(s => !s)}>{show ? 'Hide' : 'Show'}</button>
+                <button className="btn" onClick={() => setShow(s => !s)}>{show ? (<><IconEye /><span>Hide</span></>) : (<><IconEye /><span>Show</span></>)}</button>
               </div>
               {my && my.approvalCode && <div style={{ marginTop: 8, fontSize: 12, color: '#64748b' }}>Hint: Find your code in My Account.</div>}
               <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                <button className="btn" onClick={() => setAskCodeFor(null)}>Cancel</button>
+                <button className="btn" onClick={() => setAskCodeFor(null)}><IconX /><span>Cancel</span></button>
                 <button className="btn btn-primary" onClick={async () => {
                   try {
                     const loan = await approveLoan(askCodeFor, { approvalCode: code });
@@ -135,7 +136,7 @@ export default function LoanApprovals() {
                     if (e.status === 401 || String(e.message).includes('approval_code')) showError('Invalid approval code');
                     else showError('Approve failed');
                   }
-                }}>Confirm</button>
+                }}><IconCheck /><span>Confirm</span></button>
               </div>
             </div>
           </div>

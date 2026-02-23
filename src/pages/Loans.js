@@ -3,6 +3,7 @@ import { hasPermission, PERMISSIONS } from '../state/ops';
 import { createLoan, directoryLookup, listClients, listLoans, fetchConfig } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 import Pager from '../components/Pager';
+import { IconSearch, IconPlus } from '../components/Icons';
 
 export default function Loans() {
   const canView = hasPermission(PERMISSIONS.LOANS_VIEW);
@@ -141,7 +142,7 @@ export default function Loans() {
             Client Account Number
             <div className="row">
               <input className="input" name="accountNumber" value={form.accountNumber} onChange={change} placeholder="Account / Name / ID" required />
-              <button className="btn" type="button" onClick={lookup}>Lookup</button>
+              <button className="btn" type="button" onClick={lookup}><IconSearch /><span>Lookup</span></button>
             </div>
           </label>
           {client && (
@@ -223,7 +224,7 @@ export default function Loans() {
               <input className="input" type="file" accept="image/*,application/pdf" onChange={changeFile} />
             </label>
           </div>
-          <button className="btn btn-primary" type="submit">Create Loan</button>
+          <button className="btn btn-primary" type="submit"><IconPlus /><span>Create Loan</span></button>
         </form>
       </section>}
       <section className="card">

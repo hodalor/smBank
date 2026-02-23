@@ -4,6 +4,7 @@ import { getSuperBin, restoreFromSuperBin, purgeFromSuperBin, hasPermission, PER
 import { listSuperBin, restoreSuperBin, deleteSuperBin } from '../api';
 import { confirm } from '../components/Confirm';
 import { showWarning } from '../components/Toaster';
+import { IconRotateCcw, IconTrash, IconDownload } from '../components/Icons';
 
 export default function SuperBin() {
   const navigate = useNavigate();
@@ -78,7 +79,7 @@ export default function SuperBin() {
     <div className="stack">
       <h1>Super Bin</h1>
       <div className="row">
-        <button className="btn" onClick={exportAllCSV}>Export All (CSV)</button>
+        <button className="btn" onClick={exportAllCSV}><IconDownload /><span>Export All (CSV)</span></button>
       </div>
       <div className="card">
         <table className="table">
@@ -101,9 +102,9 @@ export default function SuperBin() {
                 <td>{r.by}</td>
                 <td><pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{JSON.stringify(r.payload, null, 0)}</pre></td>
                 <td>
-                  <button className="btn" onClick={() => restore(r.id)}>Restore</button>{' '}
-                  <button className="btn" onClick={() => purge(r.id)}>Delete</button>{' '}
-                  <button className="btn" onClick={() => exportOne(r)}>Export</button>
+                  <button className="btn" onClick={() => restore(r.id)}><IconRotateCcw /><span>Restore</span></button>{' '}
+                  <button className="btn" onClick={() => purge(r.id)}><IconTrash /><span>Delete</span></button>{' '}
+                  <button className="btn" onClick={() => exportOne(r)}><IconDownload /><span>Export</span></button>
                 </td>
               </tr>
             ))}

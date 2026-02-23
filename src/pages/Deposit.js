@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { getCurrentUserName, hasPermission, PERMISSIONS } from '../state/ops';
 import { createDeposit, directoryLookup, listClients, listPostedTransactions, listLoanRepayPosted, listLoans } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
+import { IconSearch, IconSend } from '../components/Icons';
 
 export default function Deposit() {
   const allowed = hasPermission(PERMISSIONS.DEPOSIT_CREATE);
@@ -127,7 +128,7 @@ export default function Deposit() {
           Account Number
           <div className="row">
             <input className="input" name="accountNumber" value={form.accountNumber} onChange={change} onBlur={lookup} placeholder="Account / Name / ID" required />
-            <button className="btn" type="button" onClick={lookup}>Lookup</button>
+            <button className="btn" type="button" onClick={lookup}><IconSearch /><span>Lookup</span></button>
           </div>
         </label>
         {client && (
@@ -197,7 +198,7 @@ export default function Deposit() {
           Notes
           <input className="input" name="notes" value={form.notes} onChange={change} placeholder="Optional" />
         </label>
-        <button className="btn btn-primary" type="submit">Submit for Approval</button>
+        <button className="btn btn-primary" type="submit"><IconSend /><span>Submit for Approval</span></button>
       </form>
     </div>
   );
