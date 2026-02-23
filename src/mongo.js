@@ -203,6 +203,22 @@ async function connect(uri) {
     errorMessage: String,
     errorStack: String,
   }, { timestamps: true });
+  const NotificationSchema = new Schema({
+    id: { type: String, index: true },
+    ts: { type: Date, index: true },
+    channel: String, // sms | email
+    type: String, // welcome | promotion | test | resend
+    sender: String,
+    receiver: String,
+    subject: String,
+    message: String,
+    status: String, // sent | failed | skipped
+    error: String,
+    campaignId: String,
+    entityType: String, // client | notify
+    entityId: String, // accountNumber | clientId | campaign id
+    originalId: String,
+  }, { timestamps: true });
 
   Models = {
     User: model('User', UserSchema),
@@ -217,6 +233,7 @@ async function connect(uri) {
     ActivityLog: model('ActivityLog', ActivitySchema),
     ServerLog: model('ServerLog', ServerLogSchema),
     Asset: model('Asset', AssetSchema),
+    Notification: model('Notification', NotificationSchema),
   };
   try {
     await Models.User.init(); // ensure indexes (unique on employeeNumber, username)

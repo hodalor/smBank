@@ -263,6 +263,9 @@ let activity = readJSON(ACTIVITY_FILE, []);
 const SERVER_LOGS_FILE = 'server_logs.json';
 let serverLogs = readJSON(SERVER_LOGS_FILE, []);
 
+const NOTIFICATIONS_FILE = 'notifications.json';
+let notifications = readJSON(NOTIFICATIONS_FILE, []);
+
 // Helpers
 function newId(prefix) {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6).toString().padStart(6, '0')}`;
@@ -392,6 +395,181 @@ function utcDateStr(d = new Date()) {
 function nextMidnightUTC(d = new Date()) {
   const t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1, 0, 0, 0, 0);
   return new Date(t).toISOString();
+}
+function normalizePhone(p) {
+  let s = String(p || '').trim();
+  s = s.replace(/\s+/g, '');
+  if (!s) return '';
+  if (s.startsWith('+')) return s;
+  const cc = String(process.env.SMS_DEFAULT_COUNTRY_CODE || '').trim();
+  if (cc) {
+    if (s.startsWith('0')) return `+${cc}${s.slice(1)}`;
+    if (/^\d+$/.test(s)) return `+${cc}${s}`;
+  }
+  return s;
+}
+async function sendSMS(to, text) {
+  const provider = String(process.env.SMS_PROVIDER || '').toLowerCase();
+  const dest = normalizePhone(to);
+  if (!dest || !text) return { ok: false, skipped: true };
+  if (provider === 'twilio') {
+    const sid = String(process.env.TWILIO_ACCOUNT_SID || '').trim();
+    const token = String(process.env.TWILIO_AUTH_TOKEN || '').trim();
+    const from = String(process.env.TWILIO_FROM || '').trim();
+    if (!sid || !token || !from) return { ok: false, error: 'twilio_env_missing' };
+    const auth = Buffer.from(`${sid}:${token}`).toString('base64');
+    const body = new URLSearchParams({ From: from, To: dest, Body: String(text) }).toString();
+    try {
+      const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+        method: 'POST',
+        headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+      });
+      if (!resp.ok) {
+        const t = await resp.text();
+        return { ok: false, status: resp.status, text: t };
+        }
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+  }
+  return { ok: false, error: 'provider_unsupported' };
+}
+async function sendBulkSMS(numbers, message, opts = {}) {
+  const results = [];
+  for (const n of numbers) {
+    try {
+      const r = await sendSMS(n, message);
+      results.push({ to: n, ...r });
+      try {
+        await logNotification({
+          channel: 'sms',
+          type: opts.type || '',
+          sender: opts.sender || '',
+          receiver: n,
+          subject: '',
+          message: String(message || ''),
+          status: r.ok ? 'sent' : (r.skipped ? 'skipped' : 'failed'),
+          error: r.error || r.text || '',
+          campaignId: opts.campaignId || '',
+          entityType: opts.entityType || '',
+          entityId: opts.entityId || '',
+          originalId: opts.originalId || '',
+        });
+      } catch {}
+    } catch {
+      results.push({ to: n, ok: false, error: 'send_failed' });
+      try {
+        await logNotification({
+          channel: 'sms',
+          type: opts.type || '',
+          sender: opts.sender || '',
+          receiver: n,
+          subject: '',
+          message: String(message || ''),
+          status: 'failed',
+          error: 'send_failed',
+          campaignId: opts.campaignId || '',
+          entityType: opts.entityType || '',
+          entityId: opts.entityId || '',
+          originalId: opts.originalId || '',
+        });
+      } catch {}
+    }
+  }
+  return results;
+}
+async function logNotification(item) {
+  const data = {
+    id: item.id || newId('NTF'),
+    ts: item.ts || new Date(),
+    channel: item.channel || '',
+    type: item.type || '',
+    sender: item.sender || '',
+    receiver: item.receiver || '',
+    subject: item.subject || '',
+    message: item.message || '',
+    status: item.status || '',
+    error: item.error || '',
+    campaignId: item.campaignId || '',
+    entityType: item.entityType || '',
+    entityId: item.entityId || '',
+    originalId: item.originalId || '',
+  };
+  if (isConnected()) {
+    try {
+      const { Notification } = getModels();
+      await Notification.create(data);
+      return data;
+    } catch {}
+  }
+  const record = { ...data, ts: data.ts.toISOString ? data.ts.toISOString() : String(data.ts) };
+  notifications.unshift(record);
+  if (notifications.length > 5000) notifications = notifications.slice(0, 5000);
+  writeJSON(NOTIFICATIONS_FILE, notifications);
+  return record;
+}
+async function sendEmail(to, subject, text) {
+  const host = String(process.env.SMTP_HOST || '').trim();
+  const port = Number(process.env.SMTP_PORT || 0);
+  const secure = String(process.env.SMTP_SECURE || '').toLowerCase() === 'true';
+  const user = String(process.env.SMTP_USER || '').trim();
+  const pass = String(process.env.SMTP_PASS || '').trim();
+  const from = String(process.env.EMAIL_FROM || '').trim() || 'no-reply@smbank.local';
+  if (!host || !port || !user || !pass) return { ok: false, error: 'smtp_env_missing' };
+  try {
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({ host, port, secure, auth: { user, pass } });
+    const info = await transporter.sendMail({ from, to, subject: String(subject || ''), text: String(text || '') });
+    return { ok: true, messageId: info && info.messageId ? info.messageId : '' };
+  } catch (e) {
+    return { ok: false, error: e && e.message ? e.message : String(e) };
+  }
+}
+async function sendBulkEmail(addresses, subject, text, opts = {}) {
+  const out = [];
+  for (const a of addresses) {
+    try {
+      const r = await sendEmail(a, subject, text);
+      out.push({ to: a, ...r });
+      try {
+        await logNotification({
+          channel: 'email',
+          type: opts.type || '',
+          sender: opts.sender || '',
+          receiver: a,
+          subject: String(subject || ''),
+          message: String(text || ''),
+          status: r.ok ? 'sent' : 'failed',
+          error: r.error || '',
+          campaignId: opts.campaignId || '',
+          entityType: opts.entityType || '',
+          entityId: opts.entityId || '',
+          originalId: opts.originalId || '',
+        });
+      } catch {}
+    } catch {
+      out.push({ to: a, ok: false, error: 'send_failed' });
+      try {
+        await logNotification({
+          channel: 'email',
+          type: opts.type || '',
+          sender: opts.sender || '',
+          receiver: a,
+          subject: String(subject || ''),
+          message: String(text || ''),
+          status: 'failed',
+          error: 'send_failed',
+          campaignId: opts.campaignId || '',
+          entityType: opts.entityType || '',
+          entityId: opts.entityId || '',
+          originalId: opts.originalId || '',
+        });
+      } catch {}
+    }
+  }
+  return out;
 }
 function getDailyApprovalCode(username, onDate = new Date()) {
   const user = String(username || '').trim().toLowerCase();
@@ -868,6 +1046,237 @@ app.post('/users/:username/enable', async (req, res) => {
   await logActivity(req, 'user.enable', 'user', String(req.params.username), {});
   return res.json(rest);
 });
+app.post('/notify/test-sms', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  const role = String(req.user.role || '');
+  if (!(role === 'Admin' || role === 'Super Admin')) return res.status(403).json({ error: 'forbidden' });
+  const { to, message } = req.body || {};
+  if (!to || !message) return res.status(400).json({ error: 'to_and_message_required' });
+  const r = await sendSMS(to, message);
+  try {
+    await logNotification({
+      channel: 'sms',
+      type: 'test',
+      sender: (req.user && req.user.username) || 'api',
+      receiver: to,
+      subject: '',
+      message: String(message || ''),
+      status: r.ok ? 'sent' : (r.skipped ? 'skipped' : 'failed'),
+      error: r.error || r.status || '',
+      entityType: 'notify',
+      entityId: '',
+    });
+  } catch {}
+  if (!r.ok) return res.status(400).json({ error: 'send_failed', details: r.error || r.status || '' });
+  await logActivity(req, 'notify.sms.test', 'notify', '', {});
+  res.json({ ok: true });
+});
+app.post('/notify/email/test', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  const role = String(req.user.role || '');
+  if (!(role === 'Admin' || role === 'Super Admin')) return res.status(403).json({ error: 'forbidden' });
+  const { to, subject, text } = req.body || {};
+  if (!to || !subject || !text) return res.status(400).json({ error: 'to_subject_text_required' });
+  const r = await sendEmail(to, subject, text);
+  try {
+    await logNotification({
+      channel: 'email',
+      type: 'test',
+      sender: (req.user && req.user.username) || 'api',
+      receiver: to,
+      subject: String(subject || ''),
+      message: String(text || ''),
+      status: r.ok ? 'sent' : 'failed',
+      error: r.error || '',
+      entityType: 'notify',
+      entityId: '',
+    });
+  } catch {}
+  if (!r.ok) return res.status(400).json({ error: 'send_failed', details: r.error || '' });
+  await logActivity(req, 'notify.email.test', 'notify', '', {});
+  res.json({ ok: true });
+});
+app.post('/notify/promotions', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  const role = String(req.user.role || '');
+  if (!(role === 'Admin' || role === 'Super Admin')) return res.status(403).json({ error: 'forbidden' });
+  const { message, numbers, segment, filters } = req.body || {};
+  if (!message) return res.status(400).json({ error: 'message_required' });
+  let dest = [];
+  if (Array.isArray(numbers) && numbers.length) {
+    dest = numbers.map(x => String(x || '').trim()).filter(Boolean);
+  } else if (String(segment || '') === 'all-clients') {
+    if (isConnected()) {
+      const { Client } = getModels();
+      const docs = await Client.find({}, { phone: 1, companyPhone: 1 }).lean();
+      dest = docs.map(d => d.phone || d.companyPhone).filter(Boolean);
+    } else {
+      dest = (clients || []).map(c => c.phone || c.companyPhone).filter(Boolean);
+    }
+  } else if (String(segment || '') === 'filtered-clients' || (filters && typeof filters === 'object')) {
+    const f = filters || {};
+    const bCode = String(f.branchCode || '').trim();
+    const aCode = String(f.accountTypeCode || '').trim();
+    const mgr = String(f.manager || '').trim();
+    const activeStatus = String(f.activeStatus || '').trim();
+    const branchCodes = Array.isArray(f.branchCodes) ? f.branchCodes.map(x => String(x || '').trim()).filter(Boolean) : [];
+    const accountTypeCodes = Array.isArray(f.accountTypeCodes) ? f.accountTypeCodes.map(x => String(x || '').trim()).filter(Boolean) : [];
+    if (isConnected()) {
+      const { Client, Config } = getModels();
+      let bank = config.bankCode;
+      try {
+        const cfg = await Config.findOne().lean();
+        bank = (cfg && cfg.bankCode) || bank;
+      } catch {}
+      const pad = (s, n) => String(s || '').replace(/\D/g, '').padStart(n, '0').slice(-n);
+      const bankPad = pad(bank, 2);
+      const regexes = [];
+      if (branchCodes.length && accountTypeCodes.length) {
+        for (const b of branchCodes) for (const a of accountTypeCodes) regexes.push(new RegExp(`^${bankPad}${pad(b, 3)}${pad(a, 2)}`));
+      } else if (branchCodes.length) {
+        for (const b of branchCodes) regexes.push(new RegExp(`^${bankPad}${pad(b, 3)}`));
+      } else if (accountTypeCodes.length) {
+        for (const a of accountTypeCodes) regexes.push(new RegExp(`^${bankPad}\\d{3}${pad(a, 2)}`));
+      } else {
+        const reStart = [bankPad];
+        if (bCode) reStart.push(pad(bCode, 3));
+        if (aCode && bCode) reStart.push(pad(aCode, 2));
+        regexes.push(new RegExp(`^${reStart.join('')}`));
+        if (aCode && !bCode) regexes.push(new RegExp(`^${bankPad}\\d{3}${pad(aCode, 2)}`));
+      }
+      const q = {};
+      if (regexes.length === 1) q.accountNumber = { $regex: regexes[0] };
+      if (regexes.length > 1) q.$or = regexes.map(r => ({ accountNumber: { $regex: r } }));
+      if (mgr) q.manager = mgr;
+      if (activeStatus) q.accountStatus = activeStatus;
+      const docs = await Client.find(q, { phone: 1, companyPhone: 1, accountNumber: 1 }).lean();
+      dest = docs.map(d => d.phone || d.companyPhone).filter(Boolean);
+    } else {
+      const pad = (s, n) => String(s || '').replace(/\D/g, '').padStart(n, '0').slice(-n);
+      const bank = config.bankCode || '';
+      const bankPad = pad(bank, 2);
+      const bPad = bCode ? pad(bCode, 3) : '';
+      const aPad = aCode ? pad(aCode, 2) : '';
+      dest = (clients || []).filter(c => {
+        if (mgr && String(c.manager || '') !== mgr) return false;
+        if (activeStatus && String(c.accountStatus || c.status || '') !== activeStatus) return false;
+        const num = String(c.accountNumber || '');
+        if (!/^\d{13}$/.test(num)) return true; // fallback include if legacy
+        if (Array.isArray(branchCodes) && branchCodes.length) {
+          const matchBranch = branchCodes.some(b => num.startsWith(`${bankPad}${pad(b, 3)}`));
+          if (!matchBranch) return false;
+        } else if (bPad && !Array.isArray(branchCodes)) {
+          if (!num.startsWith(`${bankPad}${bPad}`)) return false;
+        }
+        if (Array.isArray(accountTypeCodes) && accountTypeCodes.length) {
+          const matchType = accountTypeCodes.some(a => new RegExp(`^${bankPad}\\d{3}${pad(a, 2)}`).test(num));
+          if (!matchType) return false;
+        } else if (aPad && !Array.isArray(accountTypeCodes)) {
+          if (!new RegExp(`^${bankPad}\\d{3}${aPad}`).test(num)) return false;
+        }
+        return true;
+      }).map(c => c.phone || c.companyPhone).filter(Boolean);
+    }
+  } else {
+    return res.status(400).json({ error: 'numbers_or_segment_required' });
+  }
+  dest = Array.from(new Set(dest.map(n => String(n || '').trim()).filter(Boolean)));
+  if (dest.length === 0) return res.status(400).json({ error: 'no_recipients' });
+  const results = await sendBulkSMS(dest, String(message), { sender: (req.user && req.user.username) || 'api', type: 'promotion', entityType: 'notify' });
+  const ok = results.filter(r => r.ok).length;
+  const fail = results.length - ok;
+  await logActivity(req, 'notify.sms.promotions', 'notify', '', { recipients: results.length, ok, fail });
+  res.json({ ok: true, recipients: results.length, sent: ok, failed: fail });
+});
+app.post('/notify/email/promotions', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  const role = String(req.user.role || '');
+  if (!(role === 'Admin' || role === 'Super Admin')) return res.status(403).json({ error: 'forbidden' });
+  const { subject, text, emails, segment, filters } = req.body || {};
+  if (!subject || !text) return res.status(400).json({ error: 'subject_text_required' });
+  let dest = [];
+  if (Array.isArray(emails) && emails.length) {
+    dest = emails.map(x => String(x || '').trim().toLowerCase()).filter(Boolean);
+  } else if (String(segment || '') === 'all-clients' || String(segment || '') === 'filtered-clients' || (filters && typeof filters === 'object')) {
+    const f = filters || {};
+    const bCode = String(f.branchCode || '').trim();
+    const aCode = String(f.accountTypeCode || '').trim();
+    const mgr = String(f.manager || '').trim();
+    const activeStatus = String(f.activeStatus || '').trim();
+    const branchCodes = Array.isArray(f.branchCodes) ? f.branchCodes.map(x => String(x || '').trim()).filter(Boolean) : [];
+    const accountTypeCodes = Array.isArray(f.accountTypeCodes) ? f.accountTypeCodes.map(x => String(x || '').trim()).filter(Boolean) : [];
+    if (isConnected()) {
+      const { Client, Config } = getModels();
+      let bank = config.bankCode;
+      try {
+        const cfg = await Config.findOne().lean();
+        bank = (cfg && cfg.bankCode) || bank;
+      } catch {}
+      const pad = (s, n) => String(s || '').replace(/\D/g, '').padStart(n, '0').slice(-n);
+      const bankPad = pad(bank, 2);
+      const regexes = [];
+      if (branchCodes.length && accountTypeCodes.length) {
+        for (const b of branchCodes) for (const a of accountTypeCodes) regexes.push(new RegExp(`^${bankPad}${pad(b, 3)}${pad(a, 2)}`));
+      } else if (branchCodes.length) {
+        for (const b of branchCodes) regexes.push(new RegExp(`^${bankPad}${pad(b, 3)}`));
+      } else if (accountTypeCodes.length) {
+        for (const a of accountTypeCodes) regexes.push(new RegExp(`^${bankPad}\\d{3}${pad(a, 2)}`));
+      } else if (bCode || aCode) {
+        const reStart = [bankPad];
+        if (bCode) reStart.push(pad(bCode, 3));
+        if (aCode && bCode) reStart.push(pad(aCode, 2));
+        regexes.push(new RegExp(`^${reStart.join('')}`));
+        if (aCode && !bCode) regexes.push(new RegExp(`^${bankPad}\\d{3}${pad(aCode, 2)}`));
+      }
+      const q = {};
+      if (regexes.length === 1) q.accountNumber = { $regex: regexes[0] };
+      if (regexes.length > 1) q.$or = regexes.map(r => ({ accountNumber: { $regex: r } }));
+      if (mgr) q.manager = mgr;
+      if (activeStatus) q.accountStatus = activeStatus;
+      const docs = await Client.find(q, { data: 1 }).lean();
+      for (const d of docs) {
+        const contacts = collectContacts(d.data || {});
+        for (const em of contacts.emails) dest.push(String(em || '').trim().toLowerCase());
+      }
+    } else {
+      const pad = (s, n) => String(s || '').replace(/\D/g, '').padStart(n, '0').slice(-n);
+      const bank = config.bankCode || '';
+      const bankPad = pad(bank, 2);
+      const bPad = bCode ? pad(bCode, 3) : '';
+      const aPad = aCode ? pad(aCode, 2) : '';
+      for (const c of (clients || [])) {
+        if (mgr && String(c.manager || '') !== mgr) continue;
+        if (activeStatus && String(c.accountStatus || c.status || '') !== activeStatus) continue;
+        const num = String(c.accountNumber || '');
+        if (/^\d{13}$/.test(num)) {
+          if (Array.isArray(branchCodes) && branchCodes.length) {
+            const matchBranch = branchCodes.some(b => num.startsWith(`${bankPad}${pad(b, 3)}`));
+            if (!matchBranch) continue;
+          } else if (bPad && !Array.isArray(branchCodes)) {
+            if (!num.startsWith(`${bankPad}${bPad}`)) continue;
+          }
+          if (Array.isArray(accountTypeCodes) && accountTypeCodes.length) {
+            const matchType = accountTypeCodes.some(a => new RegExp(`^${bankPad}\\d{3}${pad(a, 2)}`).test(num));
+            if (!matchType) continue;
+          } else if (aPad && !Array.isArray(accountTypeCodes)) {
+            if (!new RegExp(`^${bankPad}\\d{3}${aPad}`).test(num)) continue;
+          }
+        }
+        const contacts = collectContacts(c);
+        for (const em of contacts.emails) dest.push(String(em || '').trim().toLowerCase());
+      }
+    }
+  } else {
+    return res.status(400).json({ error: 'emails_or_segment_required' });
+  }
+  dest = Array.from(new Set(dest.filter(Boolean)));
+  if (dest.length === 0) return res.status(400).json({ error: 'no_recipients' });
+  const results = await sendBulkEmail(dest, String(subject), String(text), { sender: (req.user && req.user.username) || 'api', type: 'promotion', entityType: 'notify' });
+  const ok = results.filter(r => r.ok).length;
+  const fail = results.length - ok;
+  await logActivity(req, 'notify.email.promotions', 'notify', '', { recipients: results.length, ok, fail });
+  res.json({ ok: true, recipients: results.length, sent: ok, failed: fail });
+});
 app.post('/users/:username/disable', async (req, res) => {
   if (!isConnected()) return res.status(503).json({ error: 'db_unavailable' });
   const { User } = getModels();
@@ -1276,6 +1685,106 @@ app.get('/server-logs/:id', requireSuperAdmin, async (req, res) => {
   const it = serverLogs.find(x => x.id === id);
   if (!it) return res.status(404).json({ error: 'not found' });
   res.json(it);
+});
+
+// Notifications
+app.get('/notifications', requireAdmin, async (req, res) => {
+  const { channel, type, status, q, from, to, limit } = req.query || {};
+  const lim = Math.min(1000, Math.max(1, Number(limit || 200)));
+  if (isConnected()) {
+    const { Notification } = getModels();
+    const filter = {};
+    if (channel) filter.channel = String(channel);
+    if (type) filter.type = String(type);
+    if (status) filter.status = String(status);
+    if (from || to) {
+      filter.ts = {};
+      if (from) filter.ts.$gte = new Date(from);
+      if (to) filter.ts.$lte = new Date(to);
+    }
+    if (q) {
+      const rx = new RegExp(String(q), 'i');
+      filter.$or = [{ receiver: rx }, { sender: rx }, { subject: rx }, { message: rx }, { channel: rx }, { type: rx }, { status: rx }];
+    }
+    const docs = await Notification.find(filter).sort({ ts: -1, _id: -1 }).limit(lim).lean();
+    const list = docs.map(d => ({ ...d, id: String(d.id || d._id || ''), ts: d.ts instanceof Date ? d.ts.toISOString() : String(d.ts || '') }));
+    await logActivity(req, 'notify.list', 'notify', '', { count: list.length });
+    return res.json(list);
+  }
+  let result = notifications.slice().sort((a, b) => String(b.ts).localeCompare(String(a.ts)));
+  if (channel) result = result.filter(x => String(x.channel) === String(channel));
+  if (type) result = result.filter(x => String(x.type) === String(type));
+  if (status) result = result.filter(x => String(x.status) === String(status));
+  if (from) result = result.filter(x => String(x.ts) >= String(from));
+  if (to) result = result.filter(x => String(x.ts) <= String(to));
+  if (q) {
+    const s = String(q).toLowerCase();
+    result = result.filter(x =>
+      String(x.receiver || '').toLowerCase().includes(s) ||
+      String(x.sender || '').toLowerCase().includes(s) ||
+      String(x.subject || '').toLowerCase().includes(s) ||
+      String(x.message || '').toLowerCase().includes(s) ||
+      String(x.channel || '').toLowerCase().includes(s) ||
+      String(x.type || '').toLowerCase().includes(s) ||
+      String(x.status || '').toLowerCase().includes(s));
+  }
+  await logActivity(req, 'notify.list', 'notify', '', { count: Math.min(lim, result.length) });
+  res.json(result.slice(0, lim));
+});
+app.get('/notifications/:id', requireAdmin, async (req, res) => {
+  const id = String(req.params.id || '');
+  if (!id) return res.status(400).json({ error: 'invalid id' });
+  if (isConnected()) {
+    const { Notification } = getModels();
+    const doc = await Notification.findOne({ $or: [{ id }, { _id: id }] }).lean();
+    if (!doc) return res.status(404).json({ error: 'not found' });
+    const item = { ...doc, id: String(doc.id || doc._id || ''), ts: doc.ts instanceof Date ? doc.ts.toISOString() : String(doc.ts || '') };
+    return res.json(item);
+  }
+  const it = notifications.find(x => String(x.id) === id);
+  if (!it) return res.status(404).json({ error: 'not found' });
+  res.json(it);
+});
+app.post('/notifications/:id/resend', requireAdmin, async (req, res) => {
+  const id = String(req.params.id || '');
+  if (!id) return res.status(400).json({ error: 'invalid id' });
+  let item = null;
+  if (isConnected()) {
+    const { Notification } = getModels();
+    item = await Notification.findOne({ $or: [{ id }, { _id: id }] }).lean();
+  } else {
+    item = notifications.find(x => String(x.id) === id) || null;
+  }
+  if (!item) return res.status(404).json({ error: 'not found' });
+  const channel = String(item.channel || '');
+  const receiver = String(item.receiver || '');
+  const subject = String(item.subject || '');
+  const message = String(item.message || '');
+  let r = { ok: false, error: 'unsupported_channel' };
+  try {
+    if (channel === 'sms') r = await sendSMS(receiver, message);
+    else if (channel === 'email') r = await sendEmail(receiver, subject, message);
+  } catch (e) {
+    r = { ok: false, error: e && e.message ? e.message : String(e) };
+  }
+  try {
+    await logNotification({
+      channel,
+      type: 'resend',
+      sender: (req.user && req.user.username) || 'api',
+      receiver,
+      subject,
+      message,
+      status: r.ok ? 'sent' : (r.skipped ? 'skipped' : 'failed'),
+      error: r.error || '',
+      entityType: 'notify',
+      entityId: '',
+      originalId: id,
+    });
+  } catch {}
+  await logActivity(req, 'notify.resend', 'notify', id, { channel, ok: !!r.ok });
+  if (!r.ok) return res.status(400).json({ error: 'send_failed', details: r.error || '' });
+  res.json({ ok: true });
 });
 
 // Clients
@@ -2019,6 +2528,37 @@ app.post('/transactions/pending/:id/approve', async (req, res) => {
     try {
       const { Client } = getModels();
       await Client.updateOne({ accountNumber: posted.accountNumber }, { $set: { lastTxnAt: posted.approvedAt } });
+      try {
+        const c = await Client.findOne({ accountNumber: posted.accountNumber }).lean();
+        const phone = c && (c.phone || c.companyPhone);
+        if (phone) {
+          const bal = await computeAccountBalance(posted.accountNumber);
+          const base = (posted.meta && typeof posted.meta.baseAmount === 'number') ? posted.meta.baseAmount : posted.amount;
+          const fee = (posted.meta && typeof posted.meta.feeAmount === 'number') ? posted.meta.feeAmount : 0;
+          const kind = posted.kind === 'withdraw' ? 'Debit' : 'Credit';
+          const parts = [];
+          parts.push(`${kind} ${Number(base || 0).toFixed(2)}`);
+          if (fee > 0) parts.push(`Fee ${Number(fee).toFixed(2)}`);
+          parts.push(`Acct ${posted.accountNumber}`);
+          parts.push(`Bal ${Number(bal || 0).toFixed(2)}`);
+          const text = parts.join(' | ');
+          const r = await sendSMS(phone, text);
+          try {
+            await logNotification({
+              channel: 'sms',
+              type: 'transaction',
+              sender: (req.user && req.user.username) || 'api',
+              receiver: phone,
+              subject: '',
+              message: String(text || ''),
+              status: r.ok ? 'sent' : (r.skipped ? 'skipped' : 'failed'),
+              error: r.error || r.status || r.text || '',
+              entityType: 'transaction',
+              entityId: String(posted.id || ''),
+            });
+          } catch {}
+        }
+      } catch {}
     } catch {}
     const io = req.app.get('io');
     if (io) io.emit('transactions:posted:new', posted);
@@ -2316,6 +2856,29 @@ app.post('/loans/:id/approve', async (req, res) => {
       meta: { loanId: loan.id, rate: loan.rate || 0, termMonths: loan.termMonths || 0 },
     };
     await PostedTxn.create(disbursed);
+    try {
+      const { Client } = getModels();
+      const c = await Client.findOne({ accountNumber: loan.accountNumber }).lean();
+      const phone = c && (c.phone || c.companyPhone);
+      if (phone) {
+        const text = `Loan disbursement ${Number(loan.principal || 0).toFixed(2)} | Acct ${loan.accountNumber}`;
+        const r = await sendSMS(phone, text);
+        try {
+          await logNotification({
+            channel: 'sms',
+            type: 'loan',
+            sender: (req.user && req.user.username) || 'api',
+            receiver: phone,
+            subject: '',
+            message: String(text || ''),
+            status: r.ok ? 'sent' : (r.skipped ? 'skipped' : 'failed'),
+            error: r.error || r.status || r.text || '',
+            entityType: 'loan',
+            entityId: String(loan.id || ''),
+          });
+        } catch {}
+    }
+    } catch {}
     const io = req.app.get('io');
     if (io) {
       io.emit('loans:approved', loan);
@@ -2351,6 +2914,28 @@ app.post('/loans/:id/approve', async (req, res) => {
   postedTx.unshift(disbursed);
   writeJSON(POSTED_TX_FILE, postedTx);
   writeJSON(LOANS_FILE, loans);
+  try {
+    const c = clients.find(x => x.accountNumber === loan.accountNumber);
+    const phone = c && (c.phone || c.companyPhone);
+    if (phone) {
+      const text = `Loan disbursement ${Number(loan.principal || 0).toFixed(2)} | Acct ${loan.accountNumber}`;
+      const r = await sendSMS(phone, text);
+      try {
+        await logNotification({
+          channel: 'sms',
+          type: 'loan',
+          sender: (req.user && req.user.username) || 'api',
+          receiver: phone,
+          subject: '',
+          message: String(text || ''),
+          status: r.ok ? 'sent' : (r.skipped ? 'skipped' : 'failed'),
+          error: r.error || r.status || r.text || '',
+          entityType: 'loan',
+          entityId: String(loan.id || ''),
+        });
+      } catch {}
+    }
+  } catch {}
   const io = req.app.get('io');
   if (io) {
     io.emit('loans:approved', loan);
