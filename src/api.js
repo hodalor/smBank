@@ -117,23 +117,28 @@ export async function publicChangePassword(username, oldPassword, newPassword) {
 export async function publicAdminResetPassword({ adminUsername, approvalCode, username, newPassword }) {
   return apiFetch('/auth/password/reset-by-admin', { method: 'POST', body: JSON.stringify({ adminUsername, approvalCode, username, newPassword }) });
 }
-export async function sendTestSMS(to, message) {
-  return apiFetch('/notify/test-sms', { method: 'POST', body: JSON.stringify({ to, message }) });
+export async function sendTestSMS(to, message, senderId) {
+  const body = { to, message };
+  if (senderId) body.senderId = senderId;
+  return apiFetch('/notify/test-sms', { method: 'POST', body: JSON.stringify(body) });
 }
 export async function sendPromotions(payload) {
   // payload: { segment: 'all-clients', message } or { numbers: [...], message }
   return apiFetch('/notify/promotions', { method: 'POST', body: JSON.stringify(payload) });
 }
-export async function sendTestEmail(to, subject, text) {
-  return apiFetch('/notify/email/test', { method: 'POST', body: JSON.stringify({ to, subject, text }) });
+export async function sendTestEmail(to, subject, text, from) {
+  const body = { to, subject, text };
+  if (from) body.from = from;
+  return apiFetch('/notify/email/test', { method: 'POST', body: JSON.stringify(body) });
 }
 export async function sendEmailPromotions(payload) {
   // payload: { segment: 'all-clients', subject, text } or { emails: [...], subject, text } or { segment: 'filtered-clients', filters, subject, text }
   return apiFetch('/notify/email/promotions', { method: 'POST', body: JSON.stringify(payload) });
 }
-export async function setUserEnabled(username, enabled) {
+export async function setUserEnabled(username, enabled, remarks = '') {
   const path = enabled ? 'enable' : 'disable';
-  return apiFetch(`/users/${encodeURIComponent(username)}/${path}`, { method: 'POST' });
+  const body = enabled ? JSON.stringify({ remarks }) : undefined;
+  return apiFetch(`/users/${encodeURIComponent(username)}/${path}`, { method: 'POST', ...(body ? { body } : {}) });
 }
 
 export async function listClients(params = {}) {

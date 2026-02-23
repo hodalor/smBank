@@ -169,6 +169,78 @@ export default function Config() {
         <button className="btn" onClick={() => setCfg({ ...cfg, branches: [ ...(cfg.branches || []), { code: '', name: '', active: true } ] })}>Add Branch</button>
       </div>
       <div className="card">
+        <h3>SMS Sender IDs</h3>
+        {(cfg.smsSenderIds || []).map((s, i) => (
+          <div key={i} className="row" style={{ gap: 8, marginBottom: 8, alignItems: 'center' }}>
+            <input
+              type="radio"
+              name="defaultSmsSenderId"
+              checked={(cfg.defaultSmsSenderId || '') === s}
+              onChange={() => quickSave({ ...cfg, defaultSmsSenderId: s })}
+              title="Default"
+            />
+            <input
+              className="input"
+              style={{ flex: 1 }}
+              placeholder="Sender ID"
+              value={s}
+              onChange={(e) => {
+                const arr = [...(cfg.smsSenderIds || [])];
+                arr[i] = e.target.value;
+                setCfg({ ...cfg, smsSenderIds: arr });
+              }}
+              onBlur={() => quickSave({ ...cfg })}
+            />
+            <button className="btn" onClick={() => {
+              const arr = (cfg.smsSenderIds || []).filter((_, idx) => idx !== i);
+              let nextDefault = cfg.defaultSmsSenderId;
+              if (s === nextDefault) nextDefault = arr[0] || '';
+              quickSave({ ...cfg, smsSenderIds: arr, defaultSmsSenderId: nextDefault });
+            }}>Remove</button>
+          </div>
+        ))}
+        <div className="row" style={{ gap: 8 }}>
+          <button className="btn" onClick={() => setCfg({ ...cfg, smsSenderIds: [ ...(cfg.smsSenderIds || []), '' ] })}>Add Sender ID</button>
+          <button className="btn" onClick={() => quickSave({ ...cfg })}>Save</button>
+        </div>
+      </div>
+      <div className="card">
+        <h3>Email From Addresses</h3>
+        {(cfg.emailFromAddresses || []).map((s, i) => (
+          <div key={i} className="row" style={{ gap: 8, marginBottom: 8, alignItems: 'center' }}>
+            <input
+              type="radio"
+              name="defaultEmailFrom"
+              checked={(cfg.defaultEmailFrom || '') === s}
+              onChange={() => quickSave({ ...cfg, defaultEmailFrom: s })}
+              title="Default"
+            />
+            <input
+              className="input"
+              style={{ flex: 1 }}
+              placeholder="From (e.g. Company <no-reply@company.com>)"
+              value={s}
+              onChange={(e) => {
+                const arr = [...(cfg.emailFromAddresses || [])];
+                arr[i] = e.target.value;
+                setCfg({ ...cfg, emailFromAddresses: arr });
+              }}
+              onBlur={() => quickSave({ ...cfg })}
+            />
+            <button className="btn" onClick={() => {
+              const arr = (cfg.emailFromAddresses || []).filter((_, idx) => idx !== i);
+              let nextDefault = cfg.defaultEmailFrom;
+              if (s === nextDefault) nextDefault = arr[0] || '';
+              quickSave({ ...cfg, emailFromAddresses: arr, defaultEmailFrom: nextDefault });
+            }}>Remove</button>
+          </div>
+        ))}
+        <div className="row" style={{ gap: 8 }}>
+          <button className="btn" onClick={() => setCfg({ ...cfg, emailFromAddresses: [ ...(cfg.emailFromAddresses || []), '' ] })}>Add From</button>
+          <button className="btn" onClick={() => quickSave({ ...cfg })}>Save</button>
+        </div>
+      </div>
+      <div className="card">
         <h3>Account Types</h3>
         {(cfg.accountTypes || []).map((a, i) => (
           <div key={i} className="row" style={{ gap: 8, marginBottom: 8 }}>

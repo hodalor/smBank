@@ -20,6 +20,8 @@ export default function Promotions() {
   const [message, setMessage] = useState('');
   const [preview, setPreview] = useState('');
   const [sending, setSending] = useState(false);
+  const [smsSenderId, setSmsSenderId] = useState('');
+  const [emailFrom, setEmailFrom] = useState('');
   useEffect(() => {
     let mounted = true;
     fetchConfig().then(cfg => { if (mounted) setConfig(cfg || { branches: [], accountTypes: [] }); }).catch(() => {});
@@ -47,14 +49,14 @@ export default function Promotions() {
       setSending(true);
       if (mode === 'all') {
         if (channel === 'sms') {
-          const r = await sendPromotions({ segment: 'all-clients', message: message.trim() });
+          const r = await sendPromotions({ segment: 'all-clients', message: message.trim(), senderId: smsSenderId.trim() || undefined });
           showSuccess(`SMS: ${r.sent}/${r.recipients} sent, ${r.failed} failed`);
         } else if (channel === 'email') {
-          const r = await sendEmailPromotions({ segment: 'all-clients', subject: subject.trim(), text: message.trim() });
+          const r = await sendEmailPromotions({ segment: 'all-clients', subject: subject.trim(), text: message.trim(), from: emailFrom.trim() || undefined });
           showSuccess(`Email: ${r.sent}/${r.recipients} sent, ${r.failed} failed`);
         } else {
-          const r1 = await sendPromotions({ segment: 'all-clients', message: message.trim() });
-          const r2 = await sendEmailPromotions({ segment: 'all-clients', subject: subject.trim(), text: message.trim() });
+          const r1 = await sendPromotions({ segment: 'all-clients', message: message.trim(), senderId: smsSenderId.trim() || undefined });
+          const r2 = await sendEmailPromotions({ segment: 'all-clients', subject: subject.trim(), text: message.trim(), from: emailFrom.trim() || undefined });
           showSuccess(`SMS ${r1.sent}/${r1.recipients}; Email ${r2.sent}/${r2.recipients}`);
         }
       } else if (mode === 'filtered') {
@@ -67,30 +69,30 @@ export default function Promotions() {
         if (manager) filters.manager = manager;
         if (activeStatus) filters.activeStatus = activeStatus;
         if (channel === 'sms') {
-          const r = await sendPromotions({ segment: 'filtered-clients', filters, message: message.trim() });
+          const r = await sendPromotions({ segment: 'filtered-clients', filters, message: message.trim(), senderId: smsSenderId.trim() || undefined });
           showSuccess(`SMS: ${r.sent}/${r.recipients} sent, ${r.failed} failed`);
         } else if (channel === 'email') {
-          const r = await sendEmailPromotions({ segment: 'filtered-clients', filters, subject: subject.trim(), text: message.trim() });
+          const r = await sendEmailPromotions({ segment: 'filtered-clients', filters, subject: subject.trim(), text: message.trim(), from: emailFrom.trim() || undefined });
           showSuccess(`Email: ${r.sent}/${r.recipients} sent, ${r.failed} failed`);
         } else {
-          const r1 = await sendPromotions({ segment: 'filtered-clients', filters, message: message.trim() });
-          const r2 = await sendEmailPromotions({ segment: 'filtered-clients', filters, subject: subject.trim(), text: message.trim() });
+          const r1 = await sendPromotions({ segment: 'filtered-clients', filters, message: message.trim(), senderId: smsSenderId.trim() || undefined });
+          const r2 = await sendEmailPromotions({ segment: 'filtered-clients', filters, subject: subject.trim(), text: message.trim(), from: emailFrom.trim() || undefined });
           showSuccess(`SMS ${r1.sent}/${r1.recipients}; Email ${r2.sent}/${r2.recipients}`);
         }
       } else {
         if (tokens.length === 0) { showWarning('Paste numbers and/or emails'); setSending(false); return; }
         if (channel === 'sms') {
           if (numbers.length === 0) { showWarning('No phone numbers detected'); setSending(false); return; }
-          const r = await sendPromotions({ numbers, message: message.trim() });
+          const r = await sendPromotions({ numbers, message: message.trim(), senderId: smsSenderId.trim() || undefined });
           showSuccess(`SMS: ${r.sent}/${r.recipients} sent, ${r.failed} failed`);
         } else if (channel === 'email') {
           if (emails.length === 0) { showWarning('No emails detected'); setSending(false); return; }
-          const r = await sendEmailPromotions({ emails, subject: subject.trim(), text: message.trim() });
+          const r = await sendEmailPromotions({ emails, subject: subject.trim(), text: message.trim(), from: emailFrom.trim() || undefined });
           showSuccess(`Email: ${r.sent}/${r.recipients} sent, ${r.failed} failed`);
         } else {
           const actions = [];
-          if (numbers.length) actions.push(sendPromotions({ numbers, message: message.trim() }));
-          if (emails.length) actions.push(sendEmailPromotions({ emails, subject: subject.trim(), text: message.trim() }));
+          if (numbers.length) actions.push(sendPromotions({ numbers, message: message.trim(), senderId: smsSenderId.trim() || undefined }));
+          if (emails.length) actions.push(sendEmailPromotions({ emails, subject: subject.trim(), text: message.trim(), from: emailFrom.trim() || undefined }));
           const [r1, r2] = await Promise.all(actions);
           const smsLine = r1 ? `SMS ${r1.sent}/${r1.recipients}` : 'SMS 0/0';
           const emailLine = r2 ? `Email ${r2.sent}/${r2.recipients}` : 'Email 0/0';
@@ -118,13 +120,13 @@ export default function Promotions() {
       if (mode === 'list' && tokens.length > 0) {
         if (channel === 'sms' || channel === 'both') {
           if (numbers.length === 0) { showWarning('No phone numbers detected'); return; }
-          await sendTestSMS(numbers[0], message.trim() || 'Test message');
+          await sendTestSMS(numbers[0], message.trim() || 'Test message', smsSenderId.trim() || undefined);
           showSuccess('Test SMS sent to first number');
           return;
         }
         if (channel === 'email') {
           if (emails.length === 0) { showWarning('No emails detected'); return; }
-          await sendTestEmail(emails[0], subject.trim() || 'Test', message.trim() || 'Test message');
+          await sendTestEmail(emails[0], subject.trim() || 'Test', message.trim() || 'Test message', emailFrom.trim() || undefined);
           showSuccess('Test email sent to first address');
           return;
         }
@@ -262,6 +264,34 @@ export default function Promotions() {
           )}
           <textarea className="input" rows="6" placeholder="Message"
             value={message} onChange={(e) => setMessage(e.target.value)} />
+          {(channel === 'sms' || channel === 'both') && (
+            <>
+              <input
+                className="input"
+                list="sms-senderids"
+                placeholder={`Sender ID (optional)${config.defaultSmsSenderId ? ` • default ${config.defaultSmsSenderId}` : ''}`}
+                value={smsSenderId}
+                onChange={(e) => setSmsSenderId(e.target.value)}
+              />
+              <datalist id="sms-senderids">
+                {(config.smsSenderIds || []).map((s, i) => <option key={`sid-${i}`} value={s} />)}
+              </datalist>
+            </>
+          )}
+          {(channel === 'email' || channel === 'both') && (
+            <>
+              <input
+                className="input"
+                list="email-froms"
+                placeholder={`From (optional)${config.defaultEmailFrom ? ` • default ${config.defaultEmailFrom}` : ''}`}
+                value={emailFrom}
+                onChange={(e) => setEmailFrom(e.target.value)}
+              />
+              <datalist id="email-froms">
+                {(config.emailFromAddresses || []).map((s, i) => <option key={`from-${i}`} value={s} />)}
+              </datalist>
+            </>
+          )}
           <div className="row" style={{ gap: 8 }}>
             <button className="btn" onClick={onPreview}>Preview</button>
             <button className="btn" onClick={onTest}>Send Test</button>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getRoles, getAllPermissions, getEffectivePermissions, hasPermission } from '../state/ops';
+import { getRoles, getAllPermissions, getEffectivePermissions, hasPermission, getCurrentUser } from '../state/ops';
 import { listUsers, upsertUser, removeUser, resetUserPassword, setUserEnabled } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 import { confirm } from '../components/Confirm';
@@ -47,6 +47,12 @@ export default function Users() {
     }
   }, [filterDept, filterRole, filterEmp]);
   useEffect(() => { reload(); }, [reload]);
+  const viewer = getCurrentUser();
+  const viewerRole = viewer.role || '';
+  const isAdminOrSuper = viewerRole === 'Admin' || viewerRole === 'Super Admin';
+  const roleOrder = ['Customer Service', 'Teller', 'Account Manager', 'Loan Officer', 'Loan Manager', 'Admin', 'Super Admin'];
+  const canSeeRole = (r) => roleOrder.indexOf(r) <= roleOrder.indexOf(viewerRole);
+  const assignableRoles = Object.values(roles).filter(r => isAdminOrSuper ? r !== roles.SUPER_ADMIN : canSeeRole(r) && r !== roles.SUPER_ADMIN && r !== roles.ADMIN);
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const togglePerm = (perm) => {
     const base = baseSet.has(perm);
@@ -144,7 +150,7 @@ export default function Users() {
         <input className="input" placeholder="Department" value={filterDept} onChange={(e) => setFilterDept(e.target.value)} style={{ width: 180 }} />
         <select className="input" value={filterRole} onChange={(e) => setFilterRole(e.target.value)} style={{ width: 180 }}>
           <option value="">Role (any)</option>
-          {Object.values(roles).map(r => <option key={r} value={r}>{r}</option>)}
+          {(isAdminOrSuper ? Object.values(roles) : Object.values(roles).filter(r => canSeeRole(r) && r !== roles.SUPER_ADMIN && r !== roles.ADMIN)).map(r => <option key={r} value={r}>{r}</option>)}
         </select>
         <input className="input" placeholder="Employee No." value={filterEmp} onChange={(e) => setFilterEmp(e.target.value)} style={{ width: 160 }} />
         <button className="btn" onClick={() => reload()}>Filter</button>
@@ -155,57 +161,61 @@ export default function Users() {
           <h3>{users.find(u => u.username === form.username) ? 'Edit User' : 'New User'}</h3>
           <label>
             Full Name
-            <input className="input" name="fullName" value={form.fullName} onChange={change} required />
+            <input className="input" name="fullName" value={form.fullName} onChange={change} required disabled={!isAdminOrSuper} />
           </label>
           <label>
             Username
-            <input className="input" name="username" value={form.username} onChange={change} required />
+            <input className="input" name="username" value={form.username} onChange={change} required disabled={!isAdminOrSuper} />
           </label>
           <div className="row" style={{ gap: 12 }}>
             <label style={{ flex: 1 }}>
               Email
-              <input className="input" name="email" value={form.email} onChange={change} />
+              <input className="input" name="email" value={form.email} onChange={change} disabled={!isAdminOrSuper} />
             </label>
             <label style={{ flex: 1 }}>
               Phone
-              <input className="input" name="phone" value={form.phone} onChange={change} />
+              <input className="input" name="phone" value={form.phone} onChange={change} disabled={!isAdminOrSuper} />
             </label>
           </div>
           <div className="row" style={{ gap: 12 }}>
             <label style={{ flex: 1 }}>
               Department
-              <input className="input" name="department" value={form.department} onChange={change} />
+              <input className="input" name="department" value={form.department} onChange={change} disabled={!isAdminOrSuper} />
             </label>
             <label style={{ flex: 1 }}>
               Position
-              <input className="input" name="position" value={form.position} onChange={change} />
+              <input className="input" name="position" value={form.position} onChange={change} disabled={!isAdminOrSuper} />
             </label>
           </div>
           <div className="row" style={{ gap: 12 }}>
             <label style={{ flex: 1 }}>
               Date Employed
-              <input className="input" type="date" name="dateEmployed" value={form.dateEmployed} onChange={change} />
+              <input className="input" type="date" name="dateEmployed" value={form.dateEmployed} onChange={change} disabled={!isAdminOrSuper} />
             </label>
             <label style={{ flex: 1 }}>
               Contract End Date
-              <input className="input" type="date" name="contractEndDate" value={form.contractEndDate} onChange={change} />
+              <input className="input" type="date" name="contractEndDate" value={form.contractEndDate} onChange={change} disabled={!isAdminOrSuper} />
             </label>
           </div>
-          <label>
-            Password {users.find(u => u.username === form.username) ? '(leave blank to keep unchanged)' : ''}
-            <input className="input" type="password" name="password" value={form.password} onChange={change} />
-          </label>
+          {isAdminOrSuper && (
+            <label>
+              Password {users.find(u => u.username === form.username) ? '(leave blank to keep unchanged)' : ''}
+              <input className="input" type="password" name="password" value={form.password} onChange={change} />
+            </label>
+          )}
           <label>
             Role
-            <select className="input" name="role" value={form.role} onChange={change}>
-              {Object.values(roles).map(r => <option key={r} value={r}>{r}</option>)}
+            <select className="input" name="role" value={form.role} onChange={change} disabled={!isAdminOrSuper}>
+              {(isAdminOrSuper ? Object.values(roles).filter(r => r !== roles.SUPER_ADMIN) : assignableRoles).map(r => <option key={r} value={r}>{r}</option>)}
             </select>
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <input type="checkbox" checked={!!form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} />
-            <span>Account Enabled</span>
-          </label>
-          <div>
+          {isAdminOrSuper && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input type="checkbox" checked={!!form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} />
+              <span>Account Enabled</span>
+            </label>
+          )}
+          {isAdminOrSuper && <div>
             <div style={{ color: '#64748b', fontSize: 12, marginBottom: 6 }}>Permissions</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 8 }}>
               {allPerms.map(p => (
@@ -215,9 +225,9 @@ export default function Users() {
                 </label>
               ))}
             </div>
-          </div>
-          <button className="btn btn-primary" type="submit">Save</button>
-          {form.username && (
+          </div>}
+          {isAdminOrSuper && <button className="btn btn-primary" type="submit">Save</button>}
+          {form.username && isAdminOrSuper && (
             <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
               <div style={{ fontWeight: 600, marginBottom: 8 }}>Change Password</div>
               <div className="row" style={{ gap: 8 }}>
@@ -243,7 +253,9 @@ export default function Users() {
               <div className="row" style={{ gap: 8, marginTop: 8 }}>
                 <button type="button" className="btn" onClick={async () => {
                   try {
-                    await setUserEnabled(form.username, true);
+                    let remarks = '';
+                    try { remarks = window.prompt ? (window.prompt('Enter remark for enabling this account') || '') : ''; } catch {}
+                    await setUserEnabled(form.username, true, remarks);
                     setForm({ ...form, enabled: true });
                     await reload();
                   } catch { showError('Failed to enable account'); }
@@ -270,7 +282,7 @@ export default function Users() {
                 <th>Emp No.</th>
                 <th>Status</th>
                 <th>Role</th>
-                <th>Actions</th>
+                {isAdminOrSuper && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -282,10 +294,23 @@ export default function Users() {
                   <td>{u.employeeNumber || '-'}</td>
                   <td>{u.enabled ? 'Enabled' : 'Disabled'}</td>
                   <td>{u.role}</td>
-                  <td>
+                  {isAdminOrSuper && <td>
                     <button className="btn" onClick={() => editUser(u)}>Edit</button>{' '}
-                    <button className="btn" onClick={() => remove(u)}>Delete</button>
-                  </td>
+                    <button className="btn" onClick={() => remove(u)}>Delete</button>{' '}
+                    <button className="btn" onClick={async () => {
+                      try {
+                        let remarks = '';
+                        if (!u.enabled) {
+                          try { remarks = window.prompt ? (window.prompt('Enter remark for enabling this account') || '') : ''; } catch {}
+                        }
+                        await setUserEnabled(u.username, !u.enabled, remarks);
+                        await reload();
+                        showSuccess(!u.enabled ? 'User enabled' : 'User disabled');
+                      } catch {
+                        showError('Failed to update status');
+                      }
+                    }}>{u.enabled ? 'Disable' : 'Enable'}</button>
+                  </td>}
                 </tr>
               ))}
             </tbody>
