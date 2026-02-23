@@ -100,7 +100,7 @@ export default function Login() {
         localStorage.removeItem('force_password_change');
       }
     } catch (e) {
-      const msg = String(e && e.message || '').toLowerCase();
+      const msg = String((e && e.message) ? e.message : '').toLowerCase();
       if (msg.includes('password_expired')) {
         setExpired(true);
         setError('Password expired — change required');
@@ -161,7 +161,7 @@ export default function Login() {
                 setResetOpen(false);
                 setAdminU(''); setAdminCode(''); setResetUser(''); setResetPwd(''); setResetPwd2('');
               } catch (e3) {
-                setError((e3 && e3.message) || 'Reset failed');
+                setError(((e3 && e3.message) ? e3.message : 'Reset failed'));
               }
             }}>Reset Password</button>
             <div style={{ color: '#64748b', fontSize: 12 }}>Ask an Admin to provide the daily approval code.</div>
@@ -186,7 +186,7 @@ export default function Login() {
                 setExpired(false);
                 setOldPwd(''); setNewPwd(''); setNewPwd2('');
               } catch (e2) {
-                setError((e2 && e2.message) || 'Failed to update password');
+                setError(((e2 && e2.message) ? e2.message : 'Failed to update password'));
               }
             }}>Update Password</button>
           </div>
