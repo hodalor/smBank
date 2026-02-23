@@ -30,6 +30,7 @@ export default function Users() {
   const roles = getRoles();
   const [filterDept, setFilterDept] = useState('');
   const [filterRole, setFilterRole] = useState('');
+  const [filterAutoDisabled, setFilterAutoDisabled] = useState(false);
   const [filterEmp, setFilterEmp] = useState('');
   const allPerms = getAllPermissions();
   const baseSet = useMemo(() => getEffectivePermissions({ role: form.role, permsAdd: [], permsRemove: [] }), [form.role]);
@@ -51,7 +52,22 @@ export default function Users() {
   const viewerRole = viewer.role || '';
   const isAdminOrSuper = viewerRole === 'Admin' || viewerRole === 'Super Admin';
   const roleOrder = ['Customer Service', 'Teller', 'Account Manager', 'Loan Officer', 'Loan Manager', 'Admin', 'Super Admin'];
-  const canSeeRole = (r) => roleOrder.indexOf(r) <= roleOrder.indexOf(viewerRole);
+  const canSeeRole = (r) => {
+    const i = roleOrder.indexOf(r);
+    const v = roleOrder.indexOf(viewerRole);
+    return (i !== -1 && v !== -1 && i <= v);
+  };
+  const viewerCanSeeRow = (u) => {
+    if (isAdminOrSuper) return u.role !== 'Super Admin';
+    return canSeeRole(u.role) && u.role !== 'Super Admin' && u.role !== 'Admin';
+  };
+  const isAutoDisabled = (u) => {
+    if (u && u.enabled === false && u.contractEndDate) {
+      const d = new Date(u.contractEndDate);
+      if (d.toString() !== 'Invalid Date') return (new Date() > d);
+    }
+    return false;
+  };
   const assignableRoles = Object.values(roles).filter(r => isAdminOrSuper ? r !== roles.SUPER_ADMIN : canSeeRole(r) && r !== roles.SUPER_ADMIN && r !== roles.ADMIN);
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const togglePerm = (perm) => {
@@ -153,6 +169,12 @@ export default function Users() {
           {(isAdminOrSuper ? Object.values(roles) : Object.values(roles).filter(r => canSeeRole(r) && r !== roles.SUPER_ADMIN && r !== roles.ADMIN)).map(r => <option key={r} value={r}>{r}</option>)}
         </select>
         <input className="input" placeholder="Employee No." value={filterEmp} onChange={(e) => setFilterEmp(e.target.value)} style={{ width: 160 }} />
+        {isAdminOrSuper && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <input type="checkbox" checked={filterAutoDisabled} onChange={(e) => setFilterAutoDisabled(e.target.checked)} />
+            <span>Auto-disabled</span>
+          </label>
+        )}
         <button className="btn" onClick={() => reload()}>Filter</button>
         <button className="btn" onClick={() => { setFilterDept(''); setFilterRole(''); setFilterEmp(''); reload({}); }}>Clear</button>
       </div>
@@ -286,13 +308,24 @@ export default function Users() {
               </tr>
             </thead>
             <tbody>
-              {users.slice(((page||1)-1)*(pageSize||10), ((page||1)-1)*(pageSize||10) + (pageSize||10)).map(u => (
+              {users
+                .filter(u => viewerCanSeeRow(u))
+                .filter(u => !filterAutoDisabled || isAutoDisabled(u))
+                .slice(((page||1)-1)*(pageSize||10), ((page||1)-1)*(pageSize||10) + (pageSize||10))
+                .map(u => (
                 <tr key={u.username}>
                   <td>{u.username}</td>
                   <td>{u.fullName || '-'}</td>
                   <td>{u.department || '-'}</td>
                   <td>{u.employeeNumber || '-'}</td>
-                  <td>{u.enabled ? 'Enabled' : 'Disabled'}</td>
+                  <td>
+                    {u.enabled ? 'Enabled' : 'Disabled'}
+                    {!u.enabled && isAutoDisabled(u) && (
+                      <span style={{ marginLeft: 8, padding: '2px 6px', fontSize: 12, borderRadius: 10, background: '#fee2e2', color: '#b91c1c' }}>
+                        Contract Ended
+                      </span>
+                    )}
+                  </td>
                   <td>{u.role}</td>
                   {isAdminOrSuper && <td>
                     <button className="btn" onClick={() => editUser(u)}>Edit</button>{' '}
