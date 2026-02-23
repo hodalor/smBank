@@ -400,6 +400,14 @@ function canApproveLoan(role) {
   return r === 'Admin' || r === 'Super Admin' || r === 'Loan Manager';
 }
 const canApproveRepay = canApproveLoan;
+function canManageAccounts(role) {
+  const r = String(role || '');
+  return r === 'Admin' || r === 'Super Admin' || r === 'Account Manager';
+}
+function canManageAssets(role) {
+  const r = String(role || '');
+  return r === 'Admin' || r === 'Super Admin';
+}
 async function nextEmployeeNumber(dept, UserModel) {
   const prefix = (String(dept || '').trim().toUpperCase().slice(0, 2) || 'XX');
   // Find the highest existing sequence for this prefix
@@ -501,6 +509,8 @@ const LOAN_REPAY_POSTED_FILE = 'loan_repay_posted.json';
 let loanRepayPending = readJSON(LOAN_REPAY_PENDING_FILE, []);
 let loanRepayPosted = readJSON(LOAN_REPAY_POSTED_FILE, []);
 
+const ASSETS_FILE = 'assets.json';
+let assets = readJSON(ASSETS_FILE, []);
 const upload = multer ? multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } }) : null;
 
 // Health
@@ -1127,11 +1137,12 @@ app.get('/server-logs/:id', requireSuperAdmin, async (req, res) => {
 
 // Clients
 app.get('/clients', async (req, res) => {
-  const { q, accountNumber } = req.query;
+  const { q, accountNumber, manager } = req.query;
   if (isConnected()) {
     const { Client } = getModels();
     const filter = {};
     if (accountNumber) filter.accountNumber = accountNumber;
+    if (manager) filter.manager = String(manager);
     if (q) {
       const s = String(q);
       filter.$or = [
@@ -1142,11 +1153,26 @@ app.get('/clients', async (req, res) => {
       ];
     }
     const docs = await Client.find(filter).sort({ createdAt: -1, _id: -1 }).lean();
-    const list = docs.map(d => ({ ...(d.data || {}), id: d.id, accountNumber: d.accountNumber, createdAt: d.createdAt, fullName: d.fullName, companyName: d.companyName, nationalId: d.nationalId, dob: d.dob, phone: d.phone, companyPhone: d.companyPhone, registrationDate: d.registrationDate }));
+    const list = docs.map(d => ({
+      ...(d.data || {}),
+      id: d.id,
+      accountNumber: d.accountNumber,
+      createdAt: d.createdAt,
+      fullName: d.fullName,
+      companyName: d.companyName,
+      nationalId: d.nationalId,
+      dob: d.dob,
+      phone: d.phone,
+      companyPhone: d.companyPhone,
+      registrationDate: d.registrationDate,
+      manager: d.manager || '',
+      status: d.accountStatus || ((d.data || {}).status) || 'Active',
+    }));
     return res.json(list);
   }
   let result = clients;
   if (accountNumber) result = result.filter(c => c.accountNumber === accountNumber);
+  if (manager) result = result.filter(c => String(c.manager || '').trim() === String(manager).trim());
   if (q) {
     const s = String(q).toLowerCase();
     result = result.filter(c =>
@@ -1166,7 +1192,21 @@ app.get('/clients/:id', async (req, res) => {
     const base = { ...(d.data || {}) };
     if (!base.branchCode && derived.branchCode) base.branchCode = derived.branchCode;
     if (!base.accountTypeCode && derived.accountTypeCode) base.accountTypeCode = derived.accountTypeCode;
-    const obj = { ...base, id: d.id, accountNumber: d.accountNumber, createdAt: d.createdAt, fullName: d.fullName, companyName: d.companyName, nationalId: d.nationalId, dob: d.dob, phone: d.phone, companyPhone: d.companyPhone, registrationDate: d.registrationDate };
+    const obj = {
+      ...base,
+      id: d.id,
+      accountNumber: d.accountNumber,
+      createdAt: d.createdAt,
+      fullName: d.fullName,
+      companyName: d.companyName,
+      nationalId: d.nationalId,
+      dob: d.dob,
+      phone: d.phone,
+      companyPhone: d.companyPhone,
+      registrationDate: d.registrationDate,
+      manager: d.manager || '',
+      managerHistory: Array.isArray(d.managerHistory) ? d.managerHistory : [],
+    };
     obj.status = d.accountStatus || obj.status || 'Active';
     if (Array.isArray(d.statusHistory)) obj.statusHistory = d.statusHistory;
     // Persist normalized codes if newly derived
@@ -1188,6 +1228,8 @@ app.get('/clients/:id', async (req, res) => {
   await logActivity(req, 'client.view', 'client', String(it.accountNumber || it.id || ''), {});
   const out = { ...it };
   out.status = it.accountStatus || it.status || 'Active';
+  out.manager = it.manager || '';
+  out.managerHistory = Array.isArray(it.managerHistory) ? it.managerHistory : [];
   res.json(out);
 });
 app.post('/clients', async (req, res) => {
@@ -1566,6 +1608,235 @@ app.post('/clients/:id/status', async (req, res) => {
   writeJSON(CLIENTS_FILE, clients);
   await logActivity(req, 'client.status.change', 'client', String(id), { from: prev, to: next, remarks });
   res.json({ ok: true, status: next });
+});
+
+// Assets registry
+app.get('/assets', async (req, res) => {
+  const { q, status, assignedTo, condition, category } = req.query || {};
+  if (isConnected()) {
+    const { Asset } = getModels();
+    const filter = {};
+    if (status) filter.status = String(status);
+    if (assignedTo) filter.assignedTo = String(assignedTo);
+    if (condition) filter.condition = String(condition);
+    if (category) filter.category = String(category);
+    if (q) {
+      const s = String(q);
+      filter.$or = [
+        { name: { $regex: s, $options: 'i' } },
+        { category: { $regex: s, $options: 'i' } },
+        { serialNumber: { $regex: s, $options: 'i' } },
+      ];
+    }
+    const docs = await Asset.find(filter).sort({ updatedAt: -1, _id: -1 }).lean();
+    return res.json(docs);
+  }
+  let result = assets;
+  if (status) result = result.filter(a => String(a.status || '') === String(status));
+  if (assignedTo) result = result.filter(a => String(a.assignedTo || '') === String(assignedTo));
+  if (condition) result = result.filter(a => String(a.condition || '') === String(condition));
+  if (category) result = result.filter(a => String(a.category || '') === String(category));
+  if (q) {
+    const s = String(q).toLowerCase();
+    result = result.filter(a =>
+      String(a.name || '').toLowerCase().includes(s) ||
+      String(a.category || '').toLowerCase().includes(s) ||
+      String(a.serialNumber || '').toLowerCase().includes(s)
+    );
+  }
+  res.json(result);
+});
+app.get('/assets/:id', async (req, res) => {
+  const id = req.params.id;
+  if (isConnected()) {
+    const { Asset } = getModels();
+    const d = await Asset.findOne({ $or: [{ id }, { _id: id }, { serialNumber: id }] }).lean();
+    if (!d) return res.status(404).json({ error: 'not_found' });
+    await logActivity(req, 'asset.view', 'asset', String(d.id || id), {});
+    return res.json(d);
+  }
+  const it = assets.find(a => String(a.id) === id || String(a.serialNumber) === id);
+  if (!it) return res.status(404).json({ error: 'not_found' });
+  await logActivity(req, 'asset.view', 'asset', String(it.id || id), {});
+  res.json(it);
+});
+app.post('/assets', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!canManageAssets(req.user.role)) return res.status(403).json({ error: 'forbidden' });
+  const body = req.body || {};
+  const nowIso = new Date().toISOString();
+  const name = String(body.name || '').trim();
+  const serialNumber = String(body.serialNumber || '').trim();
+  const category = String(body.category || '').trim();
+  if (!name) return res.status(400).json({ error: 'name_required' });
+  if (!serialNumber) return res.status(400).json({ error: 'serial_required' });
+  if (!category) return res.status(400).json({ error: 'category_required' });
+  if (isConnected()) {
+    const { Asset } = getModels();
+    const payload = {
+      id: body.id || newId('AS'),
+      name,
+      category,
+      serialNumber,
+      purchaseDate: body.purchaseDate || '',
+      condition: body.condition || 'New',
+      status: body.status || 'Available',
+      assignedTo: body.assignedTo || '',
+      notes: body.notes || '',
+      createdAt: body.createdAt || nowIso,
+      updatedAt: nowIso,
+      history: [{
+        action: 'create',
+        by: req.user.username,
+        at: nowIso,
+        remarks: body.remarks || 'Asset created',
+        fromStatus: '',
+        toStatus: body.status || 'Available',
+        fromAssignee: '',
+        toAssignee: body.assignedTo || '',
+      }],
+    };
+    let doc;
+    try {
+      doc = await Asset.create(payload);
+    } catch (e) {
+      return res.status(400).json({ error: 'create_failed', details: e.message || 'Failed to create asset' });
+    }
+    await logActivity(req, 'asset.create', 'asset', String(doc.id || ''), {});
+    return res.status(201).json(doc.toObject());
+  }
+  const payload = {
+    id: body.id || newId('AS'),
+    name,
+    category,
+    serialNumber,
+    purchaseDate: body.purchaseDate || '',
+    condition: body.condition || 'New',
+    status: body.status || 'Available',
+    assignedTo: body.assignedTo || '',
+    notes: body.notes || '',
+    createdAt: body.createdAt || nowIso,
+    updatedAt: nowIso,
+    history: [{
+      action: 'create',
+      by: (req.user && req.user.username) || 'user',
+      at: nowIso,
+      remarks: body.remarks || 'Asset created',
+      fromStatus: '',
+      toStatus: body.status || 'Available',
+      fromAssignee: '',
+      toAssignee: body.assignedTo || '',
+    }],
+  };
+  assets.unshift(payload);
+  writeJSON(ASSETS_FILE, assets);
+  await logActivity(req, 'asset.create', 'asset', String(payload.id || ''), {});
+  res.status(201).json(payload);
+});
+app.post('/assets/:id/status', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!canManageAssets(req.user.role)) return res.status(403).json({ error: 'forbidden' });
+  const id = req.params.id;
+  const body = req.body || {};
+  const nextStatus = typeof body.status === 'string' ? String(body.status) : undefined;
+  const nextAssignee = typeof body.assignedTo === 'string' ? String(body.assignedTo) : undefined;
+  const remarks = String(body.remarks || '').trim();
+  if (!remarks) return res.status(400).json({ error: 'remarks_required' });
+  const nowIso = new Date().toISOString();
+  if (isConnected()) {
+    const { Asset } = getModels();
+    const d = await Asset.findOne({ $or: [{ id }, { _id: id }, { serialNumber: id }] });
+    if (!d) return res.status(404).json({ error: 'not_found' });
+    const fromStatus = d.status || '';
+    const fromAssignee = d.assignedTo || '';
+    const updates = { updatedAt: nowIso };
+    if (nextStatus != null) updates.status = nextStatus;
+    if (nextAssignee != null) updates.assignedTo = nextAssignee;
+    await Asset.updateOne({ _id: d._id }, {
+      $set: updates,
+      $push: {
+        history: {
+          action: 'status',
+          by: req.user.username,
+          at: nowIso,
+          remarks,
+          fromStatus,
+          toStatus: nextStatus != null ? nextStatus : fromStatus,
+          fromAssignee,
+          toAssignee: nextAssignee != null ? nextAssignee : fromAssignee,
+        },
+      },
+    });
+    await logActivity(req, 'asset.update', 'asset', String(d.id || id), { fromStatus, toStatus: updates.status || fromStatus, fromAssignee, toAssignee: updates.assignedTo || fromAssignee, remarks });
+    return res.json({ ok: true });
+  }
+  const idx = assets.findIndex(a => String(a.id) === id || String(a.serialNumber) === id);
+  if (idx < 0) return res.status(404).json({ error: 'not_found' });
+  const fromStatus = assets[idx].status || '';
+  const fromAssignee = assets[idx].assignedTo || '';
+  if (nextStatus != null) assets[idx].status = nextStatus;
+  if (nextAssignee != null) assets[idx].assignedTo = nextAssignee;
+  assets[idx].updatedAt = nowIso;
+  assets[idx].history = Array.isArray(assets[idx].history) ? assets[idx].history : [];
+  assets[idx].history.push({
+    action: 'status',
+    by: (req.user && req.user.username) || 'user',
+    at: nowIso,
+    remarks,
+    fromStatus,
+    toStatus: nextStatus != null ? nextStatus : fromStatus,
+    fromAssignee,
+    toAssignee: nextAssignee != null ? nextAssignee : fromAssignee,
+  });
+  writeJSON(ASSETS_FILE, assets);
+  await logActivity(req, 'asset.update', 'asset', String(assets[idx].id || id), { fromStatus, toStatus: assets[idx].status, fromAssignee, toAssignee: assets[idx].assignedTo, remarks });
+  res.json({ ok: true });
+});
+// Manual account manager assignment (assign, unassign, reassign) with remarks
+app.post('/clients/:id/manager', async (req, res) => {
+  const id = req.params.id;
+  const body = req.body || {};
+  const target = String(body.manager || '').trim(); // empty means unassign
+  const remarks = String(body.remarks || '').trim();
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!canManageAccounts(req.user.role)) return res.status(403).json({ error: 'forbidden' });
+  if (!remarks) return res.status(400).json({ error: 'remarks_required' });
+  const nowIso = new Date().toISOString();
+  if (isConnected()) {
+    const { Client } = getModels();
+    const d = await Client.findOne({ $or: [{ accountNumber: id }, { id }] });
+    if (!d) return res.status(404).json({ error: 'not_found' });
+    const current = String(d.manager || '').trim();
+    let action = 'assign';
+    if (!current && target) action = 'assign';
+    else if (current && !target) action = 'unassign';
+    else if (current && target && current !== target) action = 'reassign';
+    else if (current === target) {
+      return res.json({ ok: true, manager: current, action: 'noop' });
+    }
+    await Client.updateOne({ _id: d._id }, {
+      $set: { manager: target },
+      $push: { managerHistory: { action, manager: target, by: req.user.username, at: nowIso, remarks } },
+    });
+    await logActivity(req, `client.manager.${action}`, 'client', String(d.accountNumber || id), { from: current, to: target, remarks });
+    return res.json({ ok: true, manager: target, action });
+  }
+  const idx = clients.findIndex(c => c.accountNumber === id || c.id === id);
+  if (idx < 0) return res.status(404).json({ error: 'not_found' });
+  const current = String(clients[idx].manager || '').trim();
+  let action = 'assign';
+  if (!current && target) action = 'assign';
+  else if (current && !target) action = 'unassign';
+  else if (current && target && current !== target) action = 'reassign';
+  else if (current === target) {
+    return res.json({ ok: true, manager: current, action: 'noop' });
+  }
+  clients[idx].manager = target;
+  clients[idx].managerHistory = Array.isArray(clients[idx].managerHistory) ? clients[idx].managerHistory : [];
+  clients[idx].managerHistory.push({ action, manager: target, by: (req.user && req.user.username) || 'user', at: nowIso, remarks });
+  writeJSON(CLIENTS_FILE, clients);
+  await logActivity(req, `client.manager.${action}`, 'client', String(clients[idx].accountNumber || id), { from: current, to: target, remarks });
+  res.json({ ok: true, manager: target, action });
 });
 app.post('/transactions/pending/:id/approve', async (req, res) => {
   const id = req.params.id;

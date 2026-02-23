@@ -87,6 +87,15 @@ async function connect(uri) {
       remarks: String,
       via: String, // user | system
     }],
+    // Account manager assignment
+    manager: { type: String, default: '' }, // username
+    managerHistory: [{
+      action: String, // assign | unassign | reassign
+      manager: String,
+      by: String,
+      at: String,
+      remarks: String,
+    }],
     lastTxnAt: String,
   }, { timestamps: true });
 
@@ -138,6 +147,28 @@ async function connect(uri) {
     approverName: String,
   }, { timestamps: true });
 
+  const AssetSchema = new Schema({
+    id: { type: String, index: true },
+    name: String,
+    category: String,
+    serialNumber: { type: String, index: true },
+    purchaseDate: String,
+    condition: String, // New | Refurbished | Used
+    status: String, // Available | In Use | Damaged | Repair | Retired
+    assignedTo: String, // username of staff using the asset
+    notes: String,
+    history: [{
+      action: String, // create | update | status | assign | reassign | unassign
+      by: String,
+      at: String,
+      remarks: String,
+      fromStatus: String,
+      toStatus: String,
+      fromAssignee: String,
+      toAssignee: String,
+    }],
+  }, { timestamps: true });
+
   const ActivitySchema = new Schema({
     ts: { type: Date, index: true },
     actor: String,
@@ -182,6 +213,7 @@ async function connect(uri) {
     LoanRepayPosted: model('LoanRepayPosted', LoanRepaySchema),
     ActivityLog: model('ActivityLog', ActivitySchema),
     ServerLog: model('ServerLog', ServerLogSchema),
+    Asset: model('Asset', AssetSchema),
   };
   try {
     await Models.User.init(); // ensure indexes (unique on employeeNumber, username)
