@@ -1167,6 +1167,8 @@ app.get('/clients/:id', async (req, res) => {
     if (!base.branchCode && derived.branchCode) base.branchCode = derived.branchCode;
     if (!base.accountTypeCode && derived.accountTypeCode) base.accountTypeCode = derived.accountTypeCode;
     const obj = { ...base, id: d.id, accountNumber: d.accountNumber, createdAt: d.createdAt, fullName: d.fullName, companyName: d.companyName, nationalId: d.nationalId, dob: d.dob, phone: d.phone, companyPhone: d.companyPhone, registrationDate: d.registrationDate };
+    obj.status = d.accountStatus || obj.status || 'Active';
+    if (Array.isArray(d.statusHistory)) obj.statusHistory = d.statusHistory;
     // Persist normalized codes if newly derived
     if ((derived.branchCode && !((d.data || {}).branchCode)) || (derived.accountTypeCode && !((d.data || {}).accountTypeCode))) {
       try {
@@ -1184,7 +1186,9 @@ app.get('/clients/:id', async (req, res) => {
   if (!it.accountTypeCode && derived.accountTypeCode) { it.accountTypeCode = derived.accountTypeCode; mutated = true; }
   if (mutated) { writeJSON(CLIENTS_FILE, clients); }
   await logActivity(req, 'client.view', 'client', String(it.accountNumber || it.id || ''), {});
-  res.json(it);
+  const out = { ...it };
+  out.status = it.accountStatus || it.status || 'Active';
+  res.json(out);
 });
 app.post('/clients', async (req, res) => {
   const body = req.body || {};
@@ -1285,11 +1289,29 @@ app.delete('/clients/:id', async (req, res) => {
 app.get('/directory/:accountNumber', async (req, res) => {
   const acct = req.params.accountNumber;
   if (isConnected()) {
-    const { Client } = getModels();
-    const d = await Client.findOne({ accountNumber: acct }).lean();
+    const { Client, PostedTxn } = getModels();
+    let d = await Client.findOne({ accountNumber: acct }).lean();
     if (!d) return res.status(404).json({ error: 'not found' });
     const c = { ...(d.data || {}), accountNumber: d.accountNumber, fullName: d.fullName, companyName: d.companyName, nationalId: d.nationalId, dob: d.dob, phone: d.phone, companyPhone: d.companyPhone, registrationDate: d.registrationDate };
     const name = c.fullName || c.companyName || '';
+    // Auto-dormant: if no transactions in 3 months
+    try {
+      const latest = await PostedTxn.findOne({ accountNumber: acct }).sort({ approvedAt: -1, _id: -1 }).lean();
+      const ref = (latest && latest.approvedAt) || (d.lastTxnAt) || (d.createdAt) || (c.createdAt) || '';
+      if (ref) {
+        const last = new Date(ref);
+        const days = (Date.now() - last.getTime()) / (1000 * 60 * 60 * 24);
+        if ((d.accountStatus || c.status || 'Active') === 'Active' && days >= 90) {
+          const nowIso = new Date().toISOString();
+          await Client.updateOne({ _id: d._id }, {
+            $set: { accountStatus: 'Dormant', lastTxnAt: ref },
+            $push: { statusHistory: { status: 'Dormant', by: 'system', at: nowIso, remarks: 'Inactive for three months or more', via: 'system' } },
+          });
+          d = await Client.findOne({ _id: d._id }).lean();
+          await logActivity(req, 'client.status.auto_dormant', 'client', String(d.accountNumber || ''), {});
+        }
+      }
+    } catch {}
     await logActivity(req, 'directory.lookup', 'client', String(d.accountNumber || ''), {});
     return res.json({
       accountNumber: d.accountNumber,
@@ -1297,6 +1319,7 @@ app.get('/directory/:accountNumber', async (req, res) => {
       nationalId: c.nationalId || c.companyRegistrationNumber || '',
       dob: c.dob || c.registrationDate || '',
       phone: c.phone || c.companyPhone || '',
+      status: d.accountStatus || c.status || 'Active',
     });
   }
   const c = clients.find(x => x.accountNumber === acct);
@@ -1309,6 +1332,7 @@ app.get('/directory/:accountNumber', async (req, res) => {
     nationalId: c.nationalId || c.companyRegistrationNumber || '',
     dob: c.dob || c.registrationDate || '',
     phone: c.phone || c.companyPhone || '',
+    status: c.accountStatus || c.status || 'Active',
   });
 });
 
@@ -1358,10 +1382,123 @@ app.get('/transactions/posted', async (req, res) => {
   await logActivity(req, 'statements.view', 'transactions', String(accountNumber || ''), { type: type || '' });
   res.json(result);
 });
+app.get('/transactions/records', async (req, res) => {
+  const role = (req.user && req.user.role) || '';
+  const actor = (req.user && req.user.username) || '';
+  const seeAll = canApproveTxn(role);
+  const { accountNumber, kind, status, id, initiator } = req.query || {};
+  if (isConnected()) {
+    const { PendingTxn, PostedTxn, SuperBin } = getModels();
+    const records = [];
+    const pFilter = {};
+    if (accountNumber) pFilter.accountNumber = accountNumber;
+    if (kind) pFilter.kind = kind;
+    const pend = await PendingTxn.find(pFilter).lean();
+    pend.forEach(p => {
+      if (!seeAll && p.initiatorName !== actor) return;
+      records.push({ ...p, status: 'Pending' });
+    });
+    const sFilter = {};
+    if (accountNumber) sFilter.accountNumber = accountNumber;
+    if (kind) sFilter.kind = kind;
+    if (id) sFilter.id = { $regex: String(id), $options: 'i' };
+    const post = await PostedTxn.find(sFilter).lean();
+    post.forEach(p => {
+      if (!seeAll && p.initiatorName !== actor) return;
+      records.push({ ...p, status: 'Approved' });
+    });
+    const bin = await SuperBin.find({ kind: 'pending_txn' }).lean();
+    bin.forEach(b => {
+      const p = b.payload || {};
+      if (accountNumber && p.accountNumber !== accountNumber) return;
+      if (kind && p.kind !== kind) return;
+      if (id && String(p.id || '').indexOf(String(id)) === -1) return;
+      if (!seeAll && p.initiatorName !== actor) return;
+      records.push({ ...p, status: 'Rejected', rejectedAt: b.deletedAt, reason: p.reason || '' });
+    });
+    let out = records;
+    if (status) out = out.filter(r => r.status === status);
+    if (initiator) out = out.filter(r => r.initiatorName === initiator);
+    out.sort((a, b) => {
+      const ta = new Date(a.approvedAt || a.initiatedAt || a.rejectedAt || 0).getTime();
+      const tb = new Date(b.approvedAt || b.initiatedAt || b.rejectedAt || 0).getTime();
+      return tb - ta;
+    });
+    await logActivity(req, 'txn.records.view', 'transactions', '', {});
+    return res.json(out);
+  }
+  const records = [];
+  let pend = pendingTx;
+  let post = postedTx;
+  let bin = superBin.filter(b => b.kind === 'pending_txn');
+  if (accountNumber) {
+    pend = pend.filter(p => p.accountNumber === accountNumber);
+    post = post.filter(p => p.accountNumber === accountNumber);
+    bin = bin.filter(b => (b.payload && b.payload.accountNumber) === accountNumber);
+  }
+  if (kind) {
+    pend = pend.filter(p => p.kind === kind);
+    post = post.filter(p => p.kind === kind);
+    bin = bin.filter(b => (b.payload && b.payload.kind) === kind);
+  }
+  if (id) {
+    const s = String(id);
+    pend = pend.filter(p => String(p.id || '').includes(s));
+    post = post.filter(p => String(p.id || '').includes(s));
+    bin = bin.filter(b => String((b.payload && b.payload.id) || '').includes(s));
+  }
+  pend.forEach(p => {
+    if (!seeAll && p.initiatorName !== actor) return;
+    records.push({ ...p, status: 'Pending' });
+  });
+  post.forEach(p => {
+    if (!seeAll && p.initiatorName !== actor) return;
+    records.push({ ...p, status: 'Approved' });
+  });
+  bin.forEach(b => {
+    const p = b.payload || {};
+    if (!seeAll && p.initiatorName !== actor) return;
+    records.push({ ...p, status: 'Rejected', rejectedAt: b.deletedAt, reason: p.reason || '' });
+  });
+  let out = records;
+  if (status) out = out.filter(r => r.status === status);
+  if (initiator) out = out.filter(r => r.initiatorName === initiator);
+  out.sort((a, b) => {
+    const ta = new Date(a.approvedAt || a.initiatedAt || a.rejectedAt || 0).getTime();
+    const tb = new Date(b.approvedAt || b.initiatedAt || b.rejectedAt || 0).getTime();
+    return tb - ta;
+  });
+  await logActivity(req, 'txn.records.view', 'transactions', '', {});
+  res.json(out);
+});
 function addPending(kind) {
   return async (req, res) => {
     const body = req.body || {};
     const amountNum = Number(body.amount);
+    // Enforce account status rules
+    try {
+      let status = 'Active';
+      if (isConnected()) {
+        const { Client } = getModels();
+        const c = await Client.findOne({ accountNumber: body.accountNumber }).lean();
+        status = (c && (c.accountStatus || (c.data && c.data.status))) || 'Active';
+      } else {
+        const c = clients.find(x => x.accountNumber === body.accountNumber);
+        status = (c && (c.accountStatus || c.status)) || 'Active';
+      }
+      if (status === 'Inactive') {
+        await logActivity(req, `txn.${kind}.create.blocked.inactive`, 'transaction', '', { accountNumber: body.accountNumber, amount: amountNum });
+        return res.status(400).json({ error: 'account_inactive' });
+      }
+      if (status === 'Dormant' && kind === 'withdraw') {
+        await logActivity(req, `txn.${kind}.create.blocked.dormant`, 'transaction', '', { accountNumber: body.accountNumber, amount: amountNum });
+        return res.status(400).json({ error: 'account_dormant' });
+      }
+      if (kind === 'withdraw' && status === 'NDS') {
+        await logActivity(req, `txn.${kind}.create.blocked.nds`, 'transaction', '', { accountNumber: body.accountNumber, amount: amountNum });
+        return res.status(400).json({ error: 'account_non_debit' });
+      }
+    } catch {}
     if (kind === 'withdraw') {
       const bal = await computeAccountBalance(body.accountNumber);
       if (amountNum > bal) {
@@ -1394,6 +1531,42 @@ function addPending(kind) {
 }
 app.post('/transactions/deposit', addPending('deposit'));
 app.post('/transactions/withdraw', addPending('withdraw'));
+
+// Manual account status change (requires remarks)
+app.post('/clients/:id/status', async (req, res) => {
+  const id = req.params.id;
+  const body = req.body || {};
+  const next = String(body.status || '');
+  const remarks = String(body.remarks || '').trim();
+  if (!next) return res.status(400).json({ error: 'status_required' });
+  if (!remarks) return res.status(400).json({ error: 'remarks_required' });
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  const allowed = new Set(['Active', 'Inactive', 'Dormant', 'NDS']);
+  if (!allowed.has(next)) return res.status(400).json({ error: 'invalid_status' });
+  if (isConnected()) {
+    const { Client } = getModels();
+    const d = await Client.findOne({ $or: [{ accountNumber: id }, { id }] });
+    if (!d) return res.status(404).json({ error: 'not_found' });
+    const prev = d.accountStatus || (d.data && d.data.status) || 'Active';
+    if (prev === next) return res.json({ ok: true, status: next });
+    const nowIso = new Date().toISOString();
+    await Client.updateOne({ _id: d._id }, {
+      $set: { accountStatus: next },
+      $push: { statusHistory: { status: next, by: req.user.username, at: nowIso, remarks, via: 'user' } },
+    });
+    await logActivity(req, 'client.status.change', 'client', String(d.accountNumber || id), { from: prev, to: next, remarks });
+    return res.json({ ok: true, status: next });
+  }
+  const idx = clients.findIndex(c => c.accountNumber === id || c.id === id);
+  if (idx < 0) return res.status(404).json({ error: 'not_found' });
+  const prev = clients[idx].accountStatus || clients[idx].status || 'Active';
+  clients[idx].accountStatus = next;
+  clients[idx].statusHistory = Array.isArray(clients[idx].statusHistory) ? clients[idx].statusHistory : [];
+  clients[idx].statusHistory.push({ status: next, by: (req.user && req.user.username) || 'user', at: new Date().toISOString(), remarks, via: 'user' });
+  writeJSON(CLIENTS_FILE, clients);
+  await logActivity(req, 'client.status.change', 'client', String(id), { from: prev, to: next, remarks });
+  res.json({ ok: true, status: next });
+});
 app.post('/transactions/pending/:id/approve', async (req, res) => {
   const id = req.params.id;
   let txn = null;
@@ -1429,6 +1602,10 @@ app.post('/transactions/pending/:id/approve', async (req, res) => {
       status: 'Approved',
     };
     await PostedTxn.create(posted);
+    try {
+      const { Client } = getModels();
+      await Client.updateOne({ accountNumber: posted.accountNumber }, { $set: { lastTxnAt: posted.approvedAt } });
+    } catch {}
     const io = req.app.get('io');
     if (io) io.emit('transactions:posted:new', posted);
     await logActivity(req, 'txn.approve', 'transaction', id, { accountNumber: posted.accountNumber, amount: posted.amount });
@@ -1466,6 +1643,13 @@ app.post('/transactions/pending/:id/approve', async (req, res) => {
   postedTx.unshift(posted);
   writeJSON(PENDING_TX_FILE, pendingTx);
   writeJSON(POSTED_TX_FILE, postedTx);
+  try {
+    const cidx = clients.findIndex(x => x.accountNumber === posted.accountNumber);
+    if (cidx >= 0) {
+      clients[cidx].lastTxnAt = posted.approvedAt;
+      writeJSON(CLIENTS_FILE, clients);
+    }
+  } catch {}
   const io = req.app.get('io');
   if (io) io.emit('transactions:posted:new', posted);
   await logActivity(req, 'txn.approve', 'transaction', id, { accountNumber: posted.accountNumber, amount: posted.amount });
@@ -2027,6 +2211,33 @@ app.use((err, req, res, next) => {
 });
 
 const port = process.env.PORT || 5000;
+// Lightweight daily job: auto-dormant scan at startup and every 24h
+async function autoDormantSweep() {
+  try {
+    if (!isConnected()) return;
+    const { Client, PostedTxn } = getModels();
+    const clients = await Client.find({}).select({ accountNumber: 1, accountStatus: 1, lastTxnAt: 1, createdAt: 1 }).lean();
+    const now = Date.now();
+    for (const c of clients) {
+      try {
+        let ref = c.lastTxnAt;
+        if (!ref) {
+          const latest = await PostedTxn.findOne({ accountNumber: c.accountNumber }).sort({ approvedAt: -1, _id: -1 }).lean();
+          ref = (latest && latest.approvedAt) || c.createdAt || null;
+        }
+        if (!ref) continue;
+        const days = (now - new Date(ref).getTime()) / (1000 * 60 * 60 * 24);
+        if ((c.accountStatus || 'Active') === 'Active' && days >= 90) {
+          const nowIso = new Date().toISOString();
+          await Client.updateOne({ accountNumber: c.accountNumber }, {
+            $set: { accountStatus: 'Dormant', lastTxnAt: ref },
+            $push: { statusHistory: { status: 'Dormant', by: 'system', at: nowIso, remarks: 'Inactive for three months or more', via: 'system' } },
+          });
+        }
+      } catch {}
+    }
+  } catch {}
+}
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -2041,4 +2252,6 @@ io.on('connection', (socket) => {
 server.listen(port, () => {
   console.log(`smBank API listening on port ${port}`);
   console.log('socket running');
+  autoDormantSweep().catch(() => {});
+  setInterval(() => { autoDormantSweep().catch(() => {}); }, 24 * 60 * 60 * 1000);
 });

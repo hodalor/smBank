@@ -79,6 +79,15 @@ async function connect(uri) {
     companyPhone: String,
     data: Mixed,
     createdAt: String,
+    accountStatus: { type: String, default: 'Active' }, // Active | Inactive | Dormant | NDS
+    statusHistory: [{
+      status: String,
+      by: String,
+      at: String,
+      remarks: String,
+      via: String, // user | system
+    }],
+    lastTxnAt: String,
   }, { timestamps: true });
 
   const TxnSchema = new Schema({
