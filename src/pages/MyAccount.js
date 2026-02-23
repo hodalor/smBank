@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getMe } from '../api';
+import { Link } from 'react-router-dom';
+import { getMe, listClients } from '../api';
 import { showError } from '../components/Toaster';
 import { hasPermission, PERMISSIONS } from '../state/ops';
 
@@ -7,6 +8,8 @@ export default function MyAccount() {
   const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [show, setShow] = useState(false);
+  const [managed, setManaged] = useState([]);
+  const [loadingManaged, setLoadingManaged] = useState(false);
   useEffect(() => {
     let stop = false;
     (async () => {
@@ -22,6 +25,22 @@ export default function MyAccount() {
     })();
     return () => { stop = true; };
   }, []);
+  useEffect(() => {
+    let stop = false;
+    (async () => {
+      if (!me || !me.username) return;
+      setLoadingManaged(true);
+      try {
+        const list = await listClients({ manager: me.username });
+        if (!stop) setManaged(Array.isArray(list) ? list : []);
+      } catch {
+        if (!stop) setManaged([]);
+      } finally {
+        if (!stop) setLoadingManaged(false);
+      }
+    })();
+    return () => { stop = true; };
+  }, [me]);
   const canApprove = hasPermission(PERMISSIONS.TXN_APPROVALS_VIEW) || hasPermission(PERMISSIONS.LOANS_APPROVALS_VIEW) || hasPermission(PERMISSIONS.LOANS_REPAY_APPROVALS_VIEW);
   return (
     <div className="stack">
@@ -54,6 +73,41 @@ export default function MyAccount() {
           </table>
         )}
       </div>
+      {me && (
+        <div className="card">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h3>Accounts I Manage</h3>
+            <div style={{ color: '#64748b' }}>{loadingManaged ? 'Loading…' : `${managed.length} assigned`}</div>
+          </div>
+          {loadingManaged && <div>Loading…</div>}
+          {!loadingManaged && managed.length === 0 && <div>No assigned accounts</div>}
+          {!loadingManaged && managed.length > 0 && (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left' }}>Account Number</th>
+                  <th style={{ textAlign: 'left' }}>Name</th>
+                  <th style={{ textAlign: 'left' }}>Phone</th>
+                  <th style={{ textAlign: 'left' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {managed.slice(0, 20).map(c => {
+                  const name = c.fullName || c.companyName || '';
+                  return (
+                    <tr key={c.accountNumber}>
+                      <td><Link to={`/clients/${c.accountNumber}`}>{c.accountNumber}</Link></td>
+                      <td>{name}</td>
+                      <td>{c.phone || c.companyPhone || ''}</td>
+                      <td>{c.status || 'Active'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
     </div>
   );
 }

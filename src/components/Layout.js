@@ -77,6 +77,9 @@ export default function Layout() {
           {hasPermission(PERMISSIONS.REPORTS_VIEW) && (
             <NavLink to="/reports" className="nav-item" onClick={() => addTab({ to: '/reports', label: 'Reports' })}>Reports</NavLink>
           )}
+          {hasPermission(PERMISSIONS.ASSETS_VIEW) && (
+            <NavLink to="/assets" className="nav-item" onClick={() => addTab({ to: '/assets', label: 'Assets Reg' })}>Assets Reg</NavLink>
+          )}
           {hasPermission('config.manage') && (
             <NavLink to="/config" className="nav-item" onClick={() => addTab({ to: '/config', label: 'Config' })}>Config</NavLink>
           )}

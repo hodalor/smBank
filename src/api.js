@@ -112,6 +112,7 @@ export async function setUserEnabled(username, enabled) {
 export async function listClients(params = {}) {
   const q = new URLSearchParams();
   if (params.accountNumber) q.set('accountNumber', params.accountNumber);
+  if (params.manager) q.set('manager', params.manager);
   if (params.q) q.set('q', params.q);
   return apiFetch(`/clients?${q.toString()}`, { method: 'GET' });
 }
@@ -132,6 +133,29 @@ export async function directoryLookup(accountNumber) {
 }
 export async function updateClientStatus(id, payload) {
   return apiFetch(`/clients/${id}/status`, { method: 'POST', body: JSON.stringify(payload) });
+}
+export async function updateClientManager(id, payload) {
+  return apiFetch(`/clients/${id}/manager`, { method: 'POST', body: JSON.stringify(payload) });
+}
+
+// Assets
+export async function listAssets(params = {}) {
+  const q = new URLSearchParams();
+  if (params.q) q.set('q', params.q);
+  if (params.status) q.set('status', params.status);
+  if (params.assignedTo) q.set('assignedTo', params.assignedTo);
+  if (params.condition) q.set('condition', params.condition);
+  if (params.category) q.set('category', params.category);
+  return apiFetch(`/assets?${q.toString()}`, { method: 'GET' });
+}
+export async function getAsset(id) {
+  return apiFetch(`/assets/${encodeURIComponent(id)}`, { method: 'GET' });
+}
+export async function createAsset(payload) {
+  return apiFetch('/assets', { method: 'POST', body: JSON.stringify(payload) });
+}
+export async function updateAssetStatus(id, payload) {
+  return apiFetch(`/assets/${encodeURIComponent(id)}/status`, { method: 'POST', body: JSON.stringify(payload) });
 }
 
 export async function createDeposit(payload) {

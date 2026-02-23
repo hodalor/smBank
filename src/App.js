@@ -26,6 +26,7 @@ import MediaUpload from './pages/MediaUpload';
 import MyAccount from './pages/MyAccount';
 import LoanStatements from './pages/LoanStatements';
 import LoanDetails from './pages/LoanDetails';
+import Assets from './pages/Assets';
 import { getCurrentUserName } from './state/ops';
 
 export default function App() {
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="server-logs" element={<ServerLogs />} />
         <Route path="super-bin" element={<SuperBin />} />
         <Route path="config" element={<Config />} />
+        <Route path="assets" element={<Assets />} />
       </Route>
     </Routes>
   );

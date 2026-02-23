@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createClient, getClient, updateClient, fetchConfig, uploadMedia, updateClientStatus } from '../api';
+import { createClient, getClient, updateClient, fetchConfig, uploadMedia, updateClientStatus, listUsers, updateClientManager } from '../api';
 import { showError, showSuccess } from '../components/Toaster';
 import { confirm } from '../components/Confirm';
+import { hasPermission, PERMISSIONS } from '../state/ops';
 
 export default function ClientProfile() {
   const { accountNumber } = useParams();
@@ -52,6 +53,11 @@ export default function ClientProfile() {
   const [statusHistory, setStatusHistory] = useState([]);
   const [newStatus, setNewStatus] = useState('Active');
   const [statusRemarks, setStatusRemarks] = useState('');
+  const [manager, setManager] = useState('');
+  const [managerHistory, setManagerHistory] = useState([]);
+  const [managerSelect, setManagerSelect] = useState('');
+  const [managerRemarks, setManagerRemarks] = useState('');
+  const [users, setUsers] = useState([]);
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const uploadNested = async (collection, idx, field, file) => {
     if (!file) return;
@@ -204,11 +210,22 @@ export default function ClientProfile() {
         });
         setStatusHistory(Array.isArray(c.statusHistory) ? c.statusHistory : []);
         setNewStatus(c.status || 'Active');
+        setManager(c.manager || '');
+        setManagerHistory(Array.isArray(c.managerHistory) ? c.managerHistory : []);
+        setManagerSelect(c.manager || '');
         const catts = Array.isArray(c.attachments) ? c.attachments : (Array.isArray(c.data && c.data.attachments) ? c.data.attachments : []);
         setAttachments(catts);
       } catch {}
     };
     load();
+    // Load users for manager assignment
+    (async () => {
+      try {
+        const list = await listUsers();
+        if (!mounted) return;
+        setUsers(Array.isArray(list) ? list : []);
+      } catch {}
+    })();
     return () => {
       if (photoPreview) URL.revokeObjectURL(photoPreview);
       if (idFrontPreview) URL.revokeObjectURL(idFrontPreview);
@@ -415,6 +432,66 @@ export default function ClientProfile() {
             </>
           )}
         </div>
+        {accountNumber && hasPermission(PERMISSIONS.CLIENT_MANAGER_MANAGE) && (
+          <div className="stack">
+            <h3>Account Manager</h3>
+            <div className="form-grid">
+              <label>
+                Current Manager
+                <input className="input" value={manager || '—'} readOnly />
+              </label>
+              <label>
+                Select Manager
+                <select className="input" value={managerSelect} onChange={(e) => setManagerSelect(e.target.value)}>
+                  <option value="">— Unassigned —</option>
+                  {users.map(u => (
+                    <option key={u.username} value={u.username}>{u.username} {u.fullName ? `— ${u.fullName}` : ''} ({u.role})</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Remarks
+                <input className="input" value={managerRemarks} onChange={(e) => setManagerRemarks(e.target.value)} placeholder="Required" />
+              </label>
+            </div>
+            <div className="row" style={{ gap: 8 }}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={async () => {
+                  try {
+                    if (!managerRemarks.trim()) { showError('Enter remarks'); return; }
+                    await updateClientManager(accountNumber, { manager: managerSelect, remarks: managerRemarks.trim() });
+                    const c = await getClient(accountNumber);
+                    setManager(c.manager || '');
+                    setManagerHistory(Array.isArray(c.managerHistory) ? c.managerHistory : []);
+                    setManagerSelect(c.manager || '');
+                    setManagerRemarks('');
+                    showSuccess(managerSelect ? 'Manager updated' : 'Manager cleared');
+                  } catch {
+                    showError('Failed to update manager');
+                  }
+                }}
+              >
+                {managerSelect ? (manager ? 'Reassign Manager' : 'Assign Manager') : 'Unassign Manager'}
+              </button>
+            </div>
+            {managerHistory && managerHistory.length > 0 && (
+              <div className="card">
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>Manager History</div>
+                <div className="stack">
+                  {managerHistory.slice(0,5).map((h, i) => (
+                    <div key={`mh-${i}`} className="row" style={{ justifyContent: 'space-between' }}>
+                      <div>{h.action} → {h.manager || '—'}</div>
+                      <div style={{ color: '#64748b', fontSize: 12 }}>{h.by} • {h.at}</div>
+                      <div style={{ color: '#64748b', fontSize: 12 }}>{h.remarks || ''}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
           {isIndividual && (
           <div className="stack">
             <h3>KYC Documents</h3>
