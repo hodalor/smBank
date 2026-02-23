@@ -12,6 +12,8 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const contentRef = useRef(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarHidden, setSidebarHidden] = useState(false);
   useEffect(() => {
     const el = contentRef.current;
     if (!el) return;
@@ -21,11 +23,15 @@ export default function Layout() {
     el.offsetHeight;
     el.classList.add('fade-in');
   }, [location.pathname]);
+  useEffect(() => {
+    // close drawer on route change (mobile)
+    setSidebarOpen(false);
+  }, [location.pathname]);
   const [cfg, setCfg] = useState(getAppConfig());
   useEffect(() => onConfigUpdate(setCfg), []);
   return (
-    <div className="layout">
-      <aside className="sidebar">
+    <div className={`layout${sidebarHidden ? ' no-sidebar' : ''}`}>
+      <aside className={`sidebar${sidebarOpen ? ' open' : ''}${sidebarHidden ? ' collapsed' : ''}`}>
         <div className="brand" onClick={() => navigate('/dashboard')}>
           <img src="/logo512.png" alt={cfg.appName || 'smBank'} className="brand-logo" />
           <span>{cfg.appName || 'smBank'}</span>
@@ -106,7 +112,18 @@ export default function Layout() {
           )}
         </nav>
       </aside>
-      <TopBar />
+      <div className={`sidebar-backdrop${sidebarOpen ? ' show' : ''}`} onClick={() => setSidebarOpen(false)} />
+      <TopBar
+        onToggleSidebar={() => {
+          // On small screens, open/close drawer; on large, hide/show
+          if (window.matchMedia && window.matchMedia('(max-width: 1024px)').matches) {
+            setSidebarOpen(v => !v);
+          } else {
+            setSidebarHidden(v => !v);
+          }
+        }}
+        sidebarHidden={sidebarHidden}
+      />
       <LoadingBar />
       <main className="content" ref={contentRef}>
         <div className="container fade-in">

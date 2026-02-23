@@ -4,7 +4,7 @@ import { getTabs, onTabsUpdate, closeTab } from '../state/tabs';
 import { getCurrentUserName, setCurrentUserName } from '../state/ops';
 import { apiLogout } from '../api';
 
-export default function TopBar() {
+export default function TopBar({ onToggleSidebar, sidebarHidden }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [tabs, setTabs] = useState(getTabs());
@@ -81,7 +81,12 @@ export default function TopBar() {
   }, [logout]);
   return (
     <div className="topbar">
-      <div style={{ fontWeight: 700 }}>{active}</div>
+      <div className="row" style={{ alignItems: 'center', gap: 10 }}>
+        <button className="sidebar-toggle" onClick={() => onToggleSidebar && onToggleSidebar()} aria-label="Toggle sidebar">
+          ☰
+        </button>
+        <div style={{ fontWeight: 700 }}>{active}</div>
+      </div>
       <div className="top-right">
         <div className="tabs-wrap">
           {showArrows && <button className="tabs-arrow" onClick={() => scrollBy(-180)}>‹</button>}
