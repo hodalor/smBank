@@ -335,13 +335,15 @@ function newTxnId(kind) {
 function newRepayId() {
   return `LRP-${randomDigits(12)}`;
 }
-function tenDigit() {
-  let s = '';
+async function autoDisableExpiredContractsOnce() {
   if (!isConnected()) return;
   try {
     const { User } = getModels();
     const nowD = new Date();
-    const docs = await User.find({ enabled: true, contractEndDate: { $exists: true, $ne: null } }, { username: 1, contractEndDate: 1 }).lean();
+    const docs = await User.find(
+      { enabled: true, contractEndDate: { $exists: true, $ne: null } },
+      { username: 1, contractEndDate: 1 }
+    ).lean();
     for (const u of docs) {
       const ced = new Date(u.contractEndDate);
       if (ced.toString() !== 'Invalid Date' && nowD > ced) {
