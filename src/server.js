@@ -277,23 +277,26 @@ function newId(prefix) {
 const PASSWORD_MIN_LENGTH = 10;
 const PASSWORD_GRACE_DAYS = 3;
 const ROLE_RANK = {
-  'Super Admin': 6,
-  'Admin': 5,
-  'Loan Manager': 4,
-  'Loan Officer': 3,
-  'Account Manager': 2,
-  'Teller': 1,
-  'Customer Service': 1,
+  'super admin': 6,
+  'admin': 5,
+  'loan manager': 4,
+  'loan officer': 3,
+  'account manager': 2,
+  'teller': 1,
+  'customer service': 1,
 };
+function normalizeRole(r) {
+  return String(r || '').trim().toLowerCase();
+}
 function roleRank(r) {
-  return ROLE_RANK[String(r) || ''] || 0;
+  return ROLE_RANK[normalizeRole(r)] || 0;
 }
 function canViewRole(viewerRole, targetRole) {
   return roleRank(targetRole) <= roleRank(viewerRole);
 }
 function isAdminRole(role) {
-  const r = String(role || '');
-  return r === 'Admin' || r === 'Super Admin';
+  const n = normalizeRole(role);
+  return n === 'admin' || n === 'super admin';
 }
 function validatePasswordPolicy(pw) {
   const s = String(pw || '');
