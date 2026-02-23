@@ -117,6 +117,20 @@ export async function publicChangePassword(username, oldPassword, newPassword) {
 export async function publicAdminResetPassword({ adminUsername, approvalCode, username, newPassword }) {
   return apiFetch('/auth/password/reset-by-admin', { method: 'POST', body: JSON.stringify({ adminUsername, approvalCode, username, newPassword }) });
 }
+export async function sendTestSMS(to, message) {
+  return apiFetch('/notify/test-sms', { method: 'POST', body: JSON.stringify({ to, message }) });
+}
+export async function sendPromotions(payload) {
+  // payload: { segment: 'all-clients', message } or { numbers: [...], message }
+  return apiFetch('/notify/promotions', { method: 'POST', body: JSON.stringify(payload) });
+}
+export async function sendTestEmail(to, subject, text) {
+  return apiFetch('/notify/email/test', { method: 'POST', body: JSON.stringify({ to, subject, text }) });
+}
+export async function sendEmailPromotions(payload) {
+  // payload: { segment: 'all-clients', subject, text } or { emails: [...], subject, text } or { segment: 'filtered-clients', filters, subject, text }
+  return apiFetch('/notify/email/promotions', { method: 'POST', body: JSON.stringify(payload) });
+}
 export async function setUserEnabled(username, enabled) {
   const path = enabled ? 'enable' : 'disable';
   return apiFetch(`/users/${encodeURIComponent(username)}/${path}`, { method: 'POST' });
@@ -276,6 +290,26 @@ export async function listServerLogs(params = {}) {
 
 export async function getServerLog(id) {
   return apiFetch(`/server-logs/${encodeURIComponent(id)}`, { method: 'GET' });
+}
+
+// Notifications
+export async function listNotifications(params = {}) {
+  const q = new URLSearchParams();
+  if (params.channel) q.set('channel', params.channel);
+  if (params.type) q.set('type', params.type);
+  if (params.status) q.set('status', params.status);
+  if (params.q) q.set('q', params.q);
+  if (params.from) q.set('from', params.from);
+  if (params.to) q.set('to', params.to);
+  if (params.limit) q.set('limit', String(params.limit));
+  const qs = q.toString();
+  return apiFetch(`/notifications${qs ? `?${qs}` : ''}`, { method: 'GET' });
+}
+export async function getNotification(id) {
+  return apiFetch(`/notifications/${encodeURIComponent(id)}`, { method: 'GET' });
+}
+export async function resendNotification(id) {
+  return apiFetch(`/notifications/${encodeURIComponent(id)}/resend`, { method: 'POST' });
 }
 
 export async function uploadMedia(file, { entityType, entityId, tag } = {}) {

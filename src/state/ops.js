@@ -40,6 +40,7 @@ const PERMS = {
   CLIENT_MANAGER_MANAGE: 'clients.manager.manage',
   ASSETS_VIEW: 'assets.view',
   ASSETS_MANAGE: 'assets.manage',
+  NOTIFY_SEND: 'notify.send',
 };
 
 const ROLE_PERMISSIONS = {

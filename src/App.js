@@ -27,6 +27,8 @@ import MyAccount from './pages/MyAccount';
 import LoanStatements from './pages/LoanStatements';
 import LoanDetails from './pages/LoanDetails';
 import Assets from './pages/Assets';
+import Promotions from './pages/Promotions';
+import Notifications from './pages/Notifications';
 import { getCurrentUserName } from './state/ops';
 
 export default function App() {
@@ -65,6 +67,8 @@ export default function App() {
         <Route path="users" element={<Users />} />
         <Route path="activity" element={<Activity />} />
         <Route path="media" element={<MediaUpload />} />
+        <Route path="promotions" element={<Promotions />} />
+        <Route path="notifications" element={<Notifications />} />
         <Route path="server-logs" element={<ServerLogs />} />
         <Route path="super-bin" element={<SuperBin />} />
         <Route path="config" element={<Config />} />
