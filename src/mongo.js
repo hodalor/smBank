@@ -68,6 +68,8 @@ async function connect(uri) {
     monthlyAccountFees: {
       enabled: { type: Boolean, default: false },
       deductionDay: { type: Number, default: 30 },
+      eligibleStatuses: [String],
+      allowNegativeBalance: { type: Boolean, default: false },
       smsAlert: { type: Boolean, default: true },
       emailAlert: { type: Boolean, default: false },
       smsTemplate: { type: String, default: 'Dear customer, {appName} deducted {currency}{amount} monthly account fee from account {accountNumber}. New balance: {currency}{balance}. Date: {date}.' },

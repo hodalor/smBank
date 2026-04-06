@@ -259,6 +259,8 @@ let config = readJSON(CONFIG_FILE, {
   monthlyAccountFees: {
     enabled: false,
     deductionDay: 30,
+    eligibleStatuses: ['Active'],
+    allowNegativeBalance: false,
     smsAlert: true,
     emailAlert: false,
     smsTemplate: 'Dear customer, {appName} deducted {currency}{amount} monthly account fee from account {accountNumber}. New balance: {currency}{balance}. Date: {date}.',
@@ -475,6 +477,8 @@ function normalizeMonthlyAccountFees(raw, accountTypes = []) {
   const out = {
     enabled: !!src.enabled,
     deductionDay: Math.min(31, Math.max(1, Number(src.deductionDay || 30))),
+    eligibleStatuses: Array.from(new Set((Array.isArray(src.eligibleStatuses) ? src.eligibleStatuses : ['Active']).map(x => String(x || '').trim()).filter(Boolean))),
+    allowNegativeBalance: !!src.allowNegativeBalance,
     smsAlert: src.smsAlert !== false,
     emailAlert: !!src.emailAlert,
     smsTemplate: String(src.smsTemplate || 'Dear customer, {appName} deducted {currency}{amount} monthly account fee from account {accountNumber}. New balance: {currency}{balance}. Date: {date}.'),
@@ -526,6 +530,7 @@ async function runMonthlyAccountFees(options = {}) {
   const now = new Date();
   const trigger = String(options.trigger || 'auto');
   const force = !!options.force;
+  const dryRun = !!options.dryRun;
   const actor = String(options.actor || 'system');
   const appCfg = isConnected()
     ? (((await getModels().Config.findOne().lean()) || config))
@@ -533,6 +538,7 @@ async function runMonthlyAccountFees(options = {}) {
   const feeCfg = normalizeMonthlyAccountFees(appCfg.monthlyAccountFees, appCfg.accountTypes || []);
   const summary = {
     ok: true,
+    preview: dryRun,
     trigger,
     forced: force,
     date: utcDateStr(now),
@@ -563,6 +569,7 @@ async function runMonthlyAccountFees(options = {}) {
     return summary;
   }
   const rulesMap = new Map((feeCfg.rules || []).map(r => [String(r.accountTypeCode), r]));
+  const eligibleStatuses = new Set((feeCfg.eligibleStatuses || ['Active']).map(x => String(x || '').trim()));
   let allClients = [];
   if (isConnected()) {
     const { Client } = getModels();
@@ -586,7 +593,7 @@ async function runMonthlyAccountFees(options = {}) {
       summary.reasons[name] = (summary.reasons[name] || 0) + 1;
     };
     const status = getClientStatus(c);
-    if (status !== 'Active') { reasonHit(`status_${status}`); continue; }
+    if (!eligibleStatuses.has(status)) { reasonHit(`status_${status}`); continue; }
     const creditAccount = String(rule.creditAccountNumber || '').trim();
     if (!creditAccount) { reasonHit('credit_account_missing'); continue; }
     if (creditAccount === accountNumber) { reasonHit('credit_account_same_as_source'); continue; }
@@ -603,7 +610,7 @@ async function runMonthlyAccountFees(options = {}) {
     }
     if (existing) { reasonHit('already_deducted'); continue; }
     const bal = await computeAccountBalance(accountNumber);
-    if (Number(bal || 0) < feeAmount) { reasonHit('insufficient_balance'); continue; }
+    if (Number(bal || 0) < feeAmount && !feeCfg.allowNegativeBalance) { reasonHit('insufficient_balance'); continue; }
     const withdrawTxn = {
       id: newTxnId('withdraw'),
       kind: 'withdraw',
@@ -645,10 +652,12 @@ async function runMonthlyAccountFees(options = {}) {
     toWrite.push(withdrawTxn, creditTxn);
     summary.deducted += 1;
     summary.credited += 1;
-    try {
-      await markClientTxnAt(accountNumber, approvedAt);
-      await markClientTxnAt(creditAccount, approvedAt);
-    } catch {}
+    if (!dryRun) {
+      try {
+        await markClientTxnAt(accountNumber, approvedAt);
+        await markClientTxnAt(creditAccount, approvedAt);
+      } catch {}
+    }
     const balanceAfter = toMoney(Number(bal || 0) - feeAmount);
     const vars = {
       appName: String(appCfg.appName || 'smBank'),
@@ -660,51 +669,53 @@ async function runMonthlyAccountFees(options = {}) {
       creditAccount,
       currency: 'GHS ',
     };
-    const phone = getClientPhone(c);
-    if (feeCfg.smsAlert && phone) {
-      const smsText = renderTemplate(feeCfg.smsTemplate, vars);
-      const r = await sendSMS(phone, smsText);
-      if (r && r.ok) summary.alertsSms += 1;
-      try {
-        await logNotification({
-          channel: 'sms',
-          type: 'monthly_fee',
-          sender: sys,
-          receiver: phone,
-          subject: '',
-          message: String(smsText || ''),
-          status: r && r.ok ? 'sent' : ((r && r.skipped) ? 'skipped' : 'failed'),
-          error: (r && (r.error || r.status || r.text)) || '',
-          entityType: 'client',
-          entityId: accountNumber,
-          originalId: feeKey,
-        });
-      } catch {}
-    }
-    const email = getClientEmail(c);
-    if (feeCfg.emailAlert && email) {
-      const subject = renderTemplate(feeCfg.emailSubject, vars);
-      const text = renderTemplate(feeCfg.emailTemplate, vars);
-      const r = await sendEmail(email, subject, text);
-      if (r && r.ok) summary.alertsEmail += 1;
-      try {
-        await logNotification({
-          channel: 'email',
-          type: 'monthly_fee',
-          sender: sys,
-          receiver: email,
-          subject: String(subject || ''),
-          message: String(text || ''),
-          status: r && r.ok ? 'sent' : ((r && r.skipped) ? 'skipped' : 'failed'),
-          error: (r && (r.error || r.status || r.text)) || '',
-          entityType: 'client',
-          entityId: accountNumber,
-          originalId: feeKey,
-        });
-      } catch {}
+    if (!dryRun) {
+      const phone = getClientPhone(c);
+      if (feeCfg.smsAlert && phone) {
+        const smsText = renderTemplate(feeCfg.smsTemplate, vars);
+        const r = await sendSMS(phone, smsText);
+        if (r && r.ok) summary.alertsSms += 1;
+        try {
+          await logNotification({
+            channel: 'sms',
+            type: 'monthly_fee',
+            sender: sys,
+            receiver: phone,
+            subject: '',
+            message: String(smsText || ''),
+            status: r && r.ok ? 'sent' : ((r && r.skipped) ? 'skipped' : 'failed'),
+            error: (r && (r.error || r.status || r.text)) || '',
+            entityType: 'client',
+            entityId: accountNumber,
+            originalId: feeKey,
+          });
+        } catch {}
+      }
+      const email = getClientEmail(c);
+      if (feeCfg.emailAlert && email) {
+        const subject = renderTemplate(feeCfg.emailSubject, vars);
+        const text = renderTemplate(feeCfg.emailTemplate, vars);
+        const r = await sendEmail(email, subject, text);
+        if (r && r.ok) summary.alertsEmail += 1;
+        try {
+          await logNotification({
+            channel: 'email',
+            type: 'monthly_fee',
+            sender: sys,
+            receiver: email,
+            subject: String(subject || ''),
+            message: String(text || ''),
+            status: r && r.ok ? 'sent' : ((r && r.skipped) ? 'skipped' : 'failed'),
+            error: (r && (r.error || r.status || r.text)) || '',
+            entityType: 'client',
+            entityId: accountNumber,
+            originalId: feeKey,
+          });
+        } catch {}
+      }
     }
   }
-  if (toWrite.length) {
+  if (!dryRun && toWrite.length) {
     if (isConnected()) {
       const { PostedTxn } = getModels();
       await PostedTxn.insertMany(toWrite);
@@ -713,17 +724,19 @@ async function runMonthlyAccountFees(options = {}) {
       writeJSON(POSTED_TX_FILE, postedTx);
     }
   }
-  feeCfg.lastRunDateKey = todayKey;
-  if (isConnected()) {
-    const { Config } = getModels();
-    await Config.findOneAndUpdate({}, { $set: { monthlyAccountFees: feeCfg } }, { upsert: true, new: true });
-  } else {
-    config = { ...config, monthlyAccountFees: feeCfg };
-    writeJSON(CONFIG_FILE, config);
+  if (!dryRun) {
+    feeCfg.lastRunDateKey = todayKey;
+    if (isConnected()) {
+      const { Config } = getModels();
+      await Config.findOneAndUpdate({}, { $set: { monthlyAccountFees: feeCfg } }, { upsert: true, new: true });
+    } else {
+      config = { ...config, monthlyAccountFees: feeCfg };
+      writeJSON(CONFIG_FILE, config);
+    }
   }
   const io = app.get('io');
-  if (io && toWrite.length) io.emit('transactions:posted:new', { kind: 'monthly_fee', count: toWrite.length, ts: approvedAt });
-  await logActivity({ user: { username: actor, role: 'System' }, method: 'SYSTEM', path: '/system/monthly-fees' }, 'fees.monthly.run', 'fees', summary.month, summary);
+  if (!dryRun && io && toWrite.length) io.emit('transactions:posted:new', { kind: 'monthly_fee', count: toWrite.length, ts: approvedAt });
+  await logActivity({ user: { username: actor, role: 'System' }, method: 'SYSTEM', path: '/system/monthly-fees' }, dryRun ? 'fees.monthly.preview' : 'fees.monthly.run', 'fees', summary.month, summary);
   return summary;
 }
 function utcDateStr(d = new Date()) {
@@ -1819,10 +1832,27 @@ app.post('/fees/monthly/run', async (req, res) => {
     return res.status(500).json({ error: 'monthly_fee_run_failed', details: String(e && e.message || e) });
   }
 });
+app.post('/fees/monthly/preview', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!isAdminRole(req.user.role)) return res.status(403).json({ error: 'forbidden' });
+  try {
+    const force = !Object.prototype.hasOwnProperty.call(req.body || {}, 'force') || !!req.body.force;
+    const summary = await runMonthlyAccountFees({
+      trigger: 'preview',
+      dryRun: true,
+      force,
+      actor: req.user.username,
+    });
+    return res.json(summary);
+  } catch (e) {
+    return res.status(500).json({ error: 'monthly_fee_preview_failed', details: String(e && e.message || e) });
+  }
+});
 
 // Super Bin
 function isSuperAdminRole(role) {
-  return String(role || '').trim().toLowerCase() === 'super admin';
+  const n = String(role || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+  return n === 'superadmin';
 }
 function requireSuperBinAuth(req, res, next) {
   // Allow if authenticated user has 'Super Admin' role
