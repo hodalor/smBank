@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getSuperBin, restoreFromSuperBin, purgeFromSuperBin, hasPermission, PERMISSIONS } from '../state/ops';
 import { listSuperBin, restoreSuperBin, deleteSuperBin } from '../api';
 import { confirm } from '../components/Confirm';
@@ -7,7 +6,6 @@ import { showWarning } from '../components/Toaster';
 import { IconRotateCcw, IconTrash, IconDownload } from '../components/Icons';
 
 export default function SuperBin() {
-  const navigate = useNavigate();
   const [rows, setRows] = useState(getSuperBin());
   const [forbidden, setForbidden] = useState(false);
   useEffect(() => {
@@ -15,8 +13,7 @@ export default function SuperBin() {
       listSuperBin().then(setRows).catch((e) => {
         if (e && e.status === 403) {
           setForbidden(true);
-          showWarning('Please log in as Super Admin to access Super Bin');
-          setTimeout(() => navigate('/login'), 300);
+          showWarning('Super Bin requires Super Admin access');
           return;
         }
         setRows(getSuperBin());
@@ -25,7 +22,7 @@ export default function SuperBin() {
     pull();
     const id = setInterval(pull, 2000);
     return () => clearInterval(id);
-  }, [navigate]);
+  }, []);
   const restore = (id) => {
     restoreSuperBin(id).then(() => {
       listSuperBin().then(setRows).catch((e) => {
