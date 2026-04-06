@@ -1500,9 +1500,12 @@ app.put('/config', async (req, res) => {
 });
 
 // Super Bin
+function isSuperAdminRole(role) {
+  return String(role || '').trim().toLowerCase() === 'super admin';
+}
 function requireSuperBinAuth(req, res, next) {
   // Allow if authenticated user has 'Super Admin' role
-  if (req.user && String(req.user.role) === 'Super Admin') return next();
+  if (req.user && isSuperAdminRole(req.user.role)) return next();
   // Fallback header gate for tools/scripts
   const token = req.headers['x-superbin-token'] || req.headers['x-admin-reset'];
   const expect = process.env.ADMIN_RESET_TOKEN || '';
@@ -1510,57 +1513,71 @@ function requireSuperBinAuth(req, res, next) {
   return res.status(403).json({ error: 'forbidden' });
 }
 function requireSuperAdmin(req, res, next) {
-  if (req.user && String(req.user.role) === 'Super Admin') return next();
+  if (req.user && isSuperAdminRole(req.user.role)) return next();
   return res.status(403).json({ error: 'forbidden' });
 }
 app.get('/super-bin', requireSuperBinAuth, async (req, res) => {
-  if (isConnected()) {
-    const { SuperBin } = getModels();
-    const docs = await SuperBin.find().sort({ deletedAt: -1, _id: -1 }).lean();
-    const list = (docs || []).map(d => ({
-      id: String(d._id || d.id || ''),
-      by: d.by || '',
-      deletedAt: d.deletedAt instanceof Date ? d.deletedAt.toISOString() : (d.deletedAt || ''),
-      kind: d.kind || 'unknown',
-      payload: d.payload || {},
-    }));
+  try {
+    if (isConnected()) {
+      const models = getModels();
+      if (!models || !models.SuperBin) throw new Error('superbin_model_unavailable');
+      const { SuperBin } = models;
+      const docs = await SuperBin.find().sort({ deletedAt: -1, _id: -1 }).lean();
+      const list = (docs || []).map(d => ({
+        id: String(d._id || d.id || ''),
+        by: d.by || '',
+        deletedAt: d.deletedAt instanceof Date ? d.deletedAt.toISOString() : (d.deletedAt || ''),
+        kind: d.kind || 'unknown',
+        payload: d.payload || {},
+      }));
+      await logActivity(req, 'superbin.list', 'superbin', '', {});
+      return res.json(list);
+    }
     await logActivity(req, 'superbin.list', 'superbin', '', {});
-    return res.json(list);
+    return res.json(superBin);
+  } catch (e) {
+    try { await logActivity(req, 'superbin.list.error', 'superbin', '', { message: String(e && e.message || e) }); } catch {}
+    return res.status(503).json({ error: 'superbin_unavailable' });
   }
-  await logActivity(req, 'superbin.list', 'superbin', '', {});
-  res.json(superBin);
 });
 app.post('/super-bin', requireSuperBinAuth, async (req, res) => {
   const entry = req.body;
-  if (isConnected()) {
-    const { SuperBin } = getModels();
-    const doc = await SuperBin.create({
+  try {
+    if (isConnected()) {
+      const models = getModels();
+      if (!models || !models.SuperBin) throw new Error('superbin_model_unavailable');
+      const { SuperBin } = models;
+      const doc = await SuperBin.create({
+        by: entry.by || 'api',
+        deletedAt: new Date(),
+        kind: entry.kind || 'unknown',
+        payload: entry.payload || {},
+      });
+      const item = {
+        id: String(doc && doc._id ? doc._id : ''),
+        by: doc.by || '',
+        deletedAt: doc.deletedAt instanceof Date ? doc.deletedAt.toISOString() : (doc.deletedAt || ''),
+        kind: doc.kind || 'unknown',
+        payload: doc.payload || {},
+      };
+      await logActivity(req, 'superbin.add', 'superbin', item.id, { kind: entry.kind || '' });
+      return res.json(item);
+    }
+    const item = {
+      id: `BIN-${Date.now()}-${Math.floor(Math.random() * 1e4)}`,
       by: entry.by || 'api',
-      deletedAt: new Date(),
+      deletedAt: new Date().toISOString(),
       kind: entry.kind || 'unknown',
       payload: entry.payload || {},
-    });
-    const item = {
-      id: String(doc && doc._id ? doc._id : ''),
-      by: doc.by || '',
-      deletedAt: doc.deletedAt instanceof Date ? doc.deletedAt.toISOString() : (doc.deletedAt || ''),
-      kind: doc.kind || 'unknown',
-      payload: doc.payload || {},
     };
-    await logActivity(req, 'superbin.add', 'superbin', item.id, { kind: entry.kind || '' });
+    superBin.unshift(item);
+    writeJSON(BIN_FILE, superBin);
+    await logActivity(req, 'superbin.add', 'superbin', item.id, { kind: item.kind || '' });
     return res.json(item);
+  } catch (e) {
+    try { await logActivity(req, 'superbin.add.error', 'superbin', '', { message: String(e && e.message || e) }); } catch {}
+    return res.status(503).json({ error: 'superbin_unavailable' });
   }
-  const item = {
-    id: `BIN-${Date.now()}-${Math.floor(Math.random() * 1e4)}`,
-    by: entry.by || 'api',
-    deletedAt: new Date().toISOString(),
-    kind: entry.kind || 'unknown',
-    payload: entry.payload || {},
-  };
-  superBin.unshift(item);
-  writeJSON(BIN_FILE, superBin);
-  await logActivity(req, 'superbin.add', 'superbin', item.id, { kind: item.kind || '' });
-  res.json(item);
 });
 app.post('/super-bin/:id/restore', requireSuperBinAuth, async (req, res) => {
   const id = req.params.id;
