@@ -65,6 +65,22 @@ async function connect(uri) {
     emailFromAddresses: [String],
     defaultEmailFrom: { type: String, default: '' },
     lastCustomerSerial: { type: Number, default: 0 }, // global running serial
+    monthlyAccountFees: {
+      enabled: { type: Boolean, default: false },
+      deductionDay: { type: Number, default: 30 },
+      smsAlert: { type: Boolean, default: true },
+      emailAlert: { type: Boolean, default: false },
+      smsTemplate: { type: String, default: 'Dear customer, {appName} deducted {currency}{amount} monthly account fee from account {accountNumber}. New balance: {currency}{balance}. Date: {date}.' },
+      emailSubject: { type: String, default: '{appName} Monthly Account Fee Notice' },
+      emailTemplate: { type: String, default: 'Hello,\n\nThis is to confirm that {appName} deducted {currency}{amount} as monthly account fee from account {accountNumber} on {date}.\n\nNew balance: {currency}{balance}\nFee destination account: {creditAccount}\n\nThank you.' },
+      lastRunDateKey: { type: String, default: '' },
+      rules: [{
+        accountTypeCode: String,
+        enabled: { type: Boolean, default: false },
+        amount: { type: Number, default: 0 },
+        creditAccountNumber: String,
+      }],
+    },
   }, { timestamps: true });
 
   const SuperBinSchema = new Schema({

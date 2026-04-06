@@ -256,6 +256,17 @@ let config = readJSON(CONFIG_FILE, {
   emailFromAddresses: [],
   defaultEmailFrom: '',
   lastCustomerSerial: 0,
+  monthlyAccountFees: {
+    enabled: false,
+    deductionDay: 30,
+    smsAlert: true,
+    emailAlert: false,
+    smsTemplate: 'Dear customer, {appName} deducted {currency}{amount} monthly account fee from account {accountNumber}. New balance: {currency}{balance}. Date: {date}.',
+    emailSubject: '{appName} Monthly Account Fee Notice',
+    emailTemplate: 'Hello,\n\nThis is to confirm that {appName} deducted {currency}{amount} as monthly account fee from account {accountNumber} on {date}.\n\nNew balance: {currency}{balance}\nFee destination account: {creditAccount}\n\nThank you.',
+    lastRunDateKey: '',
+    rules: [],
+  },
 });
 
 const BIN_FILE = 'superbin.json';
@@ -430,6 +441,290 @@ async function computeAccountBalance(accountNumber) {
   }
   const tx = postedTx.filter(t => String(t.accountNumber) === acct);
   return calcBalanceFrom(tx);
+}
+function monthKeyUTC(d = new Date()) {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}
+function toMoney(n) {
+  const x = Number(n || 0);
+  return Number.isFinite(x) ? Math.round(x * 100) / 100 : 0;
+}
+function normalizeMonthlyAccountFees(raw, accountTypes = []) {
+  const src = raw && typeof raw === 'object' ? raw : {};
+  const seen = new Set();
+  const rulesRaw = Array.isArray(src.rules) ? src.rules : [];
+  const rules = [];
+  for (const r of rulesRaw) {
+    const code = String(r && r.accountTypeCode || '').trim();
+    if (!code || seen.has(code)) continue;
+    seen.add(code);
+    rules.push({
+      accountTypeCode: code,
+      enabled: !!(r && r.enabled),
+      amount: toMoney(r && r.amount),
+      creditAccountNumber: String(r && r.creditAccountNumber || '').trim(),
+    });
+  }
+  for (const a of (Array.isArray(accountTypes) ? accountTypes : [])) {
+    const code = String(a && a.code || '').trim();
+    if (!code || seen.has(code)) continue;
+    rules.push({ accountTypeCode: code, enabled: false, amount: 0, creditAccountNumber: '' });
+  }
+  const out = {
+    enabled: !!src.enabled,
+    deductionDay: Math.min(31, Math.max(1, Number(src.deductionDay || 30))),
+    smsAlert: src.smsAlert !== false,
+    emailAlert: !!src.emailAlert,
+    smsTemplate: String(src.smsTemplate || 'Dear customer, {appName} deducted {currency}{amount} monthly account fee from account {accountNumber}. New balance: {currency}{balance}. Date: {date}.'),
+    emailSubject: String(src.emailSubject || '{appName} Monthly Account Fee Notice'),
+    emailTemplate: String(src.emailTemplate || 'Hello,\n\nThis is to confirm that {appName} deducted {currency}{amount} as monthly account fee from account {accountNumber} on {date}.\n\nNew balance: {currency}{balance}\nFee destination account: {creditAccount}\n\nThank you.'),
+    lastRunDateKey: String(src.lastRunDateKey || ''),
+    rules,
+  };
+  return out;
+}
+function renderTemplate(tpl, vars) {
+  let out = String(tpl || '');
+  Object.keys(vars || {}).forEach((k) => {
+    const v = String(vars[k] == null ? '' : vars[k]);
+    out = out.split(`{${k}}`).join(v);
+  });
+  return out;
+}
+function getClientAccountTypeCode(c) {
+  const t = String((c && c.data && c.data.accountTypeCode) || (c && c.accountTypeCode) || '').trim();
+  if (t) return t;
+  const d = deriveCodesFromAccountNumber(c && c.accountNumber);
+  return String(d.accountTypeCode || '').trim();
+}
+function getClientStatus(c) {
+  return String((c && c.accountStatus) || (c && c.status) || (c && c.data && c.data.status) || 'Active');
+}
+function getClientPhone(c) {
+  return String((c && c.phone) || (c && c.companyPhone) || (c && c.data && (c.data.phone || c.data.companyPhone || c.data.contactPhone)) || '').trim();
+}
+function getClientEmail(c) {
+  return String((c && c.email) || (c && c.data && (c.data.email || c.data.contactEmail)) || '').trim();
+}
+async function markClientTxnAt(accountNumber, atIso) {
+  const acct = String(accountNumber || '').trim();
+  if (!acct) return;
+  if (isConnected()) {
+    const { Client } = getModels();
+    await Client.updateOne({ accountNumber: acct }, { $set: { lastTxnAt: atIso } });
+    return;
+  }
+  const idx = clients.findIndex(x => String(x.accountNumber || '') === acct);
+  if (idx >= 0) {
+    clients[idx].lastTxnAt = atIso;
+    writeJSON(CLIENTS_FILE, clients);
+  }
+}
+async function runMonthlyAccountFees(options = {}) {
+  const now = new Date();
+  const trigger = String(options.trigger || 'auto');
+  const force = !!options.force;
+  const actor = String(options.actor || 'system');
+  const appCfg = isConnected()
+    ? (((await getModels().Config.findOne().lean()) || config))
+    : config;
+  const feeCfg = normalizeMonthlyAccountFees(appCfg.monthlyAccountFees, appCfg.accountTypes || []);
+  const summary = {
+    ok: true,
+    trigger,
+    forced: force,
+    date: utcDateStr(now),
+    month: monthKeyUTC(now),
+    deductionDay: feeCfg.deductionDay,
+    attempted: 0,
+    deducted: 0,
+    skipped: 0,
+    credited: 0,
+    alertsSms: 0,
+    alertsEmail: 0,
+    reasons: {},
+  };
+  if (!feeCfg.enabled) {
+    summary.ok = false;
+    summary.reason = 'disabled';
+    return summary;
+  }
+  if (!force && now.getUTCDate() !== Number(feeCfg.deductionDay || 30)) {
+    summary.ok = false;
+    summary.reason = 'not_deduction_day';
+    return summary;
+  }
+  const todayKey = utcDateStr(now);
+  if (!force && String(feeCfg.lastRunDateKey || '') === todayKey) {
+    summary.ok = false;
+    summary.reason = 'already_ran_today';
+    return summary;
+  }
+  const rulesMap = new Map((feeCfg.rules || []).map(r => [String(r.accountTypeCode), r]));
+  let allClients = [];
+  if (isConnected()) {
+    const { Client } = getModels();
+    allClients = await Client.find({}).lean();
+  } else {
+    allClients = Array.isArray(clients) ? clients : [];
+  }
+  const accountSet = new Set(allClients.map(c => String((c && c.accountNumber) || '').trim()).filter(Boolean));
+  const approvedAt = now.toISOString();
+  const sys = `system.monthly_fee.${trigger}`;
+  const toWrite = [];
+  for (const c of allClients) {
+    const accountNumber = String((c && c.accountNumber) || '').trim();
+    if (!accountNumber) continue;
+    const typeCode = getClientAccountTypeCode(c);
+    const rule = rulesMap.get(typeCode);
+    if (!rule || !rule.enabled || Number(rule.amount || 0) <= 0) continue;
+    summary.attempted += 1;
+    const reasonHit = (name) => {
+      summary.skipped += 1;
+      summary.reasons[name] = (summary.reasons[name] || 0) + 1;
+    };
+    const status = getClientStatus(c);
+    if (status !== 'Active') { reasonHit(`status_${status}`); continue; }
+    const creditAccount = String(rule.creditAccountNumber || '').trim();
+    if (!creditAccount) { reasonHit('credit_account_missing'); continue; }
+    if (creditAccount === accountNumber) { reasonHit('credit_account_same_as_source'); continue; }
+    if (!accountSet.has(creditAccount)) { reasonHit('credit_account_not_found'); continue; }
+    const feeAmount = toMoney(rule.amount);
+    if (feeAmount <= 0) { reasonHit('invalid_amount'); continue; }
+    const feeKey = `MF-${summary.month}-${accountNumber}-${typeCode}`;
+    let existing = null;
+    if (isConnected()) {
+      const { PostedTxn } = getModels();
+      existing = await PostedTxn.findOne({ accountNumber, kind: 'withdraw', 'meta.monthlyFeeKey': feeKey }).lean();
+    } else {
+      existing = (postedTx || []).find(t => String(t.accountNumber || '') === accountNumber && String(t.kind || '') === 'withdraw' && t.meta && String(t.meta.monthlyFeeKey || '') === feeKey);
+    }
+    if (existing) { reasonHit('already_deducted'); continue; }
+    const bal = await computeAccountBalance(accountNumber);
+    if (Number(bal || 0) < feeAmount) { reasonHit('insufficient_balance'); continue; }
+    const withdrawTxn = {
+      id: newTxnId('withdraw'),
+      kind: 'withdraw',
+      status: 'Approved',
+      initiatorName: sys,
+      initiatedAt: approvedAt,
+      accountNumber,
+      amount: feeAmount,
+      meta: {
+        monthlyFee: true,
+        monthlyFeeKey: feeKey,
+        monthlyFeeMonth: summary.month,
+        monthlyFeeAccountTypeCode: typeCode,
+        monthlyFeeCreditAccountNumber: creditAccount,
+        notes: 'Monthly account fee deduction',
+      },
+      approvedAt,
+      approverName: sys,
+    };
+    const creditTxn = {
+      id: newTxnId('deposit'),
+      kind: 'deposit',
+      status: 'Approved',
+      initiatorName: sys,
+      initiatedAt: approvedAt,
+      accountNumber: creditAccount,
+      amount: feeAmount,
+      meta: {
+        monthlyFeeCredit: true,
+        monthlyFeeKey: feeKey,
+        monthlyFeeMonth: summary.month,
+        sourceAccountNumber: accountNumber,
+        monthlyFeeAccountTypeCode: typeCode,
+        notes: 'Monthly account fee credit',
+      },
+      approvedAt,
+      approverName: sys,
+    };
+    toWrite.push(withdrawTxn, creditTxn);
+    summary.deducted += 1;
+    summary.credited += 1;
+    try {
+      await markClientTxnAt(accountNumber, approvedAt);
+      await markClientTxnAt(creditAccount, approvedAt);
+    } catch {}
+    const balanceAfter = toMoney(Number(bal || 0) - feeAmount);
+    const vars = {
+      appName: String(appCfg.appName || 'smBank'),
+      accountNumber,
+      amount: feeAmount.toFixed(2),
+      balance: balanceAfter.toFixed(2),
+      date: approvedAt,
+      month: summary.month,
+      creditAccount,
+      currency: 'GHS ',
+    };
+    const phone = getClientPhone(c);
+    if (feeCfg.smsAlert && phone) {
+      const smsText = renderTemplate(feeCfg.smsTemplate, vars);
+      const r = await sendSMS(phone, smsText);
+      if (r && r.ok) summary.alertsSms += 1;
+      try {
+        await logNotification({
+          channel: 'sms',
+          type: 'monthly_fee',
+          sender: sys,
+          receiver: phone,
+          subject: '',
+          message: String(smsText || ''),
+          status: r && r.ok ? 'sent' : ((r && r.skipped) ? 'skipped' : 'failed'),
+          error: (r && (r.error || r.status || r.text)) || '',
+          entityType: 'client',
+          entityId: accountNumber,
+          originalId: feeKey,
+        });
+      } catch {}
+    }
+    const email = getClientEmail(c);
+    if (feeCfg.emailAlert && email) {
+      const subject = renderTemplate(feeCfg.emailSubject, vars);
+      const text = renderTemplate(feeCfg.emailTemplate, vars);
+      const r = await sendEmail(email, subject, text);
+      if (r && r.ok) summary.alertsEmail += 1;
+      try {
+        await logNotification({
+          channel: 'email',
+          type: 'monthly_fee',
+          sender: sys,
+          receiver: email,
+          subject: String(subject || ''),
+          message: String(text || ''),
+          status: r && r.ok ? 'sent' : ((r && r.skipped) ? 'skipped' : 'failed'),
+          error: (r && (r.error || r.status || r.text)) || '',
+          entityType: 'client',
+          entityId: accountNumber,
+          originalId: feeKey,
+        });
+      } catch {}
+    }
+  }
+  if (toWrite.length) {
+    if (isConnected()) {
+      const { PostedTxn } = getModels();
+      await PostedTxn.insertMany(toWrite);
+    } else {
+      postedTx = [...toWrite, ...postedTx];
+      writeJSON(POSTED_TX_FILE, postedTx);
+    }
+  }
+  feeCfg.lastRunDateKey = todayKey;
+  if (isConnected()) {
+    const { Config } = getModels();
+    await Config.findOneAndUpdate({}, { $set: { monthlyAccountFees: feeCfg } }, { upsert: true, new: true });
+  } else {
+    config = { ...config, monthlyAccountFees: feeCfg };
+    writeJSON(CONFIG_FILE, config);
+  }
+  const io = app.get('io');
+  if (io && toWrite.length) io.emit('transactions:posted:new', { kind: 'monthly_fee', count: toWrite.length, ts: approvedAt });
+  await logActivity({ user: { username: actor, role: 'System' }, method: 'SYSTEM', path: '/system/monthly-fees' }, 'fees.monthly.run', 'fees', summary.month, summary);
+  return summary;
 }
 function utcDateStr(d = new Date()) {
   const y = d.getUTCFullYear();
@@ -1436,10 +1731,13 @@ app.get('/config', async (req, res) => {
     const { Config } = getModels();
     let doc = await Config.findOne().lean();
     if (!doc) doc = await Config.create(config);
-    // Merge with in-memory defaults to ensure new fields are present
-    return res.json({ ...config, ...doc });
+    const out = { ...config, ...doc };
+    out.monthlyAccountFees = normalizeMonthlyAccountFees(out.monthlyAccountFees, out.accountTypes || []);
+    return res.json(out);
   }
-  res.json(config);
+  const out = { ...config };
+  out.monthlyAccountFees = normalizeMonthlyAccountFees(out.monthlyAccountFees, out.accountTypes || []);
+  res.json(out);
 });
 app.put('/config', async (req, res) => {
   if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
@@ -1468,6 +1766,10 @@ app.put('/config', async (req, res) => {
         active: b.active !== false,
       }));
     }
+    if (Object.prototype.hasOwnProperty.call(body, 'monthlyAccountFees')) {
+      const acctTypes = Array.isArray(body.accountTypes) ? body.accountTypes : ((await Config.findOne().lean())?.accountTypes || config.accountTypes || []);
+      body.monthlyAccountFees = normalizeMonthlyAccountFees(body.monthlyAccountFees, acctTypes);
+    }
     const saved = await Config.findOneAndUpdate({}, { $set: body }, { upsert: true, new: true });
     await logActivity(req, 'config.update', 'config', '', {});
     const obj = saved && saved.toObject ? saved.toObject() : saved;
@@ -1493,10 +1795,29 @@ app.put('/config', async (req, res) => {
       active: b.active !== false,
     }));
   }
+  if (Object.prototype.hasOwnProperty.call(body, 'monthlyAccountFees')) {
+    const acctTypes = Array.isArray(body.accountTypes) ? body.accountTypes : (config.accountTypes || []);
+    body.monthlyAccountFees = normalizeMonthlyAccountFees(body.monthlyAccountFees, acctTypes);
+  }
   config = { ...config, ...body };
   writeJSON(CONFIG_FILE, config);
   await logActivity(req, 'config.update', 'config', '', {});
   res.json(config);
+});
+app.post('/fees/monthly/run', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!isAdminRole(req.user.role)) return res.status(403).json({ error: 'forbidden' });
+  try {
+    const force = !Object.prototype.hasOwnProperty.call(req.body || {}, 'force') || !!req.body.force;
+    const summary = await runMonthlyAccountFees({
+      trigger: 'manual',
+      force,
+      actor: req.user.username,
+    });
+    return res.json(summary);
+  } catch (e) {
+    return res.status(500).json({ error: 'monthly_fee_run_failed', details: String(e && e.message || e) });
+  }
 });
 
 // Super Bin
@@ -3384,5 +3705,7 @@ server.listen(port, () => {
   console.log(`smBank API listening on port ${port}`);
   console.log('socket running');
   autoDormantSweep().catch(() => {});
+  runMonthlyAccountFees({ trigger: 'startup', force: false, actor: 'system' }).catch(() => {});
   setInterval(() => { autoDormantSweep().catch(() => {}); }, 24 * 60 * 60 * 1000);
+  setInterval(() => { runMonthlyAccountFees({ trigger: 'auto', force: false, actor: 'system' }).catch(() => {}); }, 60 * 60 * 1000);
 });
