@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getAppConfig, saveAppConfig, hasPermission, PERMISSIONS } from '../state/ops';
-import { fetchConfig, updateConfig, runMonthlyFeeDeduction } from '../api';
+import { fetchConfig, updateConfig, runMonthlyFeeDeduction, previewMonthlyFeeDeduction } from '../api';
 import { showSuccess, showError } from '../components/Toaster';
 import { IconSave, IconRotateCcw, IconTrash, IconPlus } from '../components/Icons';
 
@@ -27,6 +27,8 @@ function normalizeMonthlyFees(raw, accountTypes = []) {
   return {
     enabled: !!src.enabled,
     deductionDay: Math.min(31, Math.max(1, Number(src.deductionDay || 30))),
+    eligibleStatuses: Array.from(new Set((Array.isArray(src.eligibleStatuses) ? src.eligibleStatuses : ['Active']).map(x => String(x || '').trim()).filter(Boolean))),
+    allowNegativeBalance: !!src.allowNegativeBalance,
     smsAlert: src.smsAlert !== false,
     emailAlert: !!src.emailAlert,
     smsTemplate: String(src.smsTemplate || 'Dear customer, {appName} deducted {currency}{amount} monthly account fee from account {accountNumber}. New balance: {currency}{balance}. Date: {date}.'),
@@ -40,6 +42,7 @@ function normalizeMonthlyFees(raw, accountTypes = []) {
 export default function Config() {
   const allowed = hasPermission(PERMISSIONS.CONFIG_MANAGE);
   const [cfg, setCfg] = useState(getAppConfig());
+  const [monthlyPreview, setMonthlyPreview] = useState(null);
   const accountTypes = useMemo(() => Array.isArray(cfg.accountTypes) ? cfg.accountTypes : [], [cfg.accountTypes]);
   useEffect(() => {
     fetchConfig().then(data => {
@@ -122,6 +125,7 @@ export default function Config() {
   };
   if (!allowed) return <div className="card">Not authorized.</div>;
   const mf = normalizeMonthlyFees(cfg.monthlyAccountFees, cfg.accountTypes || []);
+  const statusOptions = ['Active', 'Inactive', 'Dormant', 'NDS'];
   return (
     <div className="stack">
       <h1>Config</h1>
@@ -355,6 +359,37 @@ export default function Config() {
           <label style={{ alignSelf: 'end' }}>
             <input
               type="checkbox"
+              checked={!!mf.allowNegativeBalance}
+              onChange={(e) => setMonthly({ ...mf, allowNegativeBalance: e.target.checked })}
+            /> Continue deduction even when balance is insufficient (allow negative)
+          </label>
+          <label style={{ gridColumn: '1 / -1' }}>
+            Eligible Account Statuses
+            <div className="row" style={{ gap: 16, flexWrap: 'wrap', marginTop: 8 }}>
+              {statusOptions.map((s) => {
+                const set = new Set(mf.eligibleStatuses || []);
+                const checked = set.has(s);
+                return (
+                  <label key={`mfs-${s}`} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        const next = new Set(mf.eligibleStatuses || []);
+                        if (e.target.checked) next.add(s);
+                        else next.delete(s);
+                        setMonthly({ ...mf, eligibleStatuses: Array.from(next) });
+                      }}
+                    />
+                    {s}
+                  </label>
+                );
+              })}
+            </div>
+          </label>
+          <label style={{ alignSelf: 'end' }}>
+            <input
+              type="checkbox"
               checked={!!mf.smsAlert}
               onChange={(e) => setMonthly({ ...mf, smsAlert: e.target.checked })}
             /> SMS alert to client
@@ -408,8 +443,19 @@ export default function Config() {
           <button className="btn btn-primary" onClick={() => quickSave({ ...cfg, monthlyAccountFees: mf })}><IconSave /><span>Save Monthly Fee Settings</span></button>
           <button className="btn" onClick={async () => {
             try {
+              await quickSave({ ...cfg, monthlyAccountFees: mf });
+              const p = await previewMonthlyFeeDeduction(true);
+              setMonthlyPreview(p);
+              showSuccess(`Preview ready: ${p.deducted || 0} can be deducted, ${p.skipped || 0} will be skipped`);
+            } catch (e) {
+              showError(e?.message || 'Preview failed');
+            }
+          }}><IconRotateCcw /><span>Preview Impact</span></button>
+          <button className="btn" onClick={async () => {
+            try {
               const r = await runMonthlyFeeDeduction(true);
               showSuccess(`Monthly fee run: deducted ${r.deducted || 0}, credited ${r.credited || 0}, skipped ${r.skipped || 0}`);
+              setMonthlyPreview(null);
               const refreshed = await fetchConfig();
               const next = { ...refreshed, monthlyAccountFees: normalizeMonthlyFees(refreshed.monthlyAccountFees, refreshed.accountTypes || []) };
               setCfg(next);
@@ -419,6 +465,34 @@ export default function Config() {
             }
           }}><IconSave /><span>Run Deduction Now</span></button>
         </div>
+        {monthlyPreview && (
+          <div className="card" style={{ marginBottom: 10 }}>
+            <h4 style={{ marginTop: 0 }}>Preview Impact</h4>
+            <div className="row" style={{ gap: 16, flexWrap: 'wrap' }}>
+              <div><strong>Month:</strong> {monthlyPreview.month}</div>
+              <div><strong>Attempted:</strong> {monthlyPreview.attempted || 0}</div>
+              <div><strong>Will Deduct:</strong> {monthlyPreview.deducted || 0}</div>
+              <div><strong>Will Credit:</strong> {monthlyPreview.credited || 0}</div>
+              <div><strong>Will Skip:</strong> {monthlyPreview.skipped || 0}</div>
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <strong>Skip Reasons</strong>
+              <table className="table" style={{ marginTop: 8 }}>
+                <thead>
+                  <tr><th>Reason</th><th>Count</th></tr>
+                </thead>
+                <tbody>
+                  {Object.entries(monthlyPreview.reasons || {}).map(([k, v]) => (
+                    <tr key={`p-${k}`}><td>{k}</td><td>{v}</td></tr>
+                  ))}
+                  {!Object.keys(monthlyPreview.reasons || {}).length && (
+                    <tr><td colSpan="2">No skipped accounts in preview.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
         <table className="table">
           <thead>
             <tr>
@@ -478,6 +552,9 @@ export default function Config() {
         </table>
         <div className="row">
           <button className="btn" onClick={() => setMonthly({ ...mf, rules: [ ...(mf.rules || []), { accountTypeCode: '', enabled: false, amount: 0, creditAccountNumber: '' } ] })}><IconPlus /><span>Add Rule</span></button>
+        </div>
+        <div style={{ color: '#64748b', fontSize: 12 }}>
+          {mf.allowNegativeBalance ? 'Negative balance mode is ON: monthly fees continue even when account has no funds.' : 'Negative balance mode is OFF: monthly fees are skipped when balance is not enough.'}
         </div>
         <div style={{ color: '#64748b', fontSize: 12 }}>
           Last auto/manual run date key: {mf.lastRunDateKey || 'not run yet'}
