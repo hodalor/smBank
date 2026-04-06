@@ -1,16 +1,51 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getAppConfig, saveAppConfig, hasPermission, PERMISSIONS } from '../state/ops';
-import { fetchConfig, updateConfig } from '../api';
+import { fetchConfig, updateConfig, runMonthlyFeeDeduction } from '../api';
 import { showSuccess, showError } from '../components/Toaster';
 import { IconSave, IconRotateCcw, IconTrash, IconPlus } from '../components/Icons';
+
+function normalizeMonthlyFees(raw, accountTypes = []) {
+  const src = raw && typeof raw === 'object' ? raw : {};
+  const seen = new Set();
+  const rules = [];
+  for (const r of (Array.isArray(src.rules) ? src.rules : [])) {
+    const code = String((r && r.accountTypeCode) || '').trim();
+    if (!code || seen.has(code)) continue;
+    seen.add(code);
+    rules.push({
+      accountTypeCode: code,
+      enabled: !!(r && r.enabled),
+      amount: Number((r && r.amount) || 0),
+      creditAccountNumber: String((r && r.creditAccountNumber) || '').trim(),
+    });
+  }
+  for (const a of (Array.isArray(accountTypes) ? accountTypes : [])) {
+    const code = String((a && a.code) || '').trim();
+    if (!code || seen.has(code)) continue;
+    rules.push({ accountTypeCode: code, enabled: false, amount: 0, creditAccountNumber: '' });
+  }
+  return {
+    enabled: !!src.enabled,
+    deductionDay: Math.min(31, Math.max(1, Number(src.deductionDay || 30))),
+    smsAlert: src.smsAlert !== false,
+    emailAlert: !!src.emailAlert,
+    smsTemplate: String(src.smsTemplate || 'Dear customer, {appName} deducted {currency}{amount} monthly account fee from account {accountNumber}. New balance: {currency}{balance}. Date: {date}.'),
+    emailSubject: String(src.emailSubject || '{appName} Monthly Account Fee Notice'),
+    emailTemplate: String(src.emailTemplate || 'Hello,\n\nThis is to confirm that {appName} deducted {currency}{amount} as monthly account fee from account {accountNumber} on {date}.\n\nNew balance: {currency}{balance}\nFee destination account: {creditAccount}\n\nThank you.'),
+    lastRunDateKey: String(src.lastRunDateKey || ''),
+    rules,
+  };
+}
 
 export default function Config() {
   const allowed = hasPermission(PERMISSIONS.CONFIG_MANAGE);
   const [cfg, setCfg] = useState(getAppConfig());
+  const accountTypes = useMemo(() => Array.isArray(cfg.accountTypes) ? cfg.accountTypes : [], [cfg.accountTypes]);
   useEffect(() => {
     fetchConfig().then(data => {
-      setCfg(data);
-      saveAppConfig(data);
+      const next = { ...data, monthlyAccountFees: normalizeMonthlyFees(data.monthlyAccountFees, data.accountTypes || []) };
+      setCfg(next);
+      saveAppConfig(next);
     }).catch(() => {});
   }, []);
   useEffect(() => {
@@ -22,9 +57,11 @@ export default function Config() {
   const save = async (e) => {
     e.preventDefault();
     try {
-      const saved = await updateConfig(cfg);
-      setCfg(saved);
-      saveAppConfig(saved);
+      const payload = { ...cfg, monthlyAccountFees: normalizeMonthlyFees(cfg.monthlyAccountFees, cfg.accountTypes || []) };
+      const saved = await updateConfig(payload);
+      const next = { ...saved, monthlyAccountFees: normalizeMonthlyFees(saved.monthlyAccountFees, saved.accountTypes || []) };
+      setCfg(next);
+      saveAppConfig(next);
       showSuccess('Configuration saved');
     } catch {
       saveAppConfig(cfg);
@@ -32,15 +69,20 @@ export default function Config() {
     }
   };
   const quickSave = async (next) => {
-    setCfg(next);
+    const payload = { ...next, monthlyAccountFees: normalizeMonthlyFees(next.monthlyAccountFees, next.accountTypes || []) };
+    setCfg(payload);
     try {
-      const saved = await updateConfig(next);
-      setCfg(saved);
-      saveAppConfig(saved);
+      const saved = await updateConfig(payload);
+      const normalized = { ...saved, monthlyAccountFees: normalizeMonthlyFees(saved.monthlyAccountFees, saved.accountTypes || []) };
+      setCfg(normalized);
+      saveAppConfig(normalized);
       showSuccess('Saved');
     } catch (err) {
       showError(err?.message || 'Save failed');
     }
+  };
+  const setMonthly = (nextMonthly) => {
+    setCfg(prev => ({ ...prev, monthlyAccountFees: normalizeMonthlyFees(nextMonthly, prev.accountTypes || []) }));
   };
   const reset = () => {
     const def = {
@@ -66,11 +108,20 @@ export default function Config() {
         { code: '22', name: 'Mmofra Daakye Account', supportsIndividual: true, active: true },
         { code: '60', name: 'Business Account', supportsIndividual: false, active: true },
       ],
+      monthlyAccountFees: normalizeMonthlyFees({}, [
+        { code: '10' },
+        { code: '13' },
+        { code: '16' },
+        { code: '19' },
+        { code: '22' },
+        { code: '60' },
+      ]),
     };
     setCfg(def);
     saveAppConfig(def);
   };
   if (!allowed) return <div className="card">Not authorized.</div>;
+  const mf = normalizeMonthlyFees(cfg.monthlyAccountFees, cfg.accountTypes || []);
   return (
     <div className="stack">
       <h1>Config</h1>
@@ -247,7 +298,7 @@ export default function Config() {
           <div key={i} className="row" style={{ gap: 8, marginBottom: 8 }}>
             <input className="input" style={{ width: 100 }} placeholder="Code" value={a.code} pattern="\\d{2}" title="Two digits" maxLength={2} onChange={(e) => {
               const arr = [...(cfg.accountTypes || [])]; arr[i] = { ...arr[i], code: e.target.value };
-              setCfg({ ...cfg, accountTypes: arr });
+              setCfg({ ...cfg, accountTypes: arr, monthlyAccountFees: normalizeMonthlyFees(cfg.monthlyAccountFees, arr) });
             }} />
             <input className="input" style={{ flex: 1 }} placeholder="Name" value={a.name} onChange={(e) => {
               const arr = [...(cfg.accountTypes || [])]; arr[i] = { ...arr[i], name: e.target.value };
@@ -270,11 +321,167 @@ export default function Config() {
               Active
             </label>
             <button className="btn" onClick={() => {
-              const arr = (cfg.accountTypes || []).filter((_, idx) => idx !== i); setCfg({ ...cfg, accountTypes: arr });
+              const arr = (cfg.accountTypes || []).filter((_, idx) => idx !== i);
+              setCfg({ ...cfg, accountTypes: arr, monthlyAccountFees: normalizeMonthlyFees(cfg.monthlyAccountFees, arr) });
             }}><IconTrash /><span>Remove</span></button>
           </div>
         ))}
-        <button className="btn" onClick={() => setCfg({ ...cfg, accountTypes: [ ...(cfg.accountTypes || []), { code: '', name: '', supportsIndividual: true, active: true } ] })}><IconPlus /><span>Add Account Type</span></button>
+        <button className="btn" onClick={() => {
+          const arr = [ ...(cfg.accountTypes || []), { code: '', name: '', supportsIndividual: true, active: true } ];
+          setCfg({ ...cfg, accountTypes: arr, monthlyAccountFees: normalizeMonthlyFees(cfg.monthlyAccountFees, arr) });
+        }}><IconPlus /><span>Add Account Type</span></button>
+      </div>
+      <div className="card">
+        <h3>Monthly Account Fee</h3>
+        <div className="form-grid">
+          <label style={{ alignSelf: 'end' }}>
+            <input
+              type="checkbox"
+              checked={!!mf.enabled}
+              onChange={(e) => setMonthly({ ...mf, enabled: e.target.checked })}
+            /> Enable monthly account fee
+          </label>
+          <label>
+            Deduction Day (UTC day of month)
+            <input
+              className="input"
+              type="number"
+              min="1"
+              max="31"
+              value={mf.deductionDay}
+              onChange={(e) => setMonthly({ ...mf, deductionDay: e.target.value })}
+            />
+          </label>
+          <label style={{ alignSelf: 'end' }}>
+            <input
+              type="checkbox"
+              checked={!!mf.smsAlert}
+              onChange={(e) => setMonthly({ ...mf, smsAlert: e.target.checked })}
+            /> SMS alert to client
+          </label>
+          <label style={{ alignSelf: 'end' }}>
+            <input
+              type="checkbox"
+              checked={!!mf.emailAlert}
+              onChange={(e) => setMonthly({ ...mf, emailAlert: e.target.checked })}
+            /> Email alert to client
+          </label>
+          <label style={{ gridColumn: '1 / -1' }}>
+            SMS Template
+            <input
+              className="input"
+              value={mf.smsTemplate}
+              onChange={(e) => setMonthly({ ...mf, smsTemplate: e.target.value })}
+              placeholder="Use {appName} {accountNumber} {amount} {balance} {date} {month} {creditAccount} {currency}"
+            />
+          </label>
+          <label>
+            Email Subject Template
+            <input
+              className="input"
+              value={mf.emailSubject}
+              onChange={(e) => setMonthly({ ...mf, emailSubject: e.target.value })}
+            />
+          </label>
+          <label style={{ gridColumn: '1 / -1' }}>
+            Email Body Template
+            <textarea
+              className="input"
+              rows={5}
+              value={mf.emailTemplate}
+              onChange={(e) => setMonthly({ ...mf, emailTemplate: e.target.value })}
+            />
+          </label>
+        </div>
+        <div className="row" style={{ gap: 8, marginBottom: 10 }}>
+          <button className="btn" onClick={() => {
+            const generated = normalizeMonthlyFees({
+              ...mf,
+              rules: (accountTypes || []).map(a => {
+                const code = String(a.code || '').trim();
+                const exist = (mf.rules || []).find(r => String(r.accountTypeCode || '').trim() === code);
+                return exist || { accountTypeCode: code, enabled: false, amount: 0, creditAccountNumber: '' };
+              }),
+            }, accountTypes);
+            setMonthly(generated);
+          }}><IconRotateCcw /><span>Generate Rules</span></button>
+          <button className="btn btn-primary" onClick={() => quickSave({ ...cfg, monthlyAccountFees: mf })}><IconSave /><span>Save Monthly Fee Settings</span></button>
+          <button className="btn" onClick={async () => {
+            try {
+              const r = await runMonthlyFeeDeduction(true);
+              showSuccess(`Monthly fee run: deducted ${r.deducted || 0}, credited ${r.credited || 0}, skipped ${r.skipped || 0}`);
+              const refreshed = await fetchConfig();
+              const next = { ...refreshed, monthlyAccountFees: normalizeMonthlyFees(refreshed.monthlyAccountFees, refreshed.accountTypes || []) };
+              setCfg(next);
+              saveAppConfig(next);
+            } catch (e) {
+              showError(e?.message || 'Monthly fee run failed');
+            }
+          }}><IconSave /><span>Run Deduction Now</span></button>
+        </div>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Account Type</th>
+              <th>Enabled</th>
+              <th>Fee Amount (fixed)</th>
+              <th>Credit Account Number</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {(mf.rules || []).map((r, i) => (
+              <tr key={`mfr-${i}`}>
+                <td>
+                  <select className="input" value={r.accountTypeCode || ''} onChange={(e) => {
+                    const arr = [...(mf.rules || [])];
+                    arr[i] = { ...arr[i], accountTypeCode: e.target.value };
+                    setMonthly({ ...mf, rules: arr });
+                  }}>
+                    <option value="">Select type</option>
+                    {(accountTypes || []).map(a => <option key={a.code} value={a.code}>{a.code} - {a.name}</option>)}
+                  </select>
+                </td>
+                <td>
+                  <input type="checkbox" checked={!!r.enabled} onChange={(e) => {
+                    const arr = [...(mf.rules || [])];
+                    arr[i] = { ...arr[i], enabled: e.target.checked };
+                    setMonthly({ ...mf, rules: arr });
+                  }} />
+                </td>
+                <td>
+                  <input className="input" type="number" min="0" step="0.01" value={Number(r.amount || 0)} onChange={(e) => {
+                    const arr = [...(mf.rules || [])];
+                    arr[i] = { ...arr[i], amount: e.target.value };
+                    setMonthly({ ...mf, rules: arr });
+                  }} />
+                </td>
+                <td>
+                  <input className="input" value={r.creditAccountNumber || ''} onChange={(e) => {
+                    const arr = [...(mf.rules || [])];
+                    arr[i] = { ...arr[i], creditAccountNumber: e.target.value };
+                    setMonthly({ ...mf, rules: arr });
+                  }} placeholder="Account that receives fees" />
+                </td>
+                <td>
+                  <button className="btn" onClick={() => {
+                    const arr = (mf.rules || []).filter((_, idx) => idx !== i);
+                    setMonthly({ ...mf, rules: arr });
+                  }}><IconTrash /><span>Remove</span></button>
+                </td>
+              </tr>
+            ))}
+            {!(mf.rules || []).length && (
+              <tr><td colSpan="5">No rules yet. Click Generate Rules or Add Rule.</td></tr>
+            )}
+          </tbody>
+        </table>
+        <div className="row">
+          <button className="btn" onClick={() => setMonthly({ ...mf, rules: [ ...(mf.rules || []), { accountTypeCode: '', enabled: false, amount: 0, creditAccountNumber: '' } ] })}><IconPlus /><span>Add Rule</span></button>
+        </div>
+        <div style={{ color: '#64748b', fontSize: 12 }}>
+          Last auto/manual run date key: {mf.lastRunDateKey || 'not run yet'}
+        </div>
       </div>
       <div className="card">
         <div className="row" style={{ alignItems: 'center', gap: 12 }}>

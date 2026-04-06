@@ -72,6 +72,9 @@ export async function fetchConfig() {
 export async function updateConfig(cfg) {
   return apiFetch('/config', { method: 'PUT', body: JSON.stringify(cfg) });
 }
+export async function runMonthlyFeeDeduction(force = true) {
+  return apiFetch('/fees/monthly/run', { method: 'POST', body: JSON.stringify({ force: !!force }) });
+}
 
 export async function listSuperBin() {
   return apiFetch('/super-bin', { method: 'GET', headers: superBinHeaders() });
