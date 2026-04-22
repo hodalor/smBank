@@ -56,6 +56,16 @@ function writeJSON(name, data) {
   const p = path.join(DATA_DIR, name);
   fs.writeFileSync(p, JSON.stringify(data, null, 2));
 }
+async function ensureMongoConnection() {
+  if (isConnected()) return true;
+  if (!process.env.MONGODB_URI) return false;
+  try {
+    await connect(process.env.MONGODB_URI);
+    return isConnected();
+  } catch {
+    return false;
+  }
+}
 
 // Minimal HMAC token (JWT-like) – no external deps
 function b64url(input) {
@@ -1102,8 +1112,9 @@ app.get('/health', (req, res) => {
 // Current user profile, including daily approval code
 app.get('/me', async (req, res) => {
   if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!isConnected() && process.env.MONGODB_URI) await ensureMongoConnection();
   const uname = req.user.username;
-  let profile = { username: uname, role: req.user.role || 'Admin' };
+  let profile = { username: uname, role: req.user.role || 'Admin', permsAdd: [], permsRemove: [] };
   if (isConnected()) {
     try {
       const { User } = getModels();
@@ -1119,13 +1130,25 @@ app.get('/me', async (req, res) => {
           department: u.department || '',
           position: u.position || '',
           employeeNumber: u.employeeNumber || '',
+          permsAdd: Array.isArray(u.permsAdd) ? u.permsAdd : [],
+          permsRemove: Array.isArray(u.permsRemove) ? u.permsRemove : [],
         };
       }
     } catch {}
   } else {
     const u = users.find(x => x.username === uname);
     if (u) {
-      profile = { ...profile, fullName: u.fullName || '', email: u.email || '', phone: u.phone || '', department: u.department || '', position: u.position || '', employeeNumber: u.employeeNumber || '' };
+      profile = {
+        ...profile,
+        fullName: u.fullName || '',
+        email: u.email || '',
+        phone: u.phone || '',
+        department: u.department || '',
+        position: u.position || '',
+        employeeNumber: u.employeeNumber || '',
+        permsAdd: Array.isArray(u.permsAdd) ? u.permsAdd : [],
+        permsRemove: Array.isArray(u.permsRemove) ? u.permsRemove : [],
+      };
     }
   }
   const code = getDailyApprovalCode(uname);
@@ -1136,8 +1159,14 @@ app.get('/me', async (req, res) => {
 app.post('/auth/login', async (req, res) => {
   const { username = '', password = '' } = req.body || {};
   const uname = String(username).trim();
+  const dbConfigured = !!String(process.env.MONGODB_URI || '').trim();
+  const strictAuth = String(process.env.STRICT_AUTH).toLowerCase() === 'true';
+  const wantsDbAuth = dbConfigured || strictAuth;
+  if (!isConnected() && wantsDbAuth) {
+    await ensureMongoConnection();
+  }
   // Enforce strict DB-backed login when connected (or STRICT_AUTH enabled)
-  if (isConnected() || String(process.env.STRICT_AUTH).toLowerCase() === 'true') {
+  if (isConnected() || wantsDbAuth) {
     if (!isConnected()) {
       const tools = String(process.env.ALLOW_ADMIN_TOOLS).toLowerCase() === 'true';
       const envU = String(process.env.SEED_SUPER_USERNAME || '').trim();
@@ -1148,7 +1177,7 @@ app.post('/auth/login', async (req, res) => {
         const token = createToken({ username: uname, role, iat: now, exp: now + 7 * 24 * 60 * 60 * 1000 }, process.env.JWT_SECRET || 'change-me');
         res.setHeader('Set-Cookie', `smbank_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
         await logActivity({ ...req, user: { username: uname, role } }, 'login', 'auth', uname, { mode: 'env-fallback' });
-        return res.json({ username: uname, role, token });
+        return res.json({ username: uname, role, token, permsAdd: [], permsRemove: [] });
       }
       return res.status(503).json({ error: 'db_unavailable' });
     }
@@ -1197,7 +1226,15 @@ app.post('/auth/login', async (req, res) => {
     const token = createToken({ username: uname, role, iat: now, exp: now + 7 * 24 * 60 * 60 * 1000 }, process.env.JWT_SECRET || 'change-me');
     res.setHeader('Set-Cookie', `smbank_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
     await logActivity({ ...req, user: { username: uname, role } }, 'login', 'auth', uname, {});
-    return res.json({ username: uname, role, token, ...(grace || {}), ...(mustChangeFlag || {}) });
+    return res.json({
+      username: uname,
+      role,
+      token,
+      permsAdd: Array.isArray(existing.permsAdd) ? existing.permsAdd : [],
+      permsRemove: Array.isArray(existing.permsRemove) ? existing.permsRemove : [],
+      ...(grace || {}),
+      ...(mustChangeFlag || {}),
+    });
   }
   // Non-strict fallback (file store) – dev only when DB disabled
   const candidate = users.find(u => u.username === uname);
@@ -1207,7 +1244,13 @@ app.post('/auth/login', async (req, res) => {
   const token = createToken({ username: uname, role, iat: now, exp: now + 7 * 24 * 60 * 60 * 1000 }, process.env.JWT_SECRET || 'change-me');
   res.setHeader('Set-Cookie', `smbank_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
   await logActivity({ ...req, user: { username: uname, role } }, 'login', 'auth', uname, {});
-  return res.json({ username: uname, role, token });
+  return res.json({
+    username: uname,
+    role,
+    token,
+    permsAdd: Array.isArray(candidate.permsAdd) ? candidate.permsAdd : [],
+    permsRemove: Array.isArray(candidate.permsRemove) ? candidate.permsRemove : [],
+  });
 });
 
 app.post('/auth/logout', async (req, res) => {

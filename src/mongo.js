@@ -2,10 +2,20 @@ const mongoose = require('mongoose');
 
 let connected = false;
 let Models = null;
+let listenersBound = false;
 
 async function connect(uri) {
   if (!uri) return null;
-  if (connected) return Models;
+  if (!listenersBound) {
+    listenersBound = true;
+    mongoose.connection.on('connected', () => { connected = true; });
+    mongoose.connection.on('disconnected', () => { connected = false; });
+    mongoose.connection.on('error', () => { connected = false; });
+  }
+  if (mongoose.connection.readyState === 1 && Models) {
+    connected = true;
+    return Models;
+  }
   await mongoose.connect(uri, { dbName: 'smbank' });
   connected = true;
 
@@ -264,7 +274,7 @@ async function connect(uri) {
 }
 
 function isConnected() {
-  return connected;
+  return connected && mongoose.connection.readyState === 1;
 }
 
 function getModels() {
