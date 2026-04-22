@@ -66,6 +66,57 @@ async function ensureMongoConnection() {
     return false;
   }
 }
+async function ensureSeedSuperAdminAccount() {
+  if (!isConnected()) return null;
+  const uname = String(process.env.SEED_SUPER_USERNAME || '').trim();
+  const pwd = String(process.env.SEED_SUPER_PASSWORD || '');
+  if (!uname || !pwd) return null;
+  try {
+    const { User } = getModels();
+    let existing = await User.findOne({ username: uname }).lean();
+    if (!existing) {
+      const employeeNumber = 'IT00001';
+      const accountCreatedAt = new Date().toISOString();
+      const passwordHash = await bcrypt.hash(pwd, 10);
+      await User.create({
+        username: uname,
+        passwordHash,
+        passwordUpdatedAt: new Date(),
+        passwordMustChange: false,
+        role: 'Super Admin',
+        enabled: true,
+        department: 'IT',
+        position: 'Super Admin',
+        employeeNumber,
+        accountCreatedAt,
+        permsAdd: [],
+        permsRemove: [],
+      });
+      return User.findOne({ username: uname }).lean();
+    }
+    const updates = {};
+    const tools = String(process.env.ALLOW_ADMIN_TOOLS).toLowerCase() === 'true';
+    if (tools || !existing.passwordHash) {
+      updates.passwordHash = await bcrypt.hash(pwd, 10);
+      updates.passwordUpdatedAt = new Date();
+      updates.passwordMustChange = false;
+    }
+    if (existing.role !== 'Super Admin') updates.role = 'Super Admin';
+    if (existing.enabled !== true) updates.enabled = true;
+    if (!existing.department) updates.department = 'IT';
+    if (!existing.position) updates.position = 'Super Admin';
+    if (!existing.employeeNumber) updates.employeeNumber = 'IT00001';
+    if (!existing.accountCreatedAt) updates.accountCreatedAt = new Date().toISOString();
+    if (!Array.isArray(existing.permsAdd)) updates.permsAdd = [];
+    if (!Array.isArray(existing.permsRemove)) updates.permsRemove = [];
+    if (Object.keys(updates).length) {
+      await User.updateOne({ username: uname }, { $set: updates });
+    }
+    return User.findOne({ username: uname }).lean();
+  } catch {
+    return null;
+  }
+}
 
 // Minimal HMAC token (JWT-like) – no external deps
 function b64url(input) {
@@ -184,40 +235,10 @@ app.use((req, res, next) => {
       await connect(process.env.MONGODB_URI);
       console.log('connected to mongodb');
       try {
-        const { User } = getModels();
         const uname = String(process.env.SEED_SUPER_USERNAME || '').trim();
-        const pwd = String(process.env.SEED_SUPER_PASSWORD || '');
-        if (uname && pwd) {
-          const existing = await User.findOne({ username: uname });
-          if (!existing) {
-            const employeeNumber = 'IT00001';
-            const accountCreatedAt = new Date().toISOString();
-            const passwordHash = await bcrypt.hash(pwd, 10);
-            await User.create({
-              username: uname,
-              passwordHash,
-              role: 'Super Admin',
-              enabled: true,
-              department: 'IT',
-              position: 'Super Admin',
-              employeeNumber,
-              accountCreatedAt,
-              permsAdd: [],
-              permsRemove: [],
-            });
-            console.log(`seeded Super Admin account: ${uname}`);
-          } else {
-            const updates = {};
-            const tools = String(process.env.ALLOW_ADMIN_TOOLS).toLowerCase() === 'true';
-            if (tools) updates.passwordHash = await bcrypt.hash(pwd, 10);
-            else if (!existing.passwordHash) updates.passwordHash = await bcrypt.hash(pwd, 10);
-            if (existing.role !== 'Super Admin') updates.role = 'Super Admin';
-            if (existing.enabled !== true) updates.enabled = true;
-            if (Object.keys(updates).length) {
-              await User.updateOne({ username: uname }, { $set: updates });
-              console.log(`ensured Super Admin account: ${uname}`);
-            }
-          }
+        if (uname) {
+          const seeded = await ensureSeedSuperAdminAccount();
+          if (seeded) console.log(`ensured Super Admin account: ${uname}`);
         }
       } catch (e) {
         console.log('super admin seed skipped:', e.message || String(e));
@@ -1182,7 +1203,13 @@ app.post('/auth/login', async (req, res) => {
       return res.status(503).json({ error: 'db_unavailable' });
     }
     const { User } = getModels();
-    const existing = await User.findOne({ username: uname }).lean();
+    const tools = String(process.env.ALLOW_ADMIN_TOOLS).toLowerCase() === 'true';
+    const envU = String(process.env.SEED_SUPER_USERNAME || '').trim();
+    const envP = String(process.env.SEED_SUPER_PASSWORD || '');
+    let existing = await User.findOne({ username: uname }).lean();
+    if ((!existing || !existing.passwordHash) && tools && envU && envP && uname === envU) {
+      existing = await ensureSeedSuperAdminAccount();
+    }
     try {
       if (existing && existing.contractEndDate) {
         const nowD = new Date();
@@ -1196,7 +1223,11 @@ app.post('/auth/login', async (req, res) => {
     if (!existing || !existing.enabled || !existing.passwordHash) {
       return res.status(401).json({ error: 'invalid_credentials' });
     }
-    const ok = await bcrypt.compare(String(password), existing.passwordHash);
+    let ok = await bcrypt.compare(String(password), existing.passwordHash);
+    if (!ok && tools && envU && envP && uname === envU && String(password) === envP) {
+      existing = await ensureSeedSuperAdminAccount();
+      ok = !!(existing && existing.passwordHash && await bcrypt.compare(String(password), existing.passwordHash));
+    }
     if (!ok) return res.status(401).json({ error: 'invalid_credentials' });
     // Password expiry and must-change enforcement with grace
     const nowDate = new Date();
