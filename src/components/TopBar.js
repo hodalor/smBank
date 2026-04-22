@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getTabs, onTabsUpdate, closeTab } from '../state/tabs';
 import { getCurrentUserName, setCurrentUserName } from '../state/ops';
 import { apiLogout } from '../api';
+import InstallAppButton from './InstallAppButton';
 
 export default function TopBar({ onToggleSidebar, sidebarHidden }) {
   const location = useLocation();
@@ -100,6 +101,7 @@ export default function TopBar({ onToggleSidebar, sidebarHidden }) {
           </div>
           {showArrows && <button className="tabs-arrow" onClick={() => scrollBy(180)}>›</button>}
         </div>
+        <InstallAppButton compact />
         <div className="user" ref={menuRef}>
           <button className="user-btn" onClick={() => setOpen(v => !v)}>
             <span className="user-avatar">{(user || 'A').charAt(0).toUpperCase()}</span>

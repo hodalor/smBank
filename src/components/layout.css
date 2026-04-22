@@ -304,6 +304,13 @@
   .top-right {
     gap: 8px;
   }
+  .install-app-btn.compact span {
+    display: none;
+  }
+  .install-app-btn.compact {
+    width: 38px;
+    padding: 0;
+  }
   .tabs-wrap {
     display: none;
   }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { setCurrentUserName, saveUser, getUserByUsername, getAppConfig, onConfigUpdate, saveAppConfig } from '../state/ops';
 import { apiLogin, fetchConfig, publicChangePassword, publicAdminResetPassword } from '../api';
 import { IconLogIn, IconSliders, IconX, IconSave, IconRotateCcw } from '../components/Icons';
+import InstallAppButton from '../components/InstallAppButton';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -149,6 +150,7 @@ export default function Login() {
           <button type="submit" className="btn btn-primary" style={{ background: '#16a34a', borderColor: '#16a34a' }} disabled={loading}>
             {loading ? (<><IconRotateCcw /><span>Logging in…</span></>) : (<><IconLogIn /><span>Login In</span></>)}
           </button>
+          <InstallAppButton fullWidth />
         </form>
         <div className="row" style={{ justifyContent: 'flex-end', marginTop: 8 }}>
           <button className="btn" onClick={() => setResetOpen(s => !s)}>{resetOpen ? (<><IconX /><span>Hide Reset</span></>) : (<><IconSliders /><span>Reset Password (Admin)</span></>)}</button>
