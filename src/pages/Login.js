@@ -87,16 +87,18 @@ export default function Login() {
     }
     setLoading(true);
     try {
-      const { role, token, passwordChangeRequired } = await apiLogin(uname, password);
+      const { role, token, passwordChangeRequired, permsAdd = [], permsRemove = [] } = await apiLogin(uname, password);
       if (token && typeof window !== 'undefined' && window.localStorage) {
         window.localStorage.setItem('smbank_token', token);
       }
       const existing = getUserByUsername(uname);
-      if (!existing) {
-        saveUser({ username: uname, role, permsAdd: [], permsRemove: [] });
-      } else if (existing.role !== role) {
-        saveUser({ ...existing, role });
-      }
+      saveUser({
+        ...(existing || {}),
+        username: uname,
+        role,
+        permsAdd: Array.isArray(permsAdd) ? permsAdd : [],
+        permsRemove: Array.isArray(permsRemove) ? permsRemove : [],
+      });
       if (passwordChangeRequired) {
         localStorage.setItem('force_password_change', '1');
       } else {
@@ -108,6 +110,10 @@ export default function Login() {
       if (msg.includes('password_expired')) {
         setExpired(true);
         setError('Password expired — change required');
+      } else if (msg.includes('db_unavailable')) {
+        setError('Server is waking up or database is reconnecting. Please wait a few seconds and try again.');
+      } else if (msg.includes('failed to fetch') || msg.includes('networkerror')) {
+        setError('Cannot reach server right now. Please wait a moment and try again.');
       } else {
         setError('Invalid username or password');
       }

@@ -1,4 +1,5 @@
 import './App.css';
+import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/Login';
@@ -30,14 +31,47 @@ import Assets from './pages/Assets';
 import Promotions from './pages/Promotions';
 import Notifications from './pages/Notifications';
 import Docs from './pages/Docs';
-import { getCurrentUserName } from './state/ops';
+import { getMe } from './api';
+import { getCurrentUserName, getUserByUsername, saveUser, setCurrentUserName } from './state/ops';
 
 export default function App() {
   const RequireAuth = ({ children }) => {
     const loc = useLocation();
+    const [, setSessionRefresh] = useState(0);
     let token = '';
     try { if (typeof window !== 'undefined' && window.localStorage) token = window.localStorage.getItem('smbank_token') || ''; } catch {}
     const user = getCurrentUserName();
+    useEffect(() => {
+      let cancelled = false;
+      if (!token || !user) return undefined;
+      (async () => {
+        try {
+          const me = await getMe();
+          if (cancelled || !me || !me.username) return;
+          const existing = getUserByUsername(me.username);
+          saveUser({
+            ...(existing || {}),
+            ...me,
+            username: me.username,
+            permsAdd: Array.isArray(me.permsAdd) ? me.permsAdd : [],
+            permsRemove: Array.isArray(me.permsRemove) ? me.permsRemove : [],
+          });
+          setSessionRefresh(v => v + 1);
+        } catch (e) {
+          if (cancelled) return;
+          if (e && e.status === 401) {
+            setCurrentUserName('');
+            try {
+              if (typeof window !== 'undefined' && window.localStorage) {
+                window.localStorage.removeItem('smbank_token');
+              }
+            } catch {}
+            setSessionRefresh(v => v + 1);
+          }
+        }
+      })();
+      return () => { cancelled = true; };
+    }, [token, user]);
     if (!token || !user) return <Navigate to="/login" replace state={{ from: loc }} />;
     return children;
   };
