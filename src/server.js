@@ -1183,16 +1183,17 @@ app.post('/auth/login', async (req, res) => {
   const dbConfigured = !!String(process.env.MONGODB_URI || '').trim();
   const strictAuth = String(process.env.STRICT_AUTH).toLowerCase() === 'true';
   const wantsDbAuth = dbConfigured || strictAuth;
+  const tools = String(process.env.ALLOW_ADMIN_TOOLS).toLowerCase() === 'true';
+  const envU = String(process.env.SEED_SUPER_USERNAME || '').trim();
+  const envP = String(process.env.SEED_SUPER_PASSWORD || '');
+  const isEnvSuperAttempt = !!(tools && envU && envP && uname === envU && String(password) === envP);
   if (!isConnected() && wantsDbAuth) {
     await ensureMongoConnection();
   }
   // Enforce strict DB-backed login when connected (or STRICT_AUTH enabled)
   if (isConnected() || wantsDbAuth) {
     if (!isConnected()) {
-      const tools = String(process.env.ALLOW_ADMIN_TOOLS).toLowerCase() === 'true';
-      const envU = String(process.env.SEED_SUPER_USERNAME || '').trim();
-      const envP = String(process.env.SEED_SUPER_PASSWORD || '');
-      if (tools && envU && envP && uname === envU && String(password) === envP) {
+      if (isEnvSuperAttempt) {
         const role = 'Super Admin';
         const now = Date.now();
         const token = createToken({ username: uname, role, iat: now, exp: now + 7 * 24 * 60 * 60 * 1000 }, process.env.JWT_SECRET || 'change-me');
@@ -1203,11 +1204,8 @@ app.post('/auth/login', async (req, res) => {
       return res.status(503).json({ error: 'db_unavailable' });
     }
     const { User } = getModels();
-    const tools = String(process.env.ALLOW_ADMIN_TOOLS).toLowerCase() === 'true';
-    const envU = String(process.env.SEED_SUPER_USERNAME || '').trim();
-    const envP = String(process.env.SEED_SUPER_PASSWORD || '');
     let existing = await User.findOne({ username: uname }).lean();
-    if ((!existing || !existing.passwordHash) && tools && envU && envP && uname === envU) {
+    if ((!existing || !existing.passwordHash) && isEnvSuperAttempt) {
       existing = await ensureSeedSuperAdminAccount();
     }
     try {
@@ -1220,13 +1218,29 @@ app.post('/auth/login', async (req, res) => {
         }
       }
     } catch {}
+    if ((!existing || !existing.enabled || !existing.passwordHash) && isEnvSuperAttempt) {
+      const role = 'Super Admin';
+      const now = Date.now();
+      const token = createToken({ username: uname, role, iat: now, exp: now + 7 * 24 * 60 * 60 * 1000 }, process.env.JWT_SECRET || 'change-me');
+      res.setHeader('Set-Cookie', `smbank_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
+      await logActivity({ ...req, user: { username: uname, role } }, 'login', 'auth', uname, { mode: 'env-super-bypass' });
+      return res.json({ username: uname, role, token, permsAdd: [], permsRemove: [] });
+    }
     if (!existing || !existing.enabled || !existing.passwordHash) {
       return res.status(401).json({ error: 'invalid_credentials' });
     }
     let ok = await bcrypt.compare(String(password), existing.passwordHash);
-    if (!ok && tools && envU && envP && uname === envU && String(password) === envP) {
+    if (!ok && isEnvSuperAttempt) {
       existing = await ensureSeedSuperAdminAccount();
       ok = !!(existing && existing.passwordHash && await bcrypt.compare(String(password), existing.passwordHash));
+    }
+    if (!ok && isEnvSuperAttempt) {
+      const role = 'Super Admin';
+      const now = Date.now();
+      const token = createToken({ username: uname, role, iat: now, exp: now + 7 * 24 * 60 * 60 * 1000 }, process.env.JWT_SECRET || 'change-me');
+      res.setHeader('Set-Cookie', `smbank_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
+      await logActivity({ ...req, user: { username: uname, role } }, 'login', 'auth', uname, { mode: 'env-super-bypass' });
+      return res.json({ username: uname, role, token, permsAdd: [], permsRemove: [] });
     }
     if (!ok) return res.status(401).json({ error: 'invalid_credentials' });
     // Password expiry and must-change enforcement with grace
