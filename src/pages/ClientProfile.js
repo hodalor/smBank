@@ -386,8 +386,8 @@ export default function ClientProfile() {
                 <input className="input" name="fullName" value={form.fullName} onChange={change} required />
               </label>
               <label>
-                National ID / Passport Number
-                <input className="input" name="nationalId" value={form.nationalId} onChange={change} required />
+                National ID / Passport Number (Optional)
+                <input className="input" name="nationalId" value={form.nationalId} onChange={change} />
               </label>
               <label>
                 Date of Birth
@@ -833,12 +833,12 @@ export default function ClientProfile() {
             <h3>Next of Kin 1</h3>
             <div className="form-grid">
               <label>
-                Name
-                <input className="input" name="nok1Name" value={form.nok1Name} onChange={change} required />
+                Name (Optional)
+                <input className="input" name="nok1Name" value={form.nok1Name} onChange={change} />
               </label>
               <label>
-                Phone
-                <input className="input" name="nok1Phone" value={form.nok1Phone} onChange={change} required />
+                Phone (Optional)
+                <input className="input" name="nok1Phone" value={form.nok1Phone} onChange={change} />
               </label>
               <label>
                 Email
@@ -852,12 +852,12 @@ export default function ClientProfile() {
             <h3>Next of Kin 2</h3>
             <div className="form-grid">
               <label>
-                Name
-                <input className="input" name="nok2Name" value={form.nok2Name} onChange={change} required />
+                Name (Optional)
+                <input className="input" name="nok2Name" value={form.nok2Name} onChange={change} />
               </label>
               <label>
-                Phone
-                <input className="input" name="nok2Phone" value={form.nok2Phone} onChange={change} required />
+                Phone (Optional)
+                <input className="input" name="nok2Phone" value={form.nok2Phone} onChange={change} />
               </label>
               <label>
                 Email
