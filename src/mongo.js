@@ -70,6 +70,8 @@ async function connect(uri) {
       supportsIndividual: { type: Boolean, default: true },
       active: { type: Boolean, default: true },
     }],
+    companyPhone: { type: String, default: '' },
+    companyEmail: { type: String, default: '' },
     smsSenderIds: [String],
     defaultSmsSenderId: { type: String, default: '' },
     emailFromAddresses: [String],
