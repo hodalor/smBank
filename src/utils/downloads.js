@@ -13,7 +13,11 @@ export function downloadTextFile(filename, content, mimeType = 'text/plain;chars
   link.rel = 'noopener';
   link.style.display = 'none';
   document.body.appendChild(link);
-  link.click();
+  try {
+    link.click();
+  } catch {
+    window.open(url, '_blank', 'width=1100,height=800');
+  }
   window.setTimeout(() => {
     window.URL.revokeObjectURL(url);
     if (link.parentNode) link.parentNode.removeChild(link);
@@ -27,4 +31,9 @@ export function downloadCsvFile(filename, columns, rows) {
     csvRows.push(cols.map((col) => JSON.stringify(row && row[col] != null ? row[col] : '')).join(','));
   });
   downloadTextFile(ensureExtension(filename, '.csv'), csvRows.join('\n'), 'text/csv;charset=utf-8;');
+}
+
+export function downloadJsonFile(filename, value) {
+  const json = JSON.stringify(value, null, 2);
+  downloadTextFile(ensureExtension(filename, '.json'), json, 'application/json;charset=utf-8;');
 }

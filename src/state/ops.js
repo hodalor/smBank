@@ -319,7 +319,7 @@ function safePrintHtml(value) {
 
 function openReceiptPrintWindow({ title, subtitle, badges = [], summaryCards = [], tables = [], htmlContent = '', footerNote = '' }) {
   const cfg = getAppConfig();
-  const w = window.open('', '_blank', 'noopener,noreferrer,width=920,height=760');
+  const w = window.open('', '_blank', 'width=920,height=760');
   if (!w) return;
   const contactItems = [cfg.companyPhone || '', cfg.companyEmail || '', cfg.defaultEmailFrom || ''].filter(Boolean);
   const body = `
@@ -354,7 +354,7 @@ function openReceiptPrintWindow({ title, subtitle, badges = [], summaryCards = [
     </div>
   `;
   w.document.open();
-  w.document.write(`<!doctype html><html><head><meta charset="utf-8"/><title>${safePrintHtml(title || 'Receipt')}</title><style>
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"/><base href="${safePrintHtml(window.location.origin)}/" /><title>${safePrintHtml(title || 'Receipt')}</title><style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 24px; color: #0f172a; background: #f8fafc; }
     .sheet { background: #ffffff; border: 1px solid #dbe2ea; border-radius: 20px; overflow: hidden; }
     .brand { background: linear-gradient(135deg, ${safePrintHtml(cfg.primary || '#0f172a')}, #1d4ed8); color: ${safePrintHtml(cfg.primaryContrast || '#ffffff')}; padding: 20px 24px; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
@@ -377,14 +377,13 @@ function openReceiptPrintWindow({ title, subtitle, badges = [], summaryCards = [
     th { background: #f1f5f9; }
     .footer { text-align: right; color: #64748b; font-size: 12px; }
     @media print { body { padding: 0; background: #fff; } .sheet { border: 0; border-radius: 0; } }
-  </style></head><body>${body}<script>window.addEventListener("load", function(){ setTimeout(function(){ try { window.focus(); window.print(); } catch (e) {} }, 250); });</script></body></html>`);
+  </style></head><body>${body}<script>(function(){ var printed = false; function runPrint(){ if (printed) return; printed = true; setTimeout(function(){ try { window.focus(); window.print(); } catch (e) {} }, 250); } if (document.readyState === "complete") runPrint(); else window.addEventListener("load", runPrint, { once: true }); setTimeout(runPrint, 700); })();</script></body></html>`);
   w.document.close();
   try { w.focus(); } catch {}
 }
 
 export function printTxnReceipt(txn, { copies = 2 } = {}) {
   if (!txn) return;
-  const app = getAppConfig();
   const title = txn.kind === 'deposit' ? 'Deposit Receipt' :
                 txn.kind === 'withdraw' ? 'Withdrawal Receipt' :
                 txn.kind === 'loan_disbursement' ? 'Loan Disbursement Receipt' :

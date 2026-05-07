@@ -75,7 +75,7 @@ export function openBrandedPrintWindow({
 }) {
   if (typeof window === 'undefined') return;
   const cfg = getAppConfig();
-  const popup = window.open('', '_blank', 'noopener,noreferrer,width=1100,height=800');
+  const popup = window.open('', '_blank', 'width=1100,height=800');
   if (!popup) return;
 
   const contactItems = [cfg.companyPhone || '', cfg.companyEmail || '', cfg.defaultEmailFrom || ''].filter(Boolean);
@@ -114,6 +114,7 @@ export function openBrandedPrintWindow({
   <head>
     <title>${safeHtml(title)} - ${safeHtml(cfg.appName || 'smBank')}</title>
     <meta charset="utf-8" />
+    <base href="${safeHtml(window.location.origin)}/" />
     <style>
       body { font-family: Arial, sans-serif; margin: 0; padding: 24px; color: #0f172a; background: #f8fafc; }
       .sheet { background: #ffffff; border: 1px solid #dbe2ea; border-radius: 20px; overflow: hidden; }
@@ -150,7 +151,7 @@ export function openBrandedPrintWindow({
       }
     </style>
   </head>
-  <body>${body}${autoPrint ? '<script>window.addEventListener("load", function(){ setTimeout(function(){ try { window.focus(); window.print(); } catch (e) {} }, 250); });</script>' : ''}</body>
+  <body>${body}${autoPrint ? '<script>(function(){ var printed = false; function runPrint(){ if (printed) return; printed = true; setTimeout(function(){ try { window.focus(); window.print(); } catch (e) {} }, 250); } if (document.readyState === "complete") runPrint(); else window.addEventListener("load", runPrint, { once: true }); setTimeout(runPrint, 700); })();</script>' : ''}</body>
 </html>`);
   popup.document.close();
   try { popup.focus(); } catch {}

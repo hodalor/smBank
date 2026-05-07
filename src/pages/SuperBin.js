@@ -4,6 +4,7 @@ import { listSuperBin, restoreSuperBin, deleteSuperBin } from '../api';
 import { confirm } from '../components/Confirm';
 import { showWarning } from '../components/Toaster';
 import { IconRotateCcw, IconTrash, IconDownload } from '../components/Icons';
+import { downloadCsvFile, downloadJsonFile } from '../utils/downloads';
 
 export default function SuperBin() {
   const [rows, setRows] = useState(getSuperBin());
@@ -50,26 +51,16 @@ export default function SuperBin() {
     });
   };
   const exportOne = (row) => {
-    const blob = new Blob([JSON.stringify(row, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${row.id}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadJsonFile(`${row.id}.json`, row);
   };
   const exportAllCSV = () => {
-    const header = ['id','kind','deletedAt','by','payload'];
-    const data = [header.join(',')].concat(rows.map(r =>
-      [r.id, r.kind, r.deletedAt, r.by, JSON.stringify(r.payload).replace(/"/g,'""')].map(v => `"${v}"`).join(',')
-    )).join('\n');
-    const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'superbin.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsvFile('superbin.csv', ['id', 'kind', 'deletedAt', 'by', 'payload'], rows.map((r) => ({
+      id: r.id || '',
+      kind: r.kind || '',
+      deletedAt: r.deletedAt || '',
+      by: r.by || '',
+      payload: JSON.stringify(r.payload || {}),
+    })));
   };
   if (!hasPermission(PERMISSIONS.SUPERBIN_VIEW) || forbidden) return <div className="card">Not authorized.</div>;
   return (
