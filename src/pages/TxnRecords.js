@@ -170,31 +170,57 @@ export default function TxnRecords() {
         <Pager total={view.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
       </div>
       {selected && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,6,23,0.35)', display: 'grid', placeItems: 'center', zIndex: 50 }} onClick={() => setSelected(null)}>
-          <div className="card" style={{ width: 640, maxWidth: '92vw' }} onClick={(e) => e.stopPropagation()}>
-            <div className="row" style={{ justifyContent: 'space-between' }}>
-              <div style={{ fontWeight: 700 }}>Details: {selected.id}</div>
+        <div className="detail-modal-overlay" onClick={() => setSelected(null)}>
+          <div className="card detail-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="detail-modal-header">
+              <div>
+                <div className="detail-modal-title">{selected.type} Details</div>
+                <div className="detail-modal-subtitle">Transaction ID: {selected.id}</div>
+              </div>
               <button className="btn" onClick={() => setSelected(null)}>Close</button>
             </div>
-            <div className="row" style={{ gap: 24 }}>
-              <div><div style={{ color: '#64748b', fontSize: 12 }}>Type</div><div>{selected.type}</div></div>
-              <div><div style={{ color: '#64748b', fontSize: 12 }}>Status</div><div>{selected.status}</div></div>
-              <div><div style={{ color: '#64748b', fontSize: 12 }}>Account</div><div>{selected.account}</div></div>
-              <div><div style={{ color: '#64748b', fontSize: 12 }}>Amount</div><div>{toCurrency(selected.amount)}</div></div>
+            <div className="detail-modal-grid" style={{ marginBottom: 12 }}>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Status</div>
+                <div>
+                  <span className="detail-modal-pill" style={{ background: selected.status === 'Approved' ? '#dcfce7' : selected.status === 'Rejected' ? '#fee2e2' : '#e2e8f0', color: '#0f172a' }}>{selected.status}</span>
+                </div>
+              </div>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Account</div>
+                <div className="detail-modal-value">{selected.account}</div>
+              </div>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Amount</div>
+                <div className="detail-modal-value">{toCurrency(selected.amount)}</div>
+              </div>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Customer</div>
+                <div className="detail-modal-value">{client ? client.name : '—'}</div>
+              </div>
             </div>
-            <div className="row" style={{ gap: 24 }}>
-              <div><div style={{ color: '#64748b', fontSize: 12 }}>Customer</div><div>{client ? client.name : '—'}</div></div>
-              <div><div style={{ color: '#64748b', fontSize: 12 }}>Initiator</div><div>{selected.initiator || '—'}</div></div>
-              <div><div style={{ color: '#64748b', fontSize: 12 }}>Approver</div><div>{selected.approver || '—'}</div></div>
-            </div>
-            <div className="row" style={{ gap: 24 }}>
-              <div><div style={{ color: '#64748b', fontSize: 12 }}>Initiated</div><div>{selected.initiatedAt || '—'}</div></div>
-              <div><div style={{ color: '#64748b', fontSize: 12 }}>Approved/Rejected</div><div>{selected.approvedAt || '—'}</div></div>
+            <div className="detail-modal-grid" style={{ marginBottom: 12 }}>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Initiator</div>
+                <div>{selected.initiator || '—'}</div>
+              </div>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Approver</div>
+                <div>{selected.approver || '—'}</div>
+              </div>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Initiated</div>
+                <div>{selected.initiatedAt || '—'}</div>
+              </div>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Approved/Rejected</div>
+                <div>{selected.approvedAt || '—'}</div>
+              </div>
             </div>
             {metaLines(selected).length > 0 && (
               <div style={{ marginTop: 8 }}>
-                <div style={{ color: '#64748b', fontSize: 12 }}>Details</div>
-                <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, border: '1px solid var(--border)' }}>
+                <div className="detail-modal-label" style={{ marginBottom: 8 }}>Details</div>
+                <div className="detail-modal-notes">
                   {metaLines(selected).map((line, idx) => (<div key={idx}>{line}</div>))}
                 </div>
               </div>

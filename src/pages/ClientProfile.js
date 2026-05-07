@@ -3,14 +3,32 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { createClient, getClient, updateClient, fetchConfig, uploadMedia, updateClientStatus, listUsers, updateClientManager } from '../api';
 import { showError, showSuccess } from '../components/Toaster';
 import { confirm } from '../components/Confirm';
-import { hasPermission, PERMISSIONS } from '../state/ops';
-import { IconFile, IconTrash, IconSave, IconX } from '../components/Icons';
+import { getAppConfig, hasPermission, onConfigUpdate, PERMISSIONS } from '../state/ops';
+import { IconDownload, IconEdit, IconFile, IconTrash, IconSave, IconX } from '../components/Icons';
+
+function safeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function niceDate(value) {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleString();
+}
 
 export default function ClientProfile() {
   const { accountNumber } = useParams();
   const navigate = useNavigate();
   const canView = hasPermission(PERMISSIONS.CLIENTS_VIEW);
   const canEdit = hasPermission(PERMISSIONS.CLIENTS_CREATE);
+  const [appCfg, setAppCfg] = useState(() => getAppConfig());
+  const [isEditing, setIsEditing] = useState(!accountNumber);
   const [form, setForm] = useState({
     branchCode: '',
     accountTypeCode: '',
@@ -62,6 +80,7 @@ export default function ClientProfile() {
   const [managerRemarks, setManagerRemarks] = useState('');
   const [users, setUsers] = useState([]);
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  useEffect(() => onConfigUpdate(setAppCfg), []);
   const uploadNested = async (collection, idx, field, file) => {
     if (!file) return;
     if (!accountNumber) {
@@ -240,6 +259,95 @@ export default function ClientProfile() {
   const acctType = config.accountTypes?.find(a => a.code === form.accountTypeCode) || null;
   const isIndividual = acctType ? (acctType.supportsIndividual !== false) : true;
   const branchRec = config.branches?.find(b => b.code === form.branchCode) || null;
+  const profilePhoto = photoPreview || attachments.find(a => (a.tag || '') === 'photo')?.url || '';
+  const clientName = isIndividual ? (form.fullName || 'Unnamed Client') : (form.companyName || 'Unnamed Company');
+  const displayPhone = isIndividual ? form.phone : (form.contactPhone || form.phone);
+  const displayEmail = isIndividual ? form.email : (form.contactEmail || form.email);
+  const displayAddress = isIndividual ? form.address : (form.registeredAddress || form.operatingAddress || form.contactAddress);
+  const badgeItems = [
+    form.status || 'Active',
+    form.branchCode ? `${form.branchCode}${branchRec?.name ? ` - ${branchRec.name}` : ''}` : '',
+    form.accountTypeCode ? `${form.accountTypeCode}${acctType?.name ? ` - ${acctType.name}` : ''}` : '',
+    manager ? `Manager: ${manager}` : '',
+  ].filter(Boolean);
+  const exportPdf = () => {
+    if (!accountNumber || typeof window === 'undefined') return;
+    const popup = window.open('', '_blank', 'noopener,noreferrer,width=960,height=720');
+    if (!popup) return;
+    const detailRows = [
+      ['Customer Name', clientName],
+      ['Account Number', accountNumber],
+      ['Status', form.status || '—'],
+      ['Phone', displayPhone || '—'],
+      ['Email', displayEmail || '—'],
+      ['Address', displayAddress || '—'],
+      ['National ID', form.nationalId || '—'],
+      ['Date Registered', niceDate(form.createdAt || form.dateRegistered)],
+      ['Account Type', acctType ? `${form.accountTypeCode} - ${acctType.name}` : (form.accountTypeCode || '—')],
+      ['Branch', branchRec ? `${form.branchCode} - ${branchRec.name}` : (form.branchCode || '—')],
+      ['Account Manager', manager || '—'],
+      ['Next of Kin 1', form.nok1Name || form.nok1Phone ? `${form.nok1Name || '—'} / ${form.nok1Phone || '—'}` : '—'],
+      ['Next of Kin 2', form.nok2Name || form.nok2Phone ? `${form.nok2Name || '—'} / ${form.nok2Phone || '—'}` : '—'],
+    ];
+    const rowsHtml = detailRows.map(([label, value]) => `<div class="item"><div class="label">${safeHtml(label)}</div><div class="value">${safeHtml(value)}</div></div>`).join('');
+    popup.document.write(`<!doctype html>
+<html>
+  <head>
+    <title>${safeHtml(clientName)} - ${safeHtml(appCfg.appName || 'smBank')}</title>
+    <meta charset="utf-8" />
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; padding: 24px; color: #0f172a; }
+      .sheet { border: 1px solid #dbe2ea; border-radius: 18px; overflow: hidden; }
+      .brand { background: linear-gradient(135deg, ${safeHtml(appCfg.primary || '#0f172a')}, #1d4ed8); color: ${safeHtml(appCfg.primaryContrast || '#ffffff')}; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+      .brand h1 { margin: 0; font-size: 28px; }
+      .brand p { margin: 4px 0 0; opacity: 0.92; }
+      .logo { width: 58px; height: 58px; border-radius: 14px; background: rgba(255,255,255,0.14); padding: 6px; object-fit: contain; }
+      .body { padding: 24px; }
+      .hero { display: grid; grid-template-columns: 110px 1fr; gap: 18px; align-items: center; margin-bottom: 18px; }
+      .avatar { width: 110px; height: 110px; border-radius: 18px; object-fit: cover; background: #e2e8f0; }
+      .fallback { width: 110px; height: 110px; border-radius: 18px; display: grid; place-items: center; font-size: 36px; font-weight: 800; color: #1e3a8a; background: #dbeafe; }
+      .name { font-size: 30px; font-weight: 800; margin: 0 0 8px; }
+      .muted { color: #64748b; font-size: 13px; }
+      .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+      .badge { padding: 6px 10px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 12px; font-weight: 700; }
+      .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .item { border: 1px solid #dbe2ea; border-radius: 14px; padding: 14px; }
+      .label { color: #64748b; font-size: 12px; margin-bottom: 6px; }
+      .value { font-size: 15px; font-weight: 600; word-break: break-word; }
+      .footer { margin-top: 18px; color: #64748b; font-size: 12px; text-align: right; }
+      @media print { body { padding: 0; } .sheet { border: 0; border-radius: 0; } }
+    </style>
+  </head>
+  <body>
+    <div class="sheet">
+      <div class="brand">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <img src="/logo512.png" alt="${safeHtml(appCfg.appName || 'smBank')}" class="logo" />
+          <div>
+            <h1>${safeHtml(appCfg.appName || 'smBank')}</h1>
+            <p>Customer Detail Sheet</p>
+          </div>
+        </div>
+        <div class="muted" style="color:${safeHtml(appCfg.primaryContrast || '#ffffff')}">Generated ${safeHtml(new Date().toLocaleString())}</div>
+      </div>
+      <div class="body">
+        <div class="hero">
+          ${profilePhoto ? `<img src="${safeHtml(profilePhoto)}" alt="${safeHtml(clientName)}" class="avatar" />` : `<div class="fallback">${safeHtml((clientName || 'C').trim().charAt(0).toUpperCase() || 'C')}</div>`}
+          <div>
+            <div class="name">${safeHtml(clientName)}</div>
+            <div class="muted">${safeHtml(isIndividual ? 'Individual Customer' : 'Company Customer')}</div>
+            <div class="badges">${badgeItems.map((item) => `<span class="badge">${safeHtml(item)}</span>`).join('')}</div>
+          </div>
+        </div>
+        <div class="grid">${rowsHtml}</div>
+        <div class="footer">${safeHtml(appCfg.footerText || '© smBank')}</div>
+      </div>
+    </div>
+    <script>window.onload = function(){ window.print(); };</script>
+  </body>
+</html>`);
+    popup.document.close();
+  };
   const submit = async (e) => {
     e.preventDefault();
     const files = {
@@ -305,6 +413,7 @@ export default function ClientProfile() {
         } catch {}
       }
       showSuccess('Client saved');
+      if (accountNumber) setIsEditing(false);
       if (!accountNumber) navigate('/clients');
     } catch (e) {
       if (e && e.message && e.message.includes('duplicate_contact')) showError('Duplicate email/phone/ID detected');
@@ -327,32 +436,101 @@ export default function ClientProfile() {
     <div className="stack">
       <h1>{accountNumber ? 'Client Profile' : 'New Client'}</h1>
       {accountNumber && (
-        <div className="card row" style={{ justifyContent: 'space-between' }}>
-          <div>
-            <div style={{ fontSize: 14, color: '#64748b' }}>Account Number</div>
-            <div style={{ fontSize: 18, fontWeight: 600 }}>{accountNumber}</div>
+        <div className="card client-sheet">
+          <div className="client-sheet-brand">
+            <div className="client-sheet-branding">
+              <img src="/logo512.png" alt={appCfg.appName || 'smBank'} className="client-sheet-logo" />
+              <div>
+                <div className="client-sheet-brand-title">{appCfg.appName || 'smBank'}</div>
+                <div className="client-sheet-brand-subtitle">Customer detail sheet</div>
+              </div>
+            </div>
+            <div className="client-sheet-muted">Created {niceDate(form.createdAt || form.dateRegistered)}</div>
           </div>
-          <div>
-            <div style={{ fontSize: 14, color: '#64748b' }}>Branch</div>
-            <div style={{ fontSize: 18, fontWeight: 600 }}>{form.branchCode ? `${form.branchCode} - ${branchRec ? branchRec.name : ''}` : '—'}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 14, color: '#64748b' }}>Account Type</div>
-            <div style={{ fontSize: 18, fontWeight: 600 }}>{form.accountTypeCode ? `${form.accountTypeCode} - ${acctType ? acctType.name : ''}` : '—'}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 14, color: '#64748b' }}>Status</div>
-            <div style={{ fontSize: 18, fontWeight: 600 }}>{form.status}</div>
-          </div>
-          <div className="row">
-            <button className="btn" onClick={() => navigate(`/statements?account=${accountNumber}`)}><IconFile /><span>View Statement</span></button>
-            <button className="btn btn-primary" onClick={retire} disabled={form.status === 'Inactive'}>
-              {form.status === 'Inactive' ? (<><IconX /><span>Retired</span></>) : (<><IconTrash /><span>Retire Account</span></>)}
-            </button>
+          <div className="client-sheet-body">
+            <div className="client-sheet-top">
+              <div className="client-sheet-profile">
+                {profilePhoto ? (
+                  <img src={profilePhoto} alt={clientName} className="client-sheet-avatar" />
+                ) : (
+                  <div className="client-sheet-avatar-fallback">{(clientName || 'C').trim().charAt(0).toUpperCase() || 'C'}</div>
+                )}
+                <div style={{ minWidth: 0 }}>
+                  <div className="client-sheet-name">{clientName}</div>
+                  <div className="client-sheet-muted">{isIndividual ? 'Individual Customer' : 'Company Customer'}</div>
+                  <div className="client-sheet-badges">
+                    {badgeItems.map((item) => (
+                      <span key={item} className="client-sheet-badge">{item}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="client-sheet-summary">
+                <div className="client-sheet-stat">
+                  <div className="client-sheet-stat-label">Account Number</div>
+                  <div className="client-sheet-stat-value">{accountNumber}</div>
+                </div>
+                <div className="client-sheet-stat">
+                  <div className="client-sheet-stat-label">Manager</div>
+                  <div className="client-sheet-stat-value">{manager || 'Unassigned'}</div>
+                </div>
+                <div className="client-sheet-stat">
+                  <div className="client-sheet-stat-label">Phone</div>
+                  <div className="client-sheet-stat-value">{displayPhone || '—'}</div>
+                </div>
+                <div className="client-sheet-stat">
+                  <div className="client-sheet-stat-label">Email</div>
+                  <div className="client-sheet-stat-value">{displayEmail || '—'}</div>
+                </div>
+              </div>
+            </div>
+            <div className="client-sheet-section">
+              <div className="client-sheet-section-title">Profile Overview</div>
+              <div className="client-sheet-grid">
+                <div className="client-sheet-item">
+                  <div className="client-sheet-item-label">Branch</div>
+                  <div className="client-sheet-item-value">{branchRec ? `${form.branchCode} - ${branchRec.name}` : (form.branchCode || '—')}</div>
+                </div>
+                <div className="client-sheet-item">
+                  <div className="client-sheet-item-label">Account Type</div>
+                  <div className="client-sheet-item-value">{acctType ? `${form.accountTypeCode} - ${acctType.name}` : (form.accountTypeCode || '—')}</div>
+                </div>
+                <div className="client-sheet-item">
+                  <div className="client-sheet-item-label">National ID</div>
+                  <div className="client-sheet-item-value">{form.nationalId || '—'}</div>
+                </div>
+                <div className="client-sheet-item">
+                  <div className="client-sheet-item-label">Address</div>
+                  <div className="client-sheet-item-value">{displayAddress || '—'}</div>
+                </div>
+              </div>
+            </div>
+            <div className="row">
+              <button className="btn" onClick={() => navigate(`/statements?account=${accountNumber}`)}><IconFile /><span>View Statement</span></button>
+              <button className="btn" type="button" onClick={exportPdf}><IconDownload /><span>Export PDF</span></button>
+              {canEdit && (
+                <button
+                  className="btn"
+                  type="button"
+                  onClick={async () => {
+                    if (isEditing && !(await confirm('Done editing without saving any unsaved changes?'))) return;
+                    setIsEditing(v => !v);
+                  }}
+                >
+                  <IconEdit /><span>{isEditing ? 'Done Editing' : 'Edit Details'}</span>
+                </button>
+              )}
+              {canEdit && (
+                <button className="btn btn-primary" onClick={retire} disabled={form.status === 'Inactive'}>
+                  {form.status === 'Inactive' ? (<><IconX /><span>Retired</span></>) : (<><IconTrash /><span>Retire Account</span></>)}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
       <form onSubmit={submit} className="form card" style={{ maxWidth: 900 }}>
+        <fieldset className="form-fieldset" disabled={!!accountNumber && !isEditing}>
         <div className="form-grid">
           {accountNumber && (
             <label>
@@ -918,9 +1096,11 @@ export default function ClientProfile() {
             )}
           </div>
         )}
+        </fieldset>
         <div className="row">
-          {canEdit && <button className="btn btn-primary" type="submit"><IconSave /><span>Save</span></button>}
-          <button className="btn" type="button" onClick={() => navigate('/clients')}><IconX /><span>Cancel</span></button>
+          {accountNumber && !isEditing && <div className="client-readonly-note">Click <strong>Edit Details</strong> above to change customer information.</div>}
+          {canEdit && (!accountNumber || isEditing) && <button className="btn btn-primary" type="submit"><IconSave /><span>{accountNumber ? 'Save Changes' : 'Save'}</span></button>}
+          <button className="btn" type="button" onClick={() => navigate('/clients')}><IconX /><span>{accountNumber ? 'Back to Clients' : 'Cancel'}</span></button>
         </div>
       </form>
     </div>
