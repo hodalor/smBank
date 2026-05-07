@@ -163,8 +163,8 @@ export async function createClient(payload) {
 export async function updateClient(id, payload) {
   return apiFetch(`/clients/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
 }
-export async function deleteClient(id) {
-  return apiFetch(`/clients/${id}`, { method: 'DELETE' });
+export async function deleteClient(id, remarks = '') {
+  return apiFetch(`/clients/${id}`, { method: 'DELETE', body: JSON.stringify({ remarks }) });
 }
 export async function directoryLookup(accountNumber) {
   return apiFetch(`/directory/${accountNumber}`, { method: 'GET' });

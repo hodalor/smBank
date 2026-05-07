@@ -308,6 +308,7 @@ export default function ClientProfile() {
       if (!accountNumber) navigate('/clients');
     } catch (e) {
       if (e && e.message && e.message.includes('duplicate_contact')) showError('Duplicate email/phone/ID detected');
+      else if (e && e.message && e.message.includes('duplicate_account_number')) showError('Duplicate account number detected');
       else showError('Failed to save client');
     }
   };

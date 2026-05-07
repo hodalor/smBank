@@ -19,6 +19,7 @@ const PERMS = {
   DASHBOARD_VIEW: 'dashboard.view',
   CLIENTS_VIEW: 'clients.view',
   CLIENTS_CREATE: 'clients.create',
+  CLIENTS_DELETE: 'clients.delete',
   LOANS_CREATE: 'loans.create',
   DEPOSIT_CREATE: 'deposit.create',
   WITHDRAW_CREATE: 'withdraw.create',

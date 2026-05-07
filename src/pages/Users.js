@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getRoles, getAllPermissions, getEffectivePermissions, hasPermission, getCurrentUser, PERMISSIONS } from '../state/ops';
 import { listUsers, upsertUser, removeUser, resetUserPassword, setUserEnabled } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
-import { confirm } from '../components/Confirm';
+import { confirm, prompt } from '../components/Confirm';
 import Pager from '../components/Pager';
 import { IconFilter, IconX, IconSave, IconEdit, IconTrash, IconCheck, IconDownload } from '../components/Icons';
 
@@ -320,8 +320,11 @@ export default function Users() {
               <div className="row" style={{ gap: 8, marginTop: 8 }}>
                 <button type="button" className="btn" onClick={async () => {
                   try {
-                    let remarks = '';
-                    try { remarks = window.prompt ? (window.prompt('Enter remark for enabling this account') || '') : ''; } catch {}
+                    const remarks = await prompt('Enter remark for enabling this account', {
+                      title: 'Enable User',
+                      placeholder: 'Reason for enabling',
+                    });
+                    if (remarks == null) return;
                     await setUserEnabled(form.username, true, remarks);
                     setForm({ ...form, enabled: true });
                     await reload();
@@ -379,7 +382,12 @@ export default function Users() {
                       try {
                         let remarks = '';
                         if (!u.enabled) {
-                          try { remarks = window.prompt ? (window.prompt('Enter remark for enabling this account') || '') : ''; } catch {}
+                          const input = await prompt('Enter remark for enabling this account', {
+                            title: 'Enable User',
+                            placeholder: 'Reason for enabling',
+                          });
+                          if (input == null) return;
+                          remarks = input;
                         }
                         await setUserEnabled(u.username, !u.enabled, remarks);
                         await reload();

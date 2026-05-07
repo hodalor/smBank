@@ -2,13 +2,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchByAccount from '../components/SearchByAccount';
 import { hasPermission, PERMISSIONS } from '../state/ops';
-import { listClients } from '../api';
+import { deleteClient, listClients } from '../api';
 import Pager from '../components/Pager';
-import { IconPlus, IconExternal, IconDownload } from '../components/Icons';
+import { prompt } from '../components/Confirm';
+import { showError, showSuccess } from '../components/Toaster';
+import { IconPlus, IconExternal, IconDownload, IconTrash } from '../components/Icons';
 
 export default function ClientsList() {
   const navigate = useNavigate();
   const allowed = hasPermission(PERMISSIONS.CLIENTS_VIEW);
+  const canDelete = hasPermission(PERMISSIONS.CLIENTS_DELETE);
   const [query, setQuery] = useState({ type: 'account', value: '' });
   const [data, setData] = useState([]);
   const [exportCols, setExportCols] = useState({ accountNumber: true, phone: false, name: false, nationalId: false, status: false });
@@ -64,6 +67,26 @@ export default function ClientsList() {
     a.click();
     URL.revokeObjectURL(url);
   };
+  const removeClient = async (row) => {
+    const remarks = await prompt(`Enter deletion remark for ${row.accountNumber}`, {
+      title: 'Delete Client',
+      placeholder: 'Reason for deletion',
+      required: true,
+      confirmText: 'Delete',
+    });
+    if (remarks == null) return;
+    if (!String(remarks).trim()) {
+      showError('Deletion remark is required');
+      return;
+    }
+    try {
+      await deleteClient(row.accountNumber, String(remarks).trim());
+      setData(list => list.filter(item => item.accountNumber !== row.accountNumber));
+      showSuccess('Client deleted');
+    } catch {
+      showError('Failed to delete client');
+    }
+  };
   if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
@@ -96,7 +119,7 @@ export default function ClientsList() {
               <th>National ID</th>
               <th>Phone</th>
               <th>Status</th>
-              <th></th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -108,7 +131,12 @@ export default function ClientsList() {
                 <td>{row.phone}</td>
                 <td>{row.status}</td>
                 <td>
-                  <button className="btn" onClick={() => navigate(`/clients/${row.accountNumber}`)}><IconExternal /><span>Open</span></button>
+                  <div className="row" style={{ gap: 8 }}>
+                    <button className="btn" onClick={() => navigate(`/clients/${row.accountNumber}`)}><IconExternal /><span>Open</span></button>
+                    {canDelete && (
+                      <button className="btn" onClick={() => removeClient(row)}><IconTrash /><span>Delete</span></button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
