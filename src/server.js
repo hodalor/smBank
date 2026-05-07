@@ -1020,6 +1020,23 @@ function canManageAssets(role) {
   const r = String(role || '');
   return r === 'Admin' || r === 'Super Admin';
 }
+async function userHasPermission(username, perm, fallbackRole = '') {
+  const role = String(fallbackRole || '');
+  if (!username) return false;
+  if (role === 'Admin' || role === 'Super Admin') return true;
+  if (!isConnected()) return false;
+  try {
+    const { User } = getModels();
+    const doc = await User.findOne({ username: String(username) }).lean();
+    if (!doc) return false;
+    const add = Array.isArray(doc.permsAdd) ? doc.permsAdd : [];
+    const remove = Array.isArray(doc.permsRemove) ? doc.permsRemove : [];
+    if (remove.includes(perm)) return false;
+    return add.includes(perm);
+  } catch {
+    return false;
+  }
+}
 async function nextEmployeeNumber(dept, UserModel) {
   const prefix = (String(dept || '').trim().toUpperCase().slice(0, 2) || 'XX');
   // Find the highest existing sequence for this prefix
@@ -2474,6 +2491,8 @@ app.post('/clients', async (req, res) => {
   if (hasDuplicates(contacts.ids)) return res.status(400).json({ error: 'duplicate_contact', field: 'id' });
   if (isConnected()) {
     const { Client } = getModels();
+    const existingClient = await Client.findOne({ accountNumber: c.accountNumber }).lean();
+    if (existingClient) return res.status(400).json({ error: 'duplicate_account_number' });
     const doc = await Client.create({
       id: c.id,
       accountNumber: c.accountNumber,
@@ -2489,6 +2508,9 @@ app.post('/clients', async (req, res) => {
     });
     await logActivity(req, 'client.create', 'client', String(doc.accountNumber || ''), {});
     return res.status(201).json({ ...(doc.data || {}), id: doc.id, accountNumber: doc.accountNumber, createdAt: doc.createdAt });
+  }
+  if (clients.some(x => x.accountNumber === c.accountNumber)) {
+    return res.status(400).json({ error: 'duplicate_account_number' });
   }
   clients.push(c);
   writeJSON(CLIENTS_FILE, clients);
@@ -2525,12 +2547,18 @@ app.put('/clients/:id', async (req, res) => {
   res.json(clients[idx]);
 });
 app.delete('/clients/:id', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  const canDeleteClient = await userHasPermission(req.user.username, 'clients.delete', req.user.role);
+  if (!canDeleteClient) return res.status(403).json({ error: 'forbidden' });
+  const remarks = String((req.body && req.body.remarks) || '').trim();
+  if (!remarks) return res.status(400).json({ error: 'remarks_required' });
   if (isConnected()) {
     const { Client, SuperBin } = getModels();
     const d = await Client.findOneAndDelete({ $or: [{ accountNumber: req.params.id }, { id: req.params.id }] }).lean();
     if (!d) return res.status(404).json({ error: 'not found' });
-    const item = await SuperBin.create({ by: 'api', deletedAt: new Date(), kind: 'client', payload: d.data || d });
-    await logActivity(req, 'client.delete', 'client', String(req.params.id), {});
+    const payload = { ...(d.data || d), deleteRemarks: remarks, deletedBy: req.user.username };
+    const item = await SuperBin.create({ by: req.user.username || 'api', deletedAt: new Date(), kind: 'client', payload });
+    await logActivity(req, 'client.delete', 'client', String(req.params.id), { remarks });
     return res.json({ ok: true, item });
   }
   const idx = clients.findIndex(c => c.accountNumber === req.params.id || c.id === req.params.id);
@@ -2539,14 +2567,14 @@ app.delete('/clients/:id', async (req, res) => {
   writeJSON(CLIENTS_FILE, clients);
   const item = {
     id: newId('BIN'),
-    by: 'api',
+    by: req.user.username || 'api',
     deletedAt: new Date().toISOString(),
     kind: 'client',
-    payload: deleted,
+    payload: { ...deleted, deleteRemarks: remarks, deletedBy: req.user.username || 'api' },
   };
   superBin.unshift(item);
   writeJSON(BIN_FILE, superBin);
-  await logActivity(req, 'client.delete', 'client', String(req.params.id), {});
+  await logActivity(req, 'client.delete', 'client', String(req.params.id), { remarks });
   res.json({ ok: true, item });
 });
 
