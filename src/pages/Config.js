@@ -93,6 +93,8 @@ export default function Config() {
       footerText: '© smBank',
       primary: '#0f172a',
       primaryContrast: '#ffffff',
+      companyPhone: '',
+      companyEmail: '',
       darkMode: false,
       defaultLoanRate: 0,
       serviceFeeRate: 0,
@@ -138,6 +140,14 @@ export default function Config() {
           <label>
             Footer Text
             <input className="input" name="footerText" value={cfg.footerText} onChange={change} />
+          </label>
+          <label>
+            Company Phone Number
+            <input className="input" name="companyPhone" value={cfg.companyPhone || ''} onChange={change} placeholder="e.g. +233..." />
+          </label>
+          <label>
+            Company Email Address
+            <input className="input" name="companyEmail" value={cfg.companyEmail || ''} onChange={change} placeholder="e.g. info@company.com" />
           </label>
           <label>
             Primary Color

@@ -308,34 +308,78 @@ function currencyGH(n) {
   try { return num.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' }); } catch { return `GHS ${num.toFixed(2)}`; }
 }
 
-function openPrint(html, title = 'Receipt') {
-  const w = window.open('', '_blank', 'width=400,height=600');
+function safePrintHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function openReceiptPrintWindow({ title, subtitle, badges = [], summaryCards = [], tables = [], htmlContent = '', footerNote = '' }) {
+  const cfg = getAppConfig();
+  const w = window.open('', '_blank', 'noopener,noreferrer,width=920,height=760');
   if (!w) return;
-  w.document.write(`<!doctype html>
-  <html>
-  <head>
-    <meta charset="utf-8"/>
-    <title>${title}</title>
-    <style>
-      @page { margin: 6mm; }
-      body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-size: 12px; color: #0f172a; width: 260px; }
-      .center { text-align: center; }
-      .title { font-weight: 700; font-size: 14px; margin: 4px 0; }
-      .hr { border-top: 1px dashed #999; margin: 8px 0; }
-      table { width: 100%; border-collapse: collapse; }
-      td { padding: 2px 0; vertical-align: top; }
-      .label { color: #475569; width: 45%; }
-      .value { width: 55%; text-align: right; }
-      .sign { margin-top: 14px; display: flex; justify-content: space-between; }
-      .sign div { width: 48%; }
-      .line { border-top: 1px solid #0f172a; margin-top: 22px; }
-      .copy { margin-top: 6px; font-size: 11px; text-align: center; color: #64748b; }
-    </style>
-  </head>
-  <body>${html}</body></html>`);
+  const contactItems = [cfg.companyPhone || '', cfg.companyEmail || '', cfg.defaultEmailFrom || ''].filter(Boolean);
+  const body = `
+    <div class="sheet">
+      <div class="brand">
+        <div class="brand-left">
+          <img src="/logo512.png" alt="${safePrintHtml(cfg.appName || 'smBank')}" class="logo" />
+          <div>
+            <div class="app-name">${safePrintHtml(cfg.appName || 'smBank')}</div>
+            <div class="app-subtitle">${safePrintHtml(subtitle || 'Official receipt')}</div>
+            ${contactItems.length ? `<div class="contact-line">${contactItems.map((item) => safePrintHtml(item)).join(' | ')}</div>` : ''}
+          </div>
+        </div>
+        <div class="generated-at">Generated ${safePrintHtml(new Date().toLocaleString())}</div>
+      </div>
+      <div class="body">
+        <div class="title">${safePrintHtml(title || 'Receipt')}</div>
+        ${badges.length ? `<div class="badges">${badges.map((item) => `<span class="badge">${safePrintHtml(item)}</span>`).join('')}</div>` : ''}
+        ${summaryCards.length ? `<div class="summary-grid">${summaryCards.map((item) => `<div class="summary-card"><div class="summary-label">${safePrintHtml(item.label || '')}</div><div class="summary-value">${safePrintHtml(item.value == null ? '' : item.value)}</div></div>`).join('')}</div>` : ''}
+        ${tables.map((table) => `
+          <div class="section">
+            <div class="section-title">${safePrintHtml(table.title || '')}</div>
+            <table>
+              <thead><tr>${(table.columns || []).map((col) => `<th>${safePrintHtml(col.label || '')}</th>`).join('')}</tr></thead>
+              <tbody>${(table.rows || []).map((row) => `<tr>${(table.columns || []).map((col) => `<td>${safePrintHtml(row && row[col.key] != null ? row[col.key] : '')}</td>`).join('')}</tr>`).join('')}</tbody>
+            </table>
+          </div>
+        `).join('')}
+        ${htmlContent || ''}
+        <div class="footer">${safePrintHtml(footerNote || cfg.footerText || '© smBank')}</div>
+      </div>
+    </div>
+  `;
+  w.document.open();
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"/><title>${safePrintHtml(title || 'Receipt')}</title><style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 24px; color: #0f172a; background: #f8fafc; }
+    .sheet { background: #ffffff; border: 1px solid #dbe2ea; border-radius: 20px; overflow: hidden; }
+    .brand { background: linear-gradient(135deg, ${safePrintHtml(cfg.primary || '#0f172a')}, #1d4ed8); color: ${safePrintHtml(cfg.primaryContrast || '#ffffff')}; padding: 20px 24px; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+    .brand-left { display: flex; align-items: center; gap: 14px; }
+    .logo { width: 58px; height: 58px; border-radius: 14px; background: rgba(255,255,255,0.14); padding: 6px; object-fit: contain; }
+    .app-name { font-size: 26px; font-weight: 800; }
+    .app-subtitle, .generated-at, .contact-line { font-size: 12px; opacity: 0.95; }
+    .body { padding: 24px; display: grid; gap: 16px; }
+    .title { font-size: 28px; font-weight: 800; }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; }
+    .badge { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: #eff6ff; color: #1d4ed8; }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+    .summary-card { border: 1px solid #dbe2ea; border-radius: 14px; padding: 14px; background: linear-gradient(180deg, #ffffff, #f8fafc); }
+    .summary-label { color: #64748b; font-size: 12px; margin-bottom: 6px; }
+    .summary-value { font-size: 16px; font-weight: 800; }
+    .section { display: grid; gap: 10px; }
+    .section-title { font-size: 16px; font-weight: 800; }
+    table { width: 100%; border-collapse: collapse; border: 1px solid #dbe2ea; border-radius: 14px; overflow: hidden; }
+    th, td { border-bottom: 1px solid #dbe2ea; padding: 10px 12px; text-align: left; font-size: 13px; }
+    th { background: #f1f5f9; }
+    .footer { text-align: right; color: #64748b; font-size: 12px; }
+    @media print { body { padding: 0; background: #fff; } .sheet { border: 0; border-radius: 0; } }
+  </style></head><body>${body}<script>window.addEventListener("load", function(){ setTimeout(function(){ try { window.focus(); window.print(); } catch (e) {} }, 250); });</script></body></html>`);
   w.document.close();
-  w.focus();
-  setTimeout(() => { try { w.print(); } catch {} }, 150);
+  try { w.focus(); } catch {}
 }
 
 export function printTxnReceipt(txn, { copies = 2 } = {}) {
@@ -384,33 +428,38 @@ export function printTxnReceipt(txn, { copies = 2 } = {}) {
           ]
         : []),
   ];
-  const block = (copyLabel) => `
-    <div class="center">
-      <div class="title">${app.appName || 'smBank'}</div>
-      <div>${title}</div>
-      <div class="copy">${copyLabel}</div>
+  const tables = Array.from({ length: Math.max(1, copies) }).map((_, i) => ({
+    title: i === 0 ? 'Customer Copy' : 'Records Copy',
+    columns: [
+      { key: 'label', label: 'Field' },
+      { key: 'value', label: 'Value' },
+    ],
+    rows: rows.map(([label, value]) => ({ label, value })),
+    emptyText: 'No receipt details',
+  }));
+  const signatures = `
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:10px;">
+      <div style="text-align:center;"><div style="height:28px;"></div><div style="border-top:1px solid #0f172a;padding-top:6px;font-size:12px;color:#64748b;">Customer Signature</div></div>
+      <div style="text-align:center;"><div style="height:28px;"></div><div style="border-top:1px solid #0f172a;padding-top:6px;font-size:12px;color:#64748b;">Initiator Signature</div></div>
     </div>
-    <div class="hr"></div>
-    <table>${rows.map(([l,v]) => `<tr><td class="label">${l}</td><td class="value">${v}</td></tr>`).join('')}</table>
-    <div class="sign">
-      <div>
-        <div style="height:28px"></div>
-        <div class="line"></div>
-        <div class="copy">Customer Signature</div>
-      </div>
-      <div>
-        <div style="height:28px"></div>
-        <div class="line"></div>
-        <div class="copy">Initiator Signature</div>
-      </div>
-    </div>`;
-  const html = Array.from({ length: Math.max(1, copies) }).map((_, i) => block(i === 0 ? 'Customer Copy' : 'Records Copy')).join('<div class="hr"></div>');
-  openPrint(html, fileTitle);
+  `;
+  openReceiptPrintWindow({
+    title,
+    subtitle: 'Official receipt',
+    badges: [txn.accountNumber ? `Account ${txn.accountNumber}` : '', txn.id ? `Txn ${txn.id}` : ''].filter(Boolean),
+    summaryCards: [
+      { label: 'Amount', value: currencyGH(txn.amount) },
+      { label: 'Date', value: txn.approvedAt || txn.initiatedAt || new Date().toISOString() },
+      { label: 'Copies', value: String(Math.max(1, copies)) },
+    ],
+    tables,
+    htmlContent: signatures,
+    footerNote: fileTitle,
+  });
 }
 
 export function printLoanDisbursementReceipt(loan, { copies = 2 } = {}) {
   if (!loan) return;
-  const app = getAppConfig();
   const title = 'Loan Disbursement Receipt';
   const fileTitle = `${loan.accountNumber || 'receipt'} - ${title}`;
   const rows = [
@@ -422,28 +471,32 @@ export function printLoanDisbursementReceipt(loan, { copies = 2 } = {}) {
     ['Principal', currencyGH(loan.principal)],
     ['Rate/Term', `${loan.rate || 0}% / ${loan.termMonths || 0}m`],
   ];
-  const block = (copyLabel) => `
-    <div class="center">
-      <div class="title">${app.appName || 'smBank'}</div>
-      <div>${title}</div>
-      <div class="copy">${copyLabel}</div>
-    </div>
-    <div class="hr"></div>
-    <table>${rows.map(([l,v]) => `<tr><td class="label">${l}</td><td class="value">${v}</td></tr>`).join('')}</table>
-    <div class="sign">
-      <div>
-        <div style="height:28px"></div>
-        <div class="line"></div>
-        <div class="copy">Customer Signature</div>
+  openReceiptPrintWindow({
+    title,
+    subtitle: 'Loan disbursement receipt',
+    badges: [loan.accountNumber ? `Account ${loan.accountNumber}` : '', loan.id ? `Loan ${loan.id}` : ''].filter(Boolean),
+    summaryCards: [
+      { label: 'Principal', value: currencyGH(loan.principal) },
+      { label: 'Rate / Term', value: `${loan.rate || 0}% / ${loan.termMonths || 0}m` },
+      { label: 'Copies', value: String(Math.max(1, copies)) },
+    ],
+    tables: Array.from({ length: Math.max(1, copies) }).map((_, i) => ({
+      title: i === 0 ? 'Customer Copy' : 'Records Copy',
+      columns: [
+        { key: 'label', label: 'Field' },
+        { key: 'value', label: 'Value' },
+      ],
+      rows: rows.map(([label, value]) => ({ label, value })),
+      emptyText: 'No receipt details',
+    })),
+    htmlContent: `
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:10px;">
+        <div style="text-align:center;"><div style="height:28px;"></div><div style="border-top:1px solid #0f172a;padding-top:6px;font-size:12px;color:#64748b;">Customer Signature</div></div>
+        <div style="text-align:center;"><div style="height:28px;"></div><div style="border-top:1px solid #0f172a;padding-top:6px;font-size:12px;color:#64748b;">Initiator Signature</div></div>
       </div>
-      <div>
-        <div style="height:28px"></div>
-        <div class="line"></div>
-        <div class="copy">Initiator Signature</div>
-      </div>
-    </div>`;
-  const html = Array.from({ length: Math.max(1, copies) }).map((_, i) => block(i === 0 ? 'Customer Copy' : 'Records Copy')).join('<div class="hr"></div>');
-  openPrint(html, fileTitle);
+    `,
+    footerNote: fileTitle,
+  });
 }
 
 export function addToSuperBin(entry) {
@@ -497,10 +550,12 @@ export function getAppConfig() {
       footerText: '© smBank',
       primary: '#0f172a',
       primaryContrast: '#ffffff',
+      companyPhone: '',
+      companyEmail: '',
       darkMode: false,
     };
   } catch {
-    return { appName: 'smBank', footerText: '© smBank', primary: '#0f172a', primaryContrast: '#ffffff', darkMode: false };
+    return { appName: 'smBank', footerText: '© smBank', primary: '#0f172a', primaryContrast: '#ffffff', companyPhone: '', companyEmail: '', darkMode: false };
   }
 }
 export function saveAppConfig(cfg) {

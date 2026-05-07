@@ -4,7 +4,9 @@ import { listActivity, getClient, listUsers, listPostedTransactions, listLoans, 
 import { hasPermission, PERMISSIONS, displayUserName } from '../state/ops';
 import { showError } from '../components/Toaster';
 import Pager from '../components/Pager';
-import { IconX, IconExternal, IconDownload } from '../components/Icons';
+import { IconX, IconExternal, IconDownload, IconFile } from '../components/Icons';
+import { openBrandedPrintWindow } from '../utils/printLayouts';
+import { downloadCsvFile } from '../utils/downloads';
 
 export default function Activity() {
   const navigate = useNavigate();
@@ -38,28 +40,67 @@ export default function Activity() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const exportCSV = () => {
-    const cols = ['time','actor','role','action','entity','entityId','path','method'];
-    const header = cols.join(',');
-    const data = rows.map(r => {
-      const row = {
-        time: formatTs(r.ts),
-        actor: r.actor || '',
-        role: r.role || '',
-        action: r.action || '',
-        entity: r.entityType || '',
-        entityId: r.entityId || '',
-        path: r.path || '',
-        method: r.method || '',
-      };
-      return cols.map(c => JSON.stringify(row[c] ?? '')).join(',');
-    }).join('\n');
-    const blob = new Blob([header + '\n' + data], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'activity_export.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+    const cols = ['time', 'actor', 'role', 'action', 'entity', 'entityId', 'path', 'method'];
+    downloadCsvFile('activity_export.csv', cols, rows.map((r) => ({
+      time: formatTs(r.ts),
+      actor: r.actor || '',
+      role: r.role || '',
+      action: r.action || '',
+      entity: r.entityType || '',
+      entityId: r.entityId || '',
+      path: r.path || '',
+      method: r.method || '',
+    })));
+  };
+  const exportPdf = () => {
+    openBrandedPrintWindow({
+      title: 'Activity Export',
+      subtitle: 'Activity report',
+      summaryCards: [
+        { label: 'Rows', value: String(rows.length) },
+        { label: 'Quick Search', value: debouncedQuick || 'None' },
+      ],
+      tables: [{
+        title: 'Activity Entries',
+        columns: [
+          { key: 'time', label: 'Time' },
+          { key: 'actor', label: 'Actor' },
+          { key: 'role', label: 'Role' },
+          { key: 'action', label: 'Action' },
+          { key: 'entity', label: 'Entity' },
+          { key: 'entityId', label: 'Entity ID' },
+          { key: 'path', label: 'Path' },
+          { key: 'method', label: 'Method' },
+        ],
+        rows: rows.map((r) => ({
+          time: formatTs(r.ts),
+          actor: r.actor || '',
+          role: r.role || '',
+          action: r.action || '',
+          entity: r.entityType || '',
+          entityId: r.entityId || '',
+          path: r.path || '',
+          method: r.method || '',
+        })),
+        emptyText: 'No activity rows available.',
+      }],
+    });
+  };
+  const exportDetailsPdf = () => {
+    openBrandedPrintWindow({
+      title: viewTitle || 'Activity Details',
+      subtitle: 'Activity detail sheet',
+      badges: [
+        `Action ${viewSections.find(([k]) => k === 'Action')?.[1] || ''}`.trim(),
+        `Entity ${viewSections.find(([k]) => k === 'Entity')?.[1] || ''}`.trim(),
+      ].filter((v) => v && !/Action $|Entity $/.test(v)),
+      sections: viewRaw != null
+        ? [
+            { title: 'Details', rows: viewSections },
+            { title: 'Raw Snapshot', rows: [['JSON', safeJSONStringify(viewRaw)]] },
+          ]
+        : [{ title: 'Details', rows: viewSections }],
+    });
   };
   useEffect(() => {
     if (!canView) return;
@@ -236,8 +277,13 @@ export default function Activity() {
   };
   if (!canView) return <div>Not authorized.</div>;
   return (
-    <div>
-      <h2>Activity</h2>
+    <div className="stack">
+      <div className="dashboard-header">
+        <div>
+          <h1>Activity</h1>
+          <div className="dashboard-subtitle">Track actions across users, clients, transactions, loans, and configuration changes.</div>
+        </div>
+      </div>
       <div className="card" style={{ marginBottom: 16, display: 'grid', gap: 12 }}>
         <div className="row" style={{ gap: 8 }}>
           <input className="input" value={quick} onChange={e => setQuick(e.target.value)} placeholder="Quick search: actor, action or entity (auto fetch)" style={{ flex: 1 }} />
@@ -275,6 +321,7 @@ export default function Activity() {
       <div className="card">
         <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 8 }}>
           <button className="btn" onClick={exportCSV}><IconDownload /><span>Export CSV</span></button>
+          <button className="btn btn-primary" onClick={exportPdf}><IconFile /><span>Export PDF</span></button>
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table className="table">
@@ -317,33 +364,37 @@ export default function Activity() {
       </div>
       <Pager total={rows.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
       {open && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,6,23,0.35)', display: 'grid', placeItems: 'center', zIndex: 50 }} onClick={() => setOpen(false)}>
-          <div ref={modalRef} className="card" style={{ width: 720, maxWidth: '90vw', maxHeight: '80vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div style={{ fontWeight: 700, fontSize: 18 }}>{viewTitle}</div>
-              <button className="btn" onClick={() => setOpen(false)}><IconX /><span>Close</span></button>
+        <div className="detail-modal-overlay" onClick={() => setOpen(false)}>
+          <div ref={modalRef} className="card detail-modal" style={{ maxHeight: '80vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            <div className="detail-modal-header">
+              <div>
+                <div className="detail-modal-title">{viewTitle}</div>
+                <div className="detail-modal-subtitle">Detailed activity snapshot</div>
+              </div>
+              <div className="row">
+                {!viewLoading && !viewError && <button className="btn" onClick={exportDetailsPdf}><IconDownload /><span>Export PDF</span></button>}
+                <button className="btn" onClick={() => setOpen(false)}><IconX /><span>Close</span></button>
+              </div>
             </div>
             {viewLoading && <div>Loading…</div>}
             {viewError && <div style={{ color: '#dc2626' }}>{viewError}</div>}
             {!viewLoading && !viewError && (
               <>
-                <table className="table">
-                  <tbody>
-                    {viewSections.map(([k, v]) => (
-                      <tr key={k}>
-                        <th style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>{k}</th>
-                        <td>{v}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="detail-modal-grid">
+                  {viewSections.map(([k, v]) => (
+                    <div key={k} className="detail-modal-block">
+                      <div className="detail-modal-label">{k}</div>
+                      <div>{v}</div>
+                    </div>
+                  ))}
+                </div>
                 <div className="row" style={{ gap: 8, marginTop: 8 }}>
                   <ModalLinks sections={viewSections} navigate={navigate} />
                 </div>
                 {viewRaw != null && (
                   <div style={{ marginTop: 8 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>Raw</div>
-                    <div style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: '#f8fafc', border: '1px solid #e2e8f0', padding: 8, borderRadius: 6 }}>
+                    <div className="detail-modal-label" style={{ marginBottom: 8 }}>Raw</div>
+                    <div className="detail-modal-notes" style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                       {safeJSONStringify(viewRaw)}
                     </div>
                   </div>

@@ -5,6 +5,8 @@ import { displayUserName, hasPermission, PERMISSIONS } from '../state/ops';
 import { showError, showWarning } from '../components/Toaster';
 import Pager from '../components/Pager';
 import { IconSearch, IconDownload, IconX, IconFile } from '../components/Icons';
+import { openBrandedPrintWindow } from '../utils/printLayouts';
+import { downloadCsvFile } from '../utils/downloads';
 
 function toCurrency(n) {
   const num = Number(n || 0);
@@ -84,28 +86,43 @@ export default function Statements() {
   }, [rows]);
 
   const downloadCSV = (filename, tableRows, header) => {
-    const cols = header;
-    const data = [cols.join(',')].concat(tableRows.map(r => cols.map(c => JSON.stringify(r[c] ?? '')).join(','))).join('\\n');
-    const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsvFile(filename, header, tableRows);
   };
 
   const printTables = () => {
-    const content = document.getElementById('printable-area')?.innerHTML || '';
-    const w = window.open('', '_blank');
-    if (!w) return;
-    w.document.write('<html><head><title>Statement</title>');
-    w.document.write('<style>table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#f1f5f9}</style>');
-    w.document.write('</head><body>');
-    w.document.write(content);
-    w.document.write('</body></html>');
-    w.document.close();
-    w.print();
+    openBrandedPrintWindow({
+      title: `Account Statement ${accountNumber || ''}`.trim(),
+      subtitle: 'Savings statement',
+      badges: [accountNumber ? `Account ${accountNumber}` : '', startDate ? `From ${startDate}` : '', endDate ? `To ${endDate}` : ''].filter(Boolean),
+      summaryCards: [
+        { label: 'Customer', value: client?.name || '—' },
+        { label: 'Current Balance', value: toCurrency(balance) },
+        { label: 'Rows', value: String(rows.length) },
+      ],
+      sections: client ? [{
+        title: 'Customer Details',
+        rows: [
+          ['Name', client.name || '—'],
+          ['National ID', client.nationalId || '—'],
+          ['Date of Birth', client.dob || '—'],
+          ['Phone', client.phone || '—'],
+        ],
+      }] : [],
+      tables: [{
+        title: 'Transactions',
+        columns: [
+          { key: 'id', label: 'ID' },
+          { key: 'type', label: 'Type' },
+          { key: 'amount', label: 'Amount' },
+          { key: 'date', label: 'Date' },
+          { key: 'initiator', label: 'Initiator' },
+          { key: 'approver', label: 'Approver' },
+          { key: 'notes', label: 'Notes' },
+        ],
+        rows: rows.map((r) => ({ ...r, amount: toCurrency(r.amount) })),
+        emptyText: 'No statement transactions found.',
+      }],
+    });
   };
 
   const [page, setPage] = useState(1);
@@ -115,7 +132,12 @@ export default function Statements() {
   if (!hasPermission(PERMISSIONS.STATEMENTS_VIEW)) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
-      <h1>Statements</h1>
+      <div className="dashboard-header">
+        <div>
+          <h1>Statements</h1>
+          <div className="dashboard-subtitle">Preview account activity and export a branded statement with company letterhead.</div>
+        </div>
+      </div>
       <div className="card" style={{ display: 'grid', gap: 12 }}>
         <label>
           Account Number
@@ -173,15 +195,23 @@ export default function Statements() {
         </div>
       </div>
 
-      <div className="card">
-        <div className="row" style={{ justifyContent: 'space-between' }}>
-          <div>
-            <div style={{ fontSize: 14, color: '#64748b' }}>Account</div>
-            <div style={{ fontSize: 18, fontWeight: 600 }}>{accountNumber || '—'}</div>
+      <div className="card client-sheet">
+        <div className="client-sheet-brand">
+          <div className="client-sheet-branding">
+            <img src="/logo512.png" alt="smBank" className="client-sheet-logo" />
+            <div>
+              <div className="client-sheet-brand-title">Statement Preview</div>
+              <div className="client-sheet-brand-subtitle">{accountNumber ? `Account ${accountNumber}` : 'Select an account to preview'}</div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: 14, color: '#64748b' }}>Current Balance</div>
-            <div style={{ fontSize: 22, fontWeight: 700 }}>{toCurrency(balance)}</div>
+          <div className="client-sheet-muted">{startDate || endDate ? `${startDate || 'Start'} to ${endDate || 'Today'}` : 'All available dates'}</div>
+        </div>
+        <div className="client-sheet-body">
+          <div className="client-sheet-summary">
+            <div className="client-sheet-stat"><div className="client-sheet-stat-label">Customer</div><div className="client-sheet-stat-value">{client?.name || '—'}</div></div>
+            <div className="client-sheet-stat"><div className="client-sheet-stat-label">Current Balance</div><div className="client-sheet-stat-value">{toCurrency(balance)}</div></div>
+            <div className="client-sheet-stat"><div className="client-sheet-stat-label">Rows</div><div className="client-sheet-stat-value">{rows.length}</div></div>
+            <div className="client-sheet-stat"><div className="client-sheet-stat-label">Type Filter</div><div className="client-sheet-stat-value">{typeFilter}</div></div>
           </div>
           <div className="row">
             <button className="btn" onClick={() => downloadCSV(`transactions_${accountNumber || 'all'}.csv`, rows, ['id','account','type','amount','date','initiator','approver','notes'])}><IconDownload /><span>Download CSV</span></button>

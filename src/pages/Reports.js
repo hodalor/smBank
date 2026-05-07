@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { hasPermission, PERMISSIONS } from '../state/ops';
 import { IconDownload, IconFile } from '../components/Icons';
 import { listClients, listLoans, listLoanRepayPosted, listPostedTransactions } from '../api';
+import { openBrandedPrintWindow } from '../utils/printLayouts';
+import { downloadCsvFile } from '../utils/downloads';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
@@ -110,37 +112,53 @@ export default function Reports() {
   }, [clients, loansRows, reportType, startDate, endDate, balancesByAccount, loansByAccount]);
 
   const downloadCSV = (filename, tableRows) => {
-    let header = [];
-    if (reportType.includes('Clients')) header = ['account', 'name', 'nationalId', 'loans', 'balance'];
-    else header = ['id', 'account', 'client', 'principal', 'status', 'start', 'due'];
-    const data = [header.join(',')].concat(tableRows.map(r => header.map(c => JSON.stringify(r[c] ?? '')).join(','))).join('\\n');
-    const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filename}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const header = reportType.includes('Clients') ? ['account', 'name', 'nationalId', 'loans', 'balance'] : ['id', 'account', 'client', 'principal', 'status', 'start', 'due'];
+    downloadCsvFile(filename, header, tableRows);
   };
 
   const printTable = () => {
-    const el = document.getElementById('report-table')?.outerHTML || '';
-    const w = window.open('', '_blank');
-    if (!w) return;
-    w.document.write('<html><head><title>Report</title>');
-    w.document.write('<style>table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#f1f5f9}</style>');
-    w.document.write('</head><body>');
-    w.document.write(`<h2>${reportType}</h2>`);
-    w.document.write(el);
-    w.document.write('</body></html>');
-    w.document.close();
-    w.print();
+    const clientColumns = [
+      { key: 'account', label: 'Account' },
+      { key: 'name', label: 'Name' },
+      { key: 'nationalId', label: 'National ID' },
+      { key: 'loans', label: 'Loans' },
+      { key: 'balance', label: 'Balance' },
+    ];
+    const loanColumns = [
+      { key: 'id', label: 'Loan ID' },
+      { key: 'account', label: 'Account' },
+      { key: 'client', label: 'Client' },
+      { key: 'principal', label: 'Principal' },
+      { key: 'status', label: 'Status' },
+      { key: 'start', label: 'Start' },
+      { key: 'due', label: 'Due' },
+    ];
+    openBrandedPrintWindow({
+      title: reportType,
+      subtitle: 'Report export',
+      badges: [startDate ? `From ${startDate}` : '', endDate ? `To ${endDate}` : ''].filter(Boolean),
+      summaryCards: [
+        { label: 'Rows', value: String(rows.length) },
+        { label: 'Type', value: reportType },
+      ],
+      tables: [{
+        title: reportType,
+        columns: reportType.includes('Clients') ? clientColumns : loanColumns,
+        rows: rows.map((r) => reportType.includes('Clients') ? ({ ...r, balance: gh(r.balance) }) : ({ ...r, principal: gh(r.principal) })),
+        emptyText: 'No rows available for this report.',
+      }],
+    });
   };
 
   if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
-      <h1>Reports</h1>
+      <div className="dashboard-header">
+        <div>
+          <h1>Reports</h1>
+          <div className="dashboard-subtitle">Prepare client and loan reports, then export them with the company letterhead.</div>
+        </div>
+      </div>
       <div className="card">
         <div className="form-grid">
           <label>
@@ -165,6 +183,18 @@ export default function Reports() {
         <div className="row" style={{ marginTop: 8 }}>
           <button className="btn btn-primary" onClick={() => downloadCSV(reportType.replace(/\s+/g,'_'), rows)}><IconDownload /><span>Download CSV</span></button>
           <button className="btn" onClick={printTable}><IconFile /><span>Download PDF</span></button>
+        </div>
+      </div>
+      <div className="dashboard-kpi-grid">
+        <div className="card dashboard-kpi-card" style={{ '--accent': '#dbeafe' }}>
+          <div className="dashboard-kpi-label">Report Type</div>
+          <div className="dashboard-kpi-value">{reportType}</div>
+          <div className="dashboard-kpi-hint">Current report selection</div>
+        </div>
+        <div className="card dashboard-kpi-card" style={{ '--accent': '#dcfce7' }}>
+          <div className="dashboard-kpi-label">Rows</div>
+          <div className="dashboard-kpi-value">{rows.length}</div>
+          <div className="dashboard-kpi-hint">Records ready to export</div>
         </div>
       </div>
       <div className="card">

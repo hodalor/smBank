@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import { getLoan } from '../api';
 import { displayUserName, hasPermission, PERMISSIONS } from '../state/ops';
 import { showError } from '../components/Toaster';
+import { IconDownload } from '../components/Icons';
+import { openBrandedPrintWindow } from '../utils/printLayouts';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
@@ -18,58 +20,109 @@ export default function LoanDetails() {
   if (!data) return <div className="card">Loading…</div>;
   const { loan, client, repayments, summary } = data;
   const fees = (loan.totalFees ?? 0);
+  const exportPdf = () => {
+    openBrandedPrintWindow({
+      title: `Loan ${loan.id}`,
+      subtitle: 'Loan detail sheet',
+      badges: [loan.status || 'Pending', `Account ${loan.accountNumber}`],
+      summaryCards: [
+        { label: 'Principal', value: gh(loan.principal) },
+        { label: 'Interest', value: gh(loan.totalInterest) },
+        { label: 'Total Payable', value: gh(loan.totalDue) },
+        { label: 'Outstanding', value: gh(summary?.outstanding ?? Math.max(0, Number(loan.totalDue || 0) - Number(summary?.totalRepaid || 0))) },
+      ],
+      sections: [
+        {
+          title: 'Borrower Info',
+          rows: [
+            ['Name', client?.fullName || client?.companyName || '—'],
+            ['National ID', client?.nationalId || client?.registrationNumber || '—'],
+            ['DOB/Reg Date', client?.dob || client?.registrationDate || '—'],
+            ['Phone', client?.phone || client?.companyPhone || '—'],
+          ],
+        },
+        {
+          title: 'Timeline & Portfolio',
+          rows: [
+            ['Initiated', loan.createdAt ? new Date(loan.createdAt).toLocaleString() : '—'],
+            ['Initiator', displayUserName(loan.initiatorName) || '—'],
+            ['Approved', loan.approvedAt ? new Date(loan.approvedAt).toLocaleString() : '—'],
+            ['Approver', displayUserName(loan.approverName) || '—'],
+            ['Due Date', summary?.dueDate ? new Date(summary.dueDate).toLocaleDateString() : '—'],
+            ['Penalty Accrued', gh(summary?.penaltyAccrued || 0)],
+          ],
+        },
+      ],
+      tables: [{
+        title: 'Repayments',
+        columns: [
+          { key: 'id', label: 'Repay ID' },
+          { key: 'amount', label: 'Amount' },
+          { key: 'initiator', label: 'Initiator' },
+          { key: 'initiatedAt', label: 'Initiated' },
+          { key: 'approver', label: 'Approver' },
+          { key: 'approvedAt', label: 'Approved' },
+        ],
+        rows: (repayments || []).map((r) => ({
+          id: r.id,
+          amount: gh(r.amount),
+          initiator: displayUserName(r.initiatorName) || '—',
+          initiatedAt: r.initiatedAt ? new Date(r.initiatedAt).toLocaleString() : '—',
+          approver: displayUserName(r.approverName) || '—',
+          approvedAt: r.approvedAt ? new Date(r.approvedAt).toLocaleString() : '—',
+        })),
+        emptyText: 'No repayments posted.',
+      }],
+    });
+  };
   return (
     <div className="stack">
       <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1>Loan {loan.id}</h1>
-        <Link className="btn" to="/loans/records">Back to Records</Link>
+        <div>
+          <h1>Loan {loan.id}</h1>
+          <div className="dashboard-subtitle">Branded loan detail view with portfolio summary and borrower information.</div>
+        </div>
+        <div className="row">
+          <button className="btn" type="button" onClick={exportPdf}><IconDownload /><span>Export PDF</span></button>
+          <Link className="btn" to="/loans/records">Back to Records</Link>
+        </div>
       </div>
-      <div className="card row" style={{ gap: 24 }}>
-        <div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>Account</div>
-          <div style={{ fontWeight: 700 }}>{loan.accountNumber}</div>
+      <div className="card client-sheet">
+        <div className="client-sheet-brand">
+          <div className="client-sheet-branding">
+            <img src="/logo512.png" alt="smBank" className="client-sheet-logo" />
+            <div>
+              <div className="client-sheet-brand-title">Loan Detail Sheet</div>
+              <div className="client-sheet-brand-subtitle">Account {loan.accountNumber}</div>
+            </div>
+          </div>
+          <div className="client-sheet-muted">Status {loan.status}</div>
         </div>
-        <div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>Principal</div>
-          <div style={{ fontWeight: 700 }}>{gh(loan.principal)}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>Rate / Term</div>
-          <div style={{ fontWeight: 700 }}>{loan.rate}% · {loan.termMonths} months</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>Interest</div>
-          <div style={{ fontWeight: 700 }}>{gh(loan.totalInterest)}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>Fees</div>
-          <div style={{ fontWeight: 700 }}>{gh(fees)}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>Total Payable</div>
-          <div style={{ fontWeight: 700 }}>{gh(loan.totalDue)}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>Status</div>
-          <div style={{ fontWeight: 700 }}>{loan.status}</div>
+        <div className="client-sheet-body">
+          <div className="client-sheet-summary">
+            <div className="client-sheet-stat"><div className="client-sheet-stat-label">Principal</div><div className="client-sheet-stat-value">{gh(loan.principal)}</div></div>
+            <div className="client-sheet-stat"><div className="client-sheet-stat-label">Rate / Term</div><div className="client-sheet-stat-value">{loan.rate}% · {loan.termMonths} months</div></div>
+            <div className="client-sheet-stat"><div className="client-sheet-stat-label">Interest + Fees</div><div className="client-sheet-stat-value">{gh(Number(loan.totalInterest || 0) + Number(fees || 0))}</div></div>
+            <div className="client-sheet-stat"><div className="client-sheet-stat-label">Outstanding</div><div className="client-sheet-stat-value">{gh(summary?.outstanding ?? Math.max(0, Number(loan.totalDue || 0) - Number(summary?.totalRepaid || 0)))}</div></div>
+          </div>
         </div>
       </div>
       <div className="card">
         <h3>Borrower Info</h3>
-        <div className="row" style={{ gap: 24 }}>
-          <div><div style={{ color: '#64748b', fontSize: 12 }}>Name</div><div>{client?.fullName || client?.companyName || '—'}</div></div>
-          <div><div style={{ color: '#64748b', fontSize: 12 }}>National ID</div><div>{client?.nationalId || client?.registrationNumber || '—'}</div></div>
-          <div><div style={{ color: '#64748b', fontSize: 12 }}>DOB/Reg Date</div><div>{client?.dob || client?.registrationDate || '—'}</div></div>
-          <div><div style={{ color: '#64748b', fontSize: 12 }}>Phone</div><div>{client?.phone || client?.companyPhone || '—'}</div></div>
+        <div className="client-sheet-grid">
+          <div className="client-sheet-item"><div className="client-sheet-item-label">Name</div><div className="client-sheet-item-value">{client?.fullName || client?.companyName || '—'}</div></div>
+          <div className="client-sheet-item"><div className="client-sheet-item-label">National ID</div><div className="client-sheet-item-value">{client?.nationalId || client?.registrationNumber || '—'}</div></div>
+          <div className="client-sheet-item"><div className="client-sheet-item-label">DOB/Reg Date</div><div className="client-sheet-item-value">{client?.dob || client?.registrationDate || '—'}</div></div>
+          <div className="client-sheet-item"><div className="client-sheet-item-label">Phone</div><div className="client-sheet-item-value">{client?.phone || client?.companyPhone || '—'}</div></div>
         </div>
       </div>
       <div className="card">
         <h3>Timeline & Actors</h3>
-        <div className="row" style={{ gap: 24 }}>
-          <div><div style={{ color: '#64748b', fontSize: 12 }}>Initiated</div><div>{loan.createdAt ? new Date(loan.createdAt).toLocaleString() : '—'}</div></div>
-          <div><div style={{ color: '#64748b', fontSize: 12 }}>Initiator</div><div>{displayUserName(loan.initiatorName) || '—'}</div></div>
-          <div><div style={{ color: '#64748b', fontSize: 12 }}>Approved</div><div>{loan.approvedAt ? new Date(loan.approvedAt).toLocaleString() : '—'}</div></div>
-          <div><div style={{ color: '#64748b', fontSize: 12 }}>Approver</div><div>{displayUserName(loan.approverName) || '—'}</div></div>
+        <div className="client-sheet-grid">
+          <div className="client-sheet-item"><div className="client-sheet-item-label">Initiated</div><div className="client-sheet-item-value">{loan.createdAt ? new Date(loan.createdAt).toLocaleString() : '—'}</div></div>
+          <div className="client-sheet-item"><div className="client-sheet-item-label">Initiator</div><div className="client-sheet-item-value">{displayUserName(loan.initiatorName) || '—'}</div></div>
+          <div className="client-sheet-item"><div className="client-sheet-item-label">Approved</div><div className="client-sheet-item-value">{loan.approvedAt ? new Date(loan.approvedAt).toLocaleString() : '—'}</div></div>
+          <div className="client-sheet-item"><div className="client-sheet-item-label">Approver</div><div className="client-sheet-item-value">{displayUserName(loan.approverName) || '—'}</div></div>
         </div>
       </div>
       <div className="card">

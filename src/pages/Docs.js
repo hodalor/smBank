@@ -1,14 +1,23 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { fetchConfig } from '../api';
 import { getAppConfig, onConfigUpdate } from '../state/ops';
 import { useState } from 'react';
 import { IconFile } from '../components/Icons';
+import { openBrandedPrintWindow } from '../utils/printLayouts';
 
 export default function Docs() {
   const [cfg, setCfg] = useState(getAppConfig());
+  const docRef = useRef(null);
   useEffect(() => onConfigUpdate(setCfg), []);
   useEffect(() => { fetchConfig().then(setCfg).catch(() => {}); }, []);
-  const onPrint = () => window.print();
+  const onPrint = () => {
+    openBrandedPrintWindow({
+      title: `${cfg.appName || 'smBank'} Product Manual`,
+      subtitle: 'System documentation',
+      badges: ['Product Manual'],
+      htmlContent: docRef.current ? docRef.current.innerHTML : '',
+    });
+  };
   const now = new Date().toLocaleString();
   return (
     <div className="stack" style={{ maxWidth: 920 }}>
@@ -35,7 +44,7 @@ export default function Docs() {
         <button className="btn btn-primary" onClick={onPrint}><IconFile /><span>Download PDF</span></button>
       </div>
       <div style={{ color: '#64748b', marginTop: -6 }} className="print-hide">Generated: {now}</div>
-      <div className="doc stack card" style={{ padding: 16 }}>
+      <div ref={docRef} className="doc stack card" style={{ padding: 16 }}>
         <h1>{cfg.appName || 'smBank'} — Product Manual</h1>
         <div style={{ color: '#64748b' }}>This manual describes the architecture, configuration, APIs, and UI of the system.</div>
 

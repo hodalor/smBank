@@ -5,15 +5,7 @@ import { showError, showSuccess } from '../components/Toaster';
 import { confirm } from '../components/Confirm';
 import { getAppConfig, hasPermission, onConfigUpdate, PERMISSIONS } from '../state/ops';
 import { IconDownload, IconEdit, IconFile, IconTrash, IconSave, IconX } from '../components/Icons';
-
-function safeHtml(value) {
-  return String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+import { openBrandedPrintWindow } from '../utils/printLayouts';
 
 function niceDate(value) {
   if (!value) return '—';
@@ -271,82 +263,32 @@ export default function ClientProfile() {
     manager ? `Manager: ${manager}` : '',
   ].filter(Boolean);
   const exportPdf = () => {
-    if (!accountNumber || typeof window === 'undefined') return;
-    const popup = window.open('', '_blank', 'noopener,noreferrer,width=960,height=720');
-    if (!popup) return;
-    const detailRows = [
-      ['Customer Name', clientName],
-      ['Account Number', accountNumber],
-      ['Status', form.status || '—'],
-      ['Phone', displayPhone || '—'],
-      ['Email', displayEmail || '—'],
-      ['Address', displayAddress || '—'],
-      ['National ID', form.nationalId || '—'],
-      ['Date Registered', niceDate(form.createdAt || form.dateRegistered)],
-      ['Account Type', acctType ? `${form.accountTypeCode} - ${acctType.name}` : (form.accountTypeCode || '—')],
-      ['Branch', branchRec ? `${form.branchCode} - ${branchRec.name}` : (form.branchCode || '—')],
-      ['Account Manager', manager || '—'],
-      ['Next of Kin 1', form.nok1Name || form.nok1Phone ? `${form.nok1Name || '—'} / ${form.nok1Phone || '—'}` : '—'],
-      ['Next of Kin 2', form.nok2Name || form.nok2Phone ? `${form.nok2Name || '—'} / ${form.nok2Phone || '—'}` : '—'],
-    ];
-    const rowsHtml = detailRows.map(([label, value]) => `<div class="item"><div class="label">${safeHtml(label)}</div><div class="value">${safeHtml(value)}</div></div>`).join('');
-    popup.document.write(`<!doctype html>
-<html>
-  <head>
-    <title>${safeHtml(clientName)} - ${safeHtml(appCfg.appName || 'smBank')}</title>
-    <meta charset="utf-8" />
-    <style>
-      body { font-family: Arial, sans-serif; margin: 0; padding: 24px; color: #0f172a; }
-      .sheet { border: 1px solid #dbe2ea; border-radius: 18px; overflow: hidden; }
-      .brand { background: linear-gradient(135deg, ${safeHtml(appCfg.primary || '#0f172a')}, #1d4ed8); color: ${safeHtml(appCfg.primaryContrast || '#ffffff')}; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-      .brand h1 { margin: 0; font-size: 28px; }
-      .brand p { margin: 4px 0 0; opacity: 0.92; }
-      .logo { width: 58px; height: 58px; border-radius: 14px; background: rgba(255,255,255,0.14); padding: 6px; object-fit: contain; }
-      .body { padding: 24px; }
-      .hero { display: grid; grid-template-columns: 110px 1fr; gap: 18px; align-items: center; margin-bottom: 18px; }
-      .avatar { width: 110px; height: 110px; border-radius: 18px; object-fit: cover; background: #e2e8f0; }
-      .fallback { width: 110px; height: 110px; border-radius: 18px; display: grid; place-items: center; font-size: 36px; font-weight: 800; color: #1e3a8a; background: #dbeafe; }
-      .name { font-size: 30px; font-weight: 800; margin: 0 0 8px; }
-      .muted { color: #64748b; font-size: 13px; }
-      .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-      .badge { padding: 6px 10px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 12px; font-weight: 700; }
-      .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-      .item { border: 1px solid #dbe2ea; border-radius: 14px; padding: 14px; }
-      .label { color: #64748b; font-size: 12px; margin-bottom: 6px; }
-      .value { font-size: 15px; font-weight: 600; word-break: break-word; }
-      .footer { margin-top: 18px; color: #64748b; font-size: 12px; text-align: right; }
-      @media print { body { padding: 0; } .sheet { border: 0; border-radius: 0; } }
-    </style>
-  </head>
-  <body>
-    <div class="sheet">
-      <div class="brand">
-        <div style="display:flex;align-items:center;gap:14px;">
-          <img src="/logo512.png" alt="${safeHtml(appCfg.appName || 'smBank')}" class="logo" />
-          <div>
-            <h1>${safeHtml(appCfg.appName || 'smBank')}</h1>
-            <p>Customer Detail Sheet</p>
-          </div>
-        </div>
-        <div class="muted" style="color:${safeHtml(appCfg.primaryContrast || '#ffffff')}">Generated ${safeHtml(new Date().toLocaleString())}</div>
-      </div>
-      <div class="body">
-        <div class="hero">
-          ${profilePhoto ? `<img src="${safeHtml(profilePhoto)}" alt="${safeHtml(clientName)}" class="avatar" />` : `<div class="fallback">${safeHtml((clientName || 'C').trim().charAt(0).toUpperCase() || 'C')}</div>`}
-          <div>
-            <div class="name">${safeHtml(clientName)}</div>
-            <div class="muted">${safeHtml(isIndividual ? 'Individual Customer' : 'Company Customer')}</div>
-            <div class="badges">${badgeItems.map((item) => `<span class="badge">${safeHtml(item)}</span>`).join('')}</div>
-          </div>
-        </div>
-        <div class="grid">${rowsHtml}</div>
-        <div class="footer">${safeHtml(appCfg.footerText || '© smBank')}</div>
-      </div>
-    </div>
-    <script>window.onload = function(){ window.print(); };</script>
-  </body>
-</html>`);
-    popup.document.close();
+    if (!accountNumber) return;
+    openBrandedPrintWindow({
+      title: clientName,
+      subtitle: 'Customer detail sheet',
+      badges: badgeItems,
+      summaryCards: [
+        { label: 'Account Number', value: accountNumber },
+        { label: 'Manager', value: manager || 'Unassigned' },
+        { label: 'Phone', value: displayPhone || '—' },
+        { label: 'Email', value: displayEmail || '—' },
+      ],
+      sections: [{
+        title: 'Customer Details',
+        rows: [
+          ['Status', form.status || '—'],
+          ['Address', displayAddress || '—'],
+          ['National ID', form.nationalId || '—'],
+          ['Date Registered', niceDate(form.createdAt || form.dateRegistered)],
+          ['Account Type', acctType ? `${form.accountTypeCode} - ${acctType.name}` : (form.accountTypeCode || '—')],
+          ['Branch', branchRec ? `${form.branchCode} - ${branchRec.name}` : (form.branchCode || '—')],
+          ['Next of Kin 1', form.nok1Name || form.nok1Phone ? `${form.nok1Name || '—'} / ${form.nok1Phone || '—'}` : '—'],
+          ['Next of Kin 2', form.nok2Name || form.nok2Phone ? `${form.nok2Name || '—'} / ${form.nok2Phone || '—'}` : '—'],
+        ],
+      }],
+      footerNote: appCfg.footerText || '© smBank',
+    });
   };
   const submit = async (e) => {
     e.preventDefault();
@@ -529,6 +471,7 @@ export default function ClientProfile() {
           </div>
         </div>
       )}
+      {(!accountNumber || isEditing) && (
       <form onSubmit={submit} className="form card" style={{ maxWidth: 900 }}>
         <fieldset className="form-fieldset" disabled={!!accountNumber && !isEditing}>
         <div className="form-grid">
@@ -1098,11 +1041,14 @@ export default function ClientProfile() {
         )}
         </fieldset>
         <div className="row">
-          {accountNumber && !isEditing && <div className="client-readonly-note">Click <strong>Edit Details</strong> above to change customer information.</div>}
           {canEdit && (!accountNumber || isEditing) && <button className="btn btn-primary" type="submit"><IconSave /><span>{accountNumber ? 'Save Changes' : 'Save'}</span></button>}
           <button className="btn" type="button" onClick={() => navigate('/clients')}><IconX /><span>{accountNumber ? 'Back to Clients' : 'Cancel'}</span></button>
         </div>
       </form>
+      )}
+      {accountNumber && !isEditing && (
+        <div className="card client-readonly-note">Click Edit Details above to open the client form and make changes.</div>
+      )}
     </div>
   );
 }

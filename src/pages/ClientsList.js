@@ -6,7 +6,9 @@ import { deleteClient, listClients } from '../api';
 import Pager from '../components/Pager';
 import { prompt } from '../components/Confirm';
 import { showError, showSuccess } from '../components/Toaster';
-import { IconPlus, IconExternal, IconDownload, IconTrash } from '../components/Icons';
+import { IconPlus, IconExternal, IconDownload, IconTrash, IconFile } from '../components/Icons';
+import { downloadCsvFile } from '../utils/downloads';
+import { openBrandedPrintWindow } from '../utils/printLayouts';
 
 export default function ClientsList() {
   const navigate = useNavigate();
@@ -57,15 +59,32 @@ export default function ClientsList() {
   const downloadCSV = () => {
     const cols = Object.keys(exportCols).filter(k => exportCols[k]);
     if (cols.length === 0) return;
-    const header = cols.join(',');
-    const rows = filtered.map(r => cols.map(c => JSON.stringify(r[c] ?? '')).join(',')).join('\n');
-    const blob = new Blob([header + '\n' + rows], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'clients_export.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsvFile('clients_export.csv', cols, filtered);
+  };
+  const exportPdf = () => {
+    const cols = Object.keys(exportCols).filter(k => exportCols[k]);
+    if (cols.length === 0) return;
+    const labelMap = {
+      accountNumber: 'Account Number',
+      phone: 'Phone',
+      name: 'Name',
+      nationalId: 'National ID',
+      status: 'Status',
+    };
+    openBrandedPrintWindow({
+      title: 'Client List Export',
+      subtitle: 'Customer register',
+      summaryCards: [
+        { label: 'Rows', value: String(filtered.length) },
+        { label: 'Visible Columns', value: cols.map((c) => labelMap[c] || c).join(', ') },
+      ],
+      tables: [{
+        title: 'Clients',
+        columns: cols.map((c) => ({ key: c, label: labelMap[c] || c })),
+        rows: filtered,
+        emptyText: 'No clients available for export.',
+      }],
+    });
   };
   const removeClient = async (row) => {
     const remarks = await prompt(`Enter deletion remark for ${row.accountNumber}`, {
@@ -107,7 +126,8 @@ export default function ClientsList() {
           <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={exportCols.name} onChange={() => toggleCol('name')} /> Name</label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={exportCols.nationalId} onChange={() => toggleCol('nationalId')} /> ID</label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={exportCols.status} onChange={() => toggleCol('status')} /> Status</label>
-          <button className="btn btn-primary" onClick={downloadCSV}><IconDownload /><span>Export CSV</span></button>
+          <button className="btn" type="button" onClick={exportPdf}><IconFile /><span>Export PDF</span></button>
+          <button className="btn btn-primary" type="button" onClick={downloadCSV}><IconDownload /><span>Export CSV</span></button>
         </div>
       </div>
       <div className="card">
