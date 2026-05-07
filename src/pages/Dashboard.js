@@ -67,6 +67,11 @@ function formatScope(period, from, to) {
   return 'Selected range';
 }
 
+function getClientStamp(client) {
+  if (!client || typeof client !== 'object') return '';
+  return client.createdAt || client.dateRegistered || client.updatedAt || '';
+}
+
 export default function Dashboard() {
   const canView = hasPermission(PERMISSIONS.DASHBOARD_VIEW);
   const canClients = hasPermission(PERMISSIONS.CLIENTS_VIEW);
@@ -138,6 +143,10 @@ export default function Dashboard() {
   const scopeLabel = useMemo(() => formatScope(period, from, to), [period, from, to]);
   const filteredPosted = useMemo(() => posted.filter((t) => (!acct || t.account === acct) && isWithinRange(t.dateValue, from, to)), [posted, acct, from, to]);
   const filteredRepays = useMemo(() => repays.filter((r) => (!acct || r.account === acct) && isWithinRange(r.dateValue, from, to)), [repays, acct, from, to]);
+  const clientsInScope = useMemo(() => (clients || []).filter((c) => {
+    if (acct && c.accountNumber !== acct) return false;
+    return isWithinRange(getClientStamp(c), from, to);
+  }), [clients, acct, from, to]);
   const loansInScope = useMemo(() => (loans || []).filter((l) => {
     if (acct && l.accountNumber !== acct) return false;
     const stamp = l.approvedAt || l.createdAt || l.initiatedAt || l.updatedAt || '';
@@ -174,11 +183,11 @@ export default function Dashboard() {
       repaid,
       expectedRevenue,
       outstanding,
-      customers: clients.length,
+      customers: clientsInScope.length,
       netCashflow,
-      activeLoans: loans.filter((l) => (!acct || l.accountNumber === acct) && String(l.status || 'Active') !== 'Rejected').length,
+      activeLoans: loansInScope.filter((l) => String(l.status || 'Active') !== 'Rejected').length,
     };
-  }, [filteredPosted, filteredRepays, loansInScope, relatedRepays, clients, loans, acct]);
+  }, [filteredPosted, filteredRepays, loansInScope, relatedRepays, clientsInScope]);
 
   const bucketMeta = useMemo(() => buildBuckets(from, to), [from, to]);
   const savingsSeries = useMemo(() => {
@@ -222,7 +231,7 @@ export default function Dashboard() {
     { label: 'Loan Repaid', value: currency(metrics.repaid), hint: 'Loan repayments received', accent: '#e0f2fe' },
     { label: 'Expected Revenue', value: currency(metrics.expectedRevenue), hint: 'Interest plus fees in scope', accent: '#fef3c7' },
     { label: 'Outstanding Loans', value: currency(metrics.outstanding), hint: 'Estimated amount still due', accent: '#ede9fe' },
-    { label: 'Total Customers', value: String(metrics.customers), hint: 'All customer records in the system', accent: '#fce7f3' },
+    { label: 'Total Customers', value: String(metrics.customers), hint: `Customers matching ${scopeLabel.toLowerCase()}`, accent: '#fce7f3' },
     { label: 'Net Cashflow', value: currency(metrics.netCashflow), hint: 'Deposits and repayments minus payouts', accent: '#dcfce7' },
   ];
 
