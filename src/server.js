@@ -3260,8 +3260,9 @@ app.get('/loans', async (req, res) => {
   if (status) result = result.filter(l => l.status === status);
   res.json(result);
 });
-app.get('/loans/:id', async (req, res) => {
+app.get('/loans/:id', async (req, res, next) => {
   const id = req.params.id;
+  if (id === 'approvals') return next();
   if (isConnected()) {
     const { Loan, Client, LoanRepayPosted } = getModels();
     const loan = await Loan.findOne({ id }).lean();
