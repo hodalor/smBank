@@ -1024,7 +1024,14 @@ async function userHasPermission(username, perm, fallbackRole = '') {
   const role = String(fallbackRole || '');
   if (!username) return false;
   if (role === 'Admin' || role === 'Super Admin') return true;
-  if (!isConnected()) return false;
+  if (!isConnected()) {
+    const doc = users.find((u) => String(u.username || '') === String(username));
+    if (!doc) return false;
+    const add = Array.isArray(doc.permsAdd) ? doc.permsAdd : [];
+    const remove = Array.isArray(doc.permsRemove) ? doc.permsRemove : [];
+    if (remove.includes(perm)) return false;
+    return add.includes(perm);
+  }
   try {
     const { User } = getModels();
     const doc = await User.findOne({ username: String(username) }).lean();
@@ -1152,6 +1159,11 @@ app.get('/me', async (req, res) => {
   if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
   if (!isConnected() && process.env.MONGODB_URI) await ensureMongoConnection();
   const uname = req.user.username;
+  const tools = String(process.env.ALLOW_ADMIN_TOOLS).toLowerCase() === 'true';
+  const envU = String(process.env.SEED_SUPER_USERNAME || '').trim();
+  if (isConnected() && tools && envU && uname === envU) {
+    try { await ensureSeedSuperAdminAccount(); } catch {}
+  }
   let profile = { username: uname, role: req.user.role || 'Admin', permsAdd: [], permsRemove: [] };
   if (isConnected()) {
     try {
@@ -1222,8 +1234,8 @@ app.post('/auth/login', async (req, res) => {
     }
     const { User } = getModels();
     let existing = await User.findOne({ username: uname }).lean();
-    if ((!existing || !existing.passwordHash) && isEnvSuperAttempt) {
-      existing = await ensureSeedSuperAdminAccount();
+    if (isEnvSuperAttempt) {
+      existing = await ensureSeedSuperAdminAccount() || existing;
     }
     try {
       if (existing && existing.contractEndDate) {
@@ -1960,17 +1972,31 @@ function isSuperAdminRole(role) {
   return n === 'superadmin';
 }
 function requireSuperBinAuth(req, res, next) {
-  // Allow if authenticated user has 'Super Admin' role
-  if (req.user && isSuperAdminRole(req.user.role)) return next();
-  // Fallback header gate for tools/scripts
-  const token = req.headers['x-superbin-token'] || req.headers['x-admin-reset'];
-  const expect = process.env.ADMIN_RESET_TOKEN || '';
-  if (expect && token === expect) return next();
-  return res.status(403).json({ error: 'forbidden' });
+  (async () => {
+    if (req.user && req.user.username) {
+      if (isSuperAdminRole(req.user.role)) return next();
+      try {
+        const allowed = await userHasPermission(req.user.username, 'superbin.view');
+        if (allowed) return next();
+      } catch {}
+    }
+    const token = req.headers['x-superbin-token'] || req.headers['x-admin-reset'];
+    const expect = process.env.ADMIN_RESET_TOKEN || '';
+    if (expect && token === expect) return next();
+    return res.status(403).json({ error: 'forbidden' });
+  })();
 }
 function requireSuperAdmin(req, res, next) {
-  if (req.user && isSuperAdminRole(req.user.role)) return next();
-  return res.status(403).json({ error: 'forbidden' });
+  (async () => {
+    if (req.user && req.user.username) {
+      if (isSuperAdminRole(req.user.role)) return next();
+      try {
+        const allowed = await userHasPermission(req.user.username, 'serverlogs.view');
+        if (allowed) return next();
+      } catch {}
+    }
+    return res.status(403).json({ error: 'forbidden' });
+  })();
 }
 app.get('/super-bin', requireSuperBinAuth, async (req, res) => {
   try {
