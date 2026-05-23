@@ -59,7 +59,9 @@ export default function Users() {
     }
   }, [filterDept, filterRole, filterEmp]);
   useEffect(() => { reload(); }, [reload]);
-  const isAdminOrSuper = viewerRole === 'Admin' || viewerRole === 'Super Admin';
+  const isSuperAdmin = viewerRole === 'Super Admin';
+  const isAdmin = viewerRole === 'Admin';
+  const isAdminOrSuper = isAdmin || isSuperAdmin;
   const roleOrder = ['Customer Service', 'Teller', 'Account Manager', 'Loan Officer', 'Loan Manager', 'Admin', 'Super Admin'];
   const canSeeRole = (r) => {
     const i = roleOrder.indexOf(r);
@@ -67,7 +69,8 @@ export default function Users() {
     return (i !== -1 && v !== -1 && i <= v);
   };
   const viewerCanSeeRow = (u) => {
-    if (isAdminOrSuper) return u.role !== 'Super Admin';
+    if (isSuperAdmin) return canSeeRole(u.role);
+    if (isAdmin) return u.role !== 'Super Admin';
     return canSeeRole(u.role) && u.role !== 'Super Admin' && u.role !== 'Admin';
   };
   const isAutoDisabled = (u) => {
@@ -130,7 +133,14 @@ export default function Users() {
       }],
     });
   };
-  const assignableRoles = Object.values(roles).filter(r => isAdminOrSuper ? r !== roles.SUPER_ADMIN : canSeeRole(r) && r !== roles.SUPER_ADMIN && r !== roles.ADMIN);
+  const assignableRoles = Object.values(roles).filter((r) => {
+    if (isSuperAdmin) {
+      if (form.role === roles.SUPER_ADMIN) return canSeeRole(r);
+      return canSeeRole(r) && r !== roles.SUPER_ADMIN;
+    }
+    if (isAdmin) return r !== roles.SUPER_ADMIN;
+    return canSeeRole(r) && r !== roles.SUPER_ADMIN && r !== roles.ADMIN;
+  });
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const togglePerm = (perm) => {
     const base = baseSet.has(perm);
@@ -226,9 +236,9 @@ export default function Users() {
       <h1>Users</h1>
       <div className="row" style={{ gap: 8 }}>
         <input className="input" placeholder="Department" value={filterDept} onChange={(e) => setFilterDept(e.target.value)} style={{ width: 180 }} />
-        <select className="input" value={filterRole} onChange={(e) => setFilterRole(e.target.value)} style={{ width: 180 }}>
+          <select className="input" value={filterRole} onChange={(e) => setFilterRole(e.target.value)} style={{ width: 180 }}>
           <option value="">Role (any)</option>
-          {(isAdminOrSuper ? Object.values(roles) : Object.values(roles).filter(r => canSeeRole(r) && r !== roles.SUPER_ADMIN && r !== roles.ADMIN)).map(r => <option key={r} value={r}>{r}</option>)}
+          {((isSuperAdmin ? Object.values(roles) : isAdmin ? Object.values(roles).filter(r => r !== roles.SUPER_ADMIN) : Object.values(roles).filter(r => canSeeRole(r) && r !== roles.SUPER_ADMIN && r !== roles.ADMIN))).map(r => <option key={r} value={r}>{r}</option>)}
         </select>
         <input className="input" placeholder="Employee No." value={filterEmp} onChange={(e) => setFilterEmp(e.target.value)} style={{ width: 160 }} />
         {isAdminOrSuper && (
@@ -304,7 +314,7 @@ export default function Users() {
           <label>
             Role
             <select className="input" name="role" value={form.role} onChange={change} disabled={!isAdminOrSuper}>
-              {(isAdminOrSuper ? Object.values(roles).filter(r => r !== roles.SUPER_ADMIN) : assignableRoles).map(r => <option key={r} value={r}>{r}</option>)}
+              {assignableRoles.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
           </label>
           {isAdminOrSuper && (

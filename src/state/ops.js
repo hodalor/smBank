@@ -155,11 +155,6 @@ export function getEffectivePermissions(user) {
   if (user.role !== ROLES.ADMIN && user.role !== ROLES.SUPER_ADMIN) {
     base.delete(PERMS.CONFIG_MANAGE);
   }
-  // Enforce: only Super Admin can view Super Bin regardless of overrides
-  if (user.role !== ROLES.SUPER_ADMIN) {
-    base.delete(PERMS.SUPERBIN_VIEW);
-    base.delete(PERMS.SERVERLOGS_VIEW);
-  }
   // Enforce: only Admin and Super Admin can manage Users regardless of overrides
   if (user.role !== ROLES.ADMIN && user.role !== ROLES.SUPER_ADMIN) {
     base.delete(PERMS.USERS_MANAGE);
