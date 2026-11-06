@@ -196,6 +196,25 @@ export async function updateAssetStatus(id, payload) {
   return apiFetch(`/assets/${encodeURIComponent(id)}/status`, { method: 'POST', body: JSON.stringify(payload) });
 }
 
+export async function listExpenses(params = {}) {
+  const q = new URLSearchParams();
+  if (params.status) q.set('status', params.status);
+  if (params.month) q.set('month', params.month);
+  if (params.year) q.set('year', params.year);
+  if (params.q) q.set('q', params.q);
+  const qs = q.toString();
+  return apiFetch(`/expenses${qs ? `?${qs}` : ''}`, { method: 'GET' });
+}
+export async function createExpense(payload) {
+  return apiFetch('/expenses', { method: 'POST', body: JSON.stringify(payload) });
+}
+export async function approveExpense(id, payload = {}) {
+  return apiFetch(`/expenses/${encodeURIComponent(id)}/approve`, { method: 'POST', body: JSON.stringify(payload) });
+}
+export async function payExpense(id, payload = {}) {
+  return apiFetch(`/expenses/${encodeURIComponent(id)}/pay`, { method: 'POST', body: JSON.stringify(payload) });
+}
+
 export async function createDeposit(payload) {
   return apiFetch('/transactions/deposit', { method: 'POST', body: JSON.stringify(payload) });
 }

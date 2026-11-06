@@ -31,6 +31,8 @@ import Assets from './pages/Assets';
 import Promotions from './pages/Promotions';
 import Notifications from './pages/Notifications';
 import Docs from './pages/Docs';
+import SummarySheet from './pages/SummarySheet';
+import Expenses from './pages/Expenses';
 import { getMe } from './api';
 import { getCurrentUserName, getUserByUsername, saveUser, setCurrentUserName } from './state/ops';
 
@@ -98,6 +100,8 @@ export default function App() {
         <Route path="loans/repay" element={<LoanRepay />} />
         <Route path="loans/repay/approvals" element={<LoanRepayApprovals />} />
         <Route path="loans/statements" element={<LoanStatements />} />
+        <Route path="summary" element={<SummarySheet />} />
+        <Route path="expenses" element={<Expenses />} />
         <Route path="reports" element={<Reports />} />
         <Route path="users" element={<Users />} />
         <Route path="activity" element={<Activity />} />

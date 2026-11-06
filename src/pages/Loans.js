@@ -4,6 +4,7 @@ import { createLoan, directoryLookup, listClients, listLoans, fetchConfig } from
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 import Pager from '../components/Pager';
 import { IconSearch, IconPlus } from '../components/Icons';
+import Modal from '../components/Modal';
 
 export default function Loans() {
   const canView = hasPermission(PERMISSIONS.LOANS_VIEW);
@@ -61,7 +62,10 @@ export default function Loans() {
         collateral: { description: form.collateralDesc, value: Number(form.collateralValue || 0) },
       });
       showSuccess('Loan created and submitted for approval');
-      setForm({ accountNumber: '', principal: '', interestRate: '', durationMonths: '', startDate: '', g1Name: '', g1Phone: '', g1Id: '', g2Name: '', g2Phone: '', g2Id: '', collateralDesc: '', collateralValue: '', collateralDoc: null });
+      setForm({ ...blankForm, interestRate: String(Number(cfg.defaultLoanRate ?? 0)) });
+      setClient(null);
+      setShowForm(false);
+      try { const list = await listLoans({}); setRows(list); } catch {}
     } catch (e) {
       if (e && e.message && e.message.includes('duplicate')) showError('Duplicate contact detected');
       else showError('Failed to create loan');
@@ -69,6 +73,23 @@ export default function Loans() {
   };
   const [rows, setRows] = useState([]);
   const [loanIdFilter, setLoanIdFilter] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const blankForm = {
+    accountNumber: '',
+    principal: '',
+    interestRate: '',
+    durationMonths: '',
+    startDate: '',
+    g1Name: '',
+    g1Phone: '',
+    g1Id: '',
+    g2Name: '',
+    g2Phone: '',
+    g2Id: '',
+    collateralDesc: '',
+    collateralValue: '',
+    collateralDoc: null
+  };
   useEffect(() => {
     if (!canView) return;
     listLoans({}).then(setRows).catch(() => setRows([]));
@@ -134,10 +155,17 @@ export default function Loans() {
   if (!canView) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
-      <h1>Loans</h1>
-      {canCreate && <section className="card">
-        <h3>New Loan</h3>
-        <form onSubmit={submit} className="form" style={{ maxWidth: 520 }}>
+      <div className="page-head">
+        <h1>Loans</h1>
+        {canCreate && (
+          <button className="btn btn-primary" type="button" onClick={() => setShowForm(true)}>
+            <IconPlus /><span>Add Loan</span>
+          </button>
+        )}
+      </div>
+      {canCreate && (
+      <Modal open={showForm} title="New Loan" subtitle="Loan applications are submitted for approval" onClose={() => setShowForm(false)} width="min(760px, 100%)">
+        <form onSubmit={submit} className="form">
           <label>
             Client Account Number
             <div className="row">
@@ -226,7 +254,8 @@ export default function Loans() {
           </div>
           <button className="btn btn-primary" type="submit"><IconPlus /><span>Create Loan</span></button>
         </form>
-      </section>}
+      </Modal>
+      )}
       <section className="card">
         <h3>Loans List</h3>
         <div style={{ marginBottom: 12, maxWidth: 320 }}>

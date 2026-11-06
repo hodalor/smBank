@@ -5,7 +5,7 @@ import LoadingBar from './LoadingBar';
 import Toaster from './Toaster';
 import './layout.css';
 import { addTab } from '../state/tabs';
-import { hasPermission, PERMISSIONS, getAppConfig, onConfigUpdate } from '../state/ops';
+import { hasPermission, PERMISSIONS, getAppConfig, onConfigUpdate, canExpenseAction } from '../state/ops';
  
 
 function Svg(props) {
@@ -214,6 +214,58 @@ function IconBook() {
     </Svg>
   );
 }
+function IconClipboard() {
+  return (
+    <Svg>
+      <rect x="8" y="3" width="8" height="4" rx="1" />
+      <path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+      <path d="M9 12h6" />
+      <path d="M9 16h4" />
+    </Svg>
+  );
+}
+function IconReceipt() {
+  return (
+    <Svg>
+      <path d="M6 3h12v18l-2-1-2 1-2-1-2 1-2-1-2 1z" />
+      <path d="M9 8h6" />
+      <path d="M9 12h6" />
+      <path d="M9 16h4" />
+    </Svg>
+  );
+}
+function IconLayers() {
+  return (
+    <Svg>
+      <path d="M12 3l9 5-9 5-9-5 9-5z" />
+      <path d="M3 12l9 5 9-5" />
+      <path d="M3 16l9 5 9-5" />
+    </Svg>
+  );
+}
+function IconChevron({ open }) {
+  return (
+    <svg
+      className={`nav-caret${open ? ' open' : ''}`}
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
+function isPathActive(pathname, to) {
+  if (to === '/loans') return pathname === '/loans' || /^\/loans\/[^/]+$/.test(pathname);
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -221,6 +273,7 @@ export default function Layout() {
   const contentRef = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarHidden, setSidebarHidden] = useState(false);
+  const [openMenu, setOpenMenu] = useState(null);
   useEffect(() => {
     const el = contentRef.current;
     if (!el) return;
@@ -236,6 +289,35 @@ export default function Layout() {
   }, [location.pathname]);
   const [cfg, setCfg] = useState(getAppConfig());
   useEffect(() => onConfigUpdate(setCfg), []);
+  const closeMenus = () => setOpenMenu(null);
+  const toggleMenu = (name) => setOpenMenu((prev) => (prev === name ? null : name));
+  const go = (item) => {
+    closeMenus();
+    addTab(item);
+  };
+  const operationsItems = [
+    hasPermission(PERMISSIONS.DEPOSIT_CREATE) && { to: '/transactions/deposit', label: 'Deposit', icon: <IconArrowDownBox /> },
+    hasPermission(PERMISSIONS.WITHDRAW_CREATE) && { to: '/transactions/withdraw', label: 'Withdrawal', icon: <IconArrowUpBox /> },
+    hasPermission(PERMISSIONS.TXN_APPROVALS_VIEW) && { to: '/transactions/approvals', label: 'Txn Approvals', icon: <IconCheckCircle /> },
+    hasPermission(PERMISSIONS.TXN_RECORDS_VIEW) && { to: '/transactions/records', label: 'Txn Records', icon: <IconList /> },
+    hasPermission(PERMISSIONS.STATEMENTS_VIEW) && { to: '/statements', label: 'Statement', icon: <IconFileText /> },
+  ].filter(Boolean);
+  const creditItems = [
+    hasPermission(PERMISSIONS.LOANS_VIEW) && { to: '/loans', label: 'Loans', icon: <IconCreditCard /> },
+    hasPermission(PERMISSIONS.LOANS_REPAYMENTS_VIEW) && { to: '/loans/statements', label: 'Loan Statement', icon: <IconFileText /> },
+    hasPermission(PERMISSIONS.LOANS_APPROVALS_VIEW) && { to: '/loans/approvals', label: 'Approvals', icon: <IconCheckCircle /> },
+    hasPermission(PERMISSIONS.LOANS_RECORDS_VIEW) && { to: '/loans/records', label: 'Loan Records', icon: <IconList /> },
+    hasPermission(PERMISSIONS.LOANS_REPAYMENTS_VIEW) && { to: '/loans/repayments', label: 'Repayment Records', icon: <IconList /> },
+    hasPermission(PERMISSIONS.LOANS_REPAY_CREATE) && { to: '/loans/repay', label: 'Repay Loan', icon: <IconUTurn /> },
+    hasPermission(PERMISSIONS.LOANS_REPAY_APPROVALS_VIEW) && { to: '/loans/repay/approvals', label: 'Repay Approvals', icon: <IconCheckCircle /> },
+  ].filter(Boolean);
+  const opsActive = operationsItems.some((item) => isPathActive(location.pathname, item.to));
+  const creditActive = creditItems.some((item) => isPathActive(location.pathname, item.to));
+  useEffect(() => {
+    if (opsActive) setOpenMenu('operations');
+    else if (creditActive) setOpenMenu('credit');
+    else setOpenMenu(null);
+  }, [location.pathname, opsActive, creditActive]);
   return (
     <div className={`layout${sidebarHidden ? ' no-sidebar' : ''}`}>
       <aside className={`sidebar${sidebarOpen ? ' open' : ''}${sidebarHidden ? ' collapsed' : ''}`}>
@@ -244,80 +326,78 @@ export default function Layout() {
           <span>{cfg.appName || 'smBank'}</span>
         </div>
         <nav className="nav">
-          <NavLink to="/my-account" className="nav-item" onClick={() => addTab({ to: '/my-account', label: 'My Account' })}><IconUser /><span>My Account</span></NavLink>
+          <NavLink to="/my-account" className="nav-item" onClick={() => go({ to: '/my-account', label: 'My Account' })}><IconUser /><span>My Account</span></NavLink>
           {hasPermission(PERMISSIONS.DASHBOARD_VIEW) && (
-            <NavLink to="/dashboard" className="nav-item" onClick={() => addTab({ to: '/dashboard', label: 'Dashboard' })}><IconDashboard /><span>Dashboard</span></NavLink>
+            <NavLink to="/dashboard" className="nav-item" onClick={() => go({ to: '/dashboard', label: 'Dashboard' })}><IconDashboard /><span>Dashboard</span></NavLink>
           )}
           {hasPermission(PERMISSIONS.CLIENTS_VIEW) && (
-            <NavLink to="/clients" className="nav-item" onClick={() => addTab({ to: '/clients', label: 'Clients' })}><IconUsers /><span>Clients</span></NavLink>
+            <NavLink to="/clients" className="nav-item" onClick={() => go({ to: '/clients', label: 'Clients' })}><IconUsers /><span>Clients</span></NavLink>
           )}
-          {hasPermission(PERMISSIONS.DEPOSIT_CREATE) && (
-            <NavLink to="/transactions/deposit" className="nav-item" onClick={() => addTab({ to: '/transactions/deposit', label: 'Deposit' })}><IconArrowDownBox /><span>Deposit</span></NavLink>
+          {hasPermission(PERMISSIONS.SUMMARY_VIEW) && (
+            <NavLink to="/summary" className="nav-item" onClick={() => go({ to: '/summary', label: 'Summary Sheet' })}><IconClipboard /><span>Summary Sheet</span></NavLink>
           )}
-          {hasPermission(PERMISSIONS.WITHDRAW_CREATE) && (
-            <NavLink to="/transactions/withdraw" className="nav-item" onClick={() => addTab({ to: '/transactions/withdraw', label: 'Withdraw' })}><IconArrowUpBox /><span>Withdraw</span></NavLink>
+          {operationsItems.length > 0 && (
+            <div className={`nav-group${openMenu === 'operations' ? ' open' : ''}${opsActive ? ' current' : ''}`}>
+              <button type="button" className="nav-item nav-group-toggle" onClick={() => toggleMenu('operations')}>
+                <IconLayers /><span>Operations</span><IconChevron open={openMenu === 'operations'} />
+              </button>
+              <div className="nav-sub">
+                {operationsItems.map((item) => (
+                  <NavLink key={item.to} to={item.to} className="nav-item" onClick={() => addTab({ to: item.to, label: item.label })}>
+                    {item.icon}<span>{item.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           )}
-          {hasPermission(PERMISSIONS.TXN_APPROVALS_VIEW) && (
-            <NavLink to="/transactions/approvals" className="nav-item" onClick={() => addTab({ to: '/transactions/approvals', label: 'Txn Approvals' })}><IconCheckCircle /><span>Txn Approvals</span></NavLink>
+          {creditItems.length > 0 && (
+            <div className={`nav-group${openMenu === 'credit' ? ' open' : ''}${creditActive ? ' current' : ''}`}>
+              <button type="button" className="nav-item nav-group-toggle" onClick={() => toggleMenu('credit')}>
+                <IconCreditCard /><span>Credit</span><IconChevron open={openMenu === 'credit'} />
+              </button>
+              <div className="nav-sub">
+                {creditItems.map((item) => (
+                  <NavLink key={item.to} to={item.to} className="nav-item" onClick={() => addTab({ to: item.to, label: item.label })}>
+                    {item.icon}<span>{item.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           )}
-          {hasPermission(PERMISSIONS.TXN_RECORDS_VIEW) && (
-            <NavLink to="/transactions/records" className="nav-item" onClick={() => addTab({ to: '/transactions/records', label: 'Txn Records' })}><IconList /><span>Txn Records</span></NavLink>
-          )}
-          {hasPermission(PERMISSIONS.STATEMENTS_VIEW) && (
-            <NavLink to="/statements" className="nav-item" onClick={() => addTab({ to: '/statements', label: 'Statements' })}><IconFileText /><span>Statements</span></NavLink>
-          )}
-          {hasPermission(PERMISSIONS.LOANS_VIEW) && (
-            <NavLink to="/loans" className="nav-item" onClick={() => addTab({ to: '/loans', label: 'Loans' })}><IconCreditCard /><span>Loans</span></NavLink>
-          )}
-          {hasPermission(PERMISSIONS.LOANS_REPAYMENTS_VIEW) && (
-            <NavLink to="/loans/statements" className="nav-item" onClick={() => addTab({ to: '/loans/statements', label: 'Loan Statements' })}><IconFileText /><span>Loan Statements</span></NavLink>
-          )}
-          {hasPermission(PERMISSIONS.LOANS_APPROVALS_VIEW) && (
-            <NavLink to="/loans/approvals" className="nav-item" onClick={() => addTab({ to: '/loans/approvals', label: 'Approvals' })}><IconCheckCircle /><span>Approvals</span></NavLink>
-          )}
-          {hasPermission(PERMISSIONS.LOANS_RECORDS_VIEW) && (
-            <NavLink to="/loans/records" className="nav-item" onClick={() => addTab({ to: '/loans/records', label: 'Loan Records' })}><IconList /><span>Loan Records</span></NavLink>
-          )}
-          {hasPermission(PERMISSIONS.LOANS_REPAYMENTS_VIEW) && (
-            <NavLink to="/loans/repayments" className="nav-item" onClick={() => addTab({ to: '/loans/repayments', label: 'Repayment Records' })}><IconList /><span>Repayment Records</span></NavLink>
-          )}
-          {hasPermission(PERMISSIONS.LOANS_REPAY_CREATE) && (
-            <NavLink to="/loans/repay" className="nav-item" onClick={() => addTab({ to: '/loans/repay', label: 'Repay Loan' })}><IconUTurn /><span>Repay Loan</span></NavLink>
-          )}
-          {hasPermission(PERMISSIONS.LOANS_REPAY_APPROVALS_VIEW) && (
-            <NavLink to="/loans/repay/approvals" className="nav-item" onClick={() => addTab({ to: '/loans/repay/approvals', label: 'Repay Approvals' })}><IconCheckCircle /><span>Repay Approvals</span></NavLink>
+          {canExpenseAction('view') && (
+            <NavLink to="/expenses" className="nav-item" onClick={() => go({ to: '/expenses', label: 'Expenses' })}><IconReceipt /><span>Expenses</span></NavLink>
           )}
           {hasPermission(PERMISSIONS.REPORTS_VIEW) && (
-            <NavLink to="/reports" className="nav-item" onClick={() => addTab({ to: '/reports', label: 'Reports' })}><IconBarChart /><span>Reports</span></NavLink>
+            <NavLink to="/reports" className="nav-item" onClick={() => go({ to: '/reports', label: 'Reports' })}><IconBarChart /><span>Reports</span></NavLink>
           )}
           {hasPermission(PERMISSIONS.ASSETS_VIEW) && (
-            <NavLink to="/assets" className="nav-item" onClick={() => addTab({ to: '/assets', label: 'Assets Reg' })}><IconDatabase /><span>Assets Reg</span></NavLink>
+            <NavLink to="/assets" className="nav-item" onClick={() => go({ to: '/assets', label: 'Assets Reg' })}><IconDatabase /><span>Assets Reg</span></NavLink>
           )}
           {hasPermission(PERMISSIONS.CONFIG_MANAGE) && (
-            <NavLink to="/config" className="nav-item" onClick={() => addTab({ to: '/config', label: 'Config' })}><IconSliders /><span>Config</span></NavLink>
+            <NavLink to="/config" className="nav-item" onClick={() => go({ to: '/config', label: 'Config' })}><IconSliders /><span>Config</span></NavLink>
           )}
           {hasPermission(PERMISSIONS.USERS_MANAGE) && (
-            <NavLink to="/users" className="nav-item" onClick={() => addTab({ to: '/users', label: 'Users' })}><IconUsers /><span>Users</span></NavLink>
+            <NavLink to="/users" className="nav-item" onClick={() => go({ to: '/users', label: 'Users' })}><IconUsers /><span>Users</span></NavLink>
           )}
           {hasPermission(PERMISSIONS.ACTIVITY_VIEW) && (
-            <NavLink to="/activity" className="nav-item" onClick={() => addTab({ to: '/activity', label: 'Activity' })}><IconActivity /><span>Activity</span></NavLink>
+            <NavLink to="/activity" className="nav-item" onClick={() => go({ to: '/activity', label: 'Activity' })}><IconActivity /><span>Activity</span></NavLink>
           )}
           {hasPermission(PERMISSIONS.MEDIA_UPLOAD) && (
-            <NavLink to="/media" className="nav-item" onClick={() => addTab({ to: '/media', label: 'Media Upload' })}><IconImage /><span>Media Upload</span></NavLink>
+            <NavLink to="/media" className="nav-item" onClick={() => go({ to: '/media', label: 'Media Upload' })}><IconImage /><span>Media Upload</span></NavLink>
           )}
           {hasPermission(PERMISSIONS.NOTIFY_SEND) && (
-            <NavLink to="/promotions" className="nav-item" onClick={() => addTab({ to: '/promotions', label: 'Promotions' })}><IconMegaphone /><span>Promotions</span></NavLink>
+            <NavLink to="/promotions" className="nav-item" onClick={() => go({ to: '/promotions', label: 'Promotions' })}><IconMegaphone /><span>Promotions</span></NavLink>
           )}
           {hasPermission(PERMISSIONS.NOTIFY_SEND) && (
-            <NavLink to="/notifications" className="nav-item" onClick={() => addTab({ to: '/notifications', label: 'Notifications' })}><IconBell /><span>Notifications</span></NavLink>
+            <NavLink to="/notifications" className="nav-item" onClick={() => go({ to: '/notifications', label: 'Notifications' })}><IconBell /><span>Notifications</span></NavLink>
           )}
           {hasPermission(PERMISSIONS.SERVERLOGS_VIEW) && (
-            <NavLink to="/server-logs" className="nav-item" onClick={() => addTab({ to: '/server-logs', label: 'Server Logs' })}><IconTerminal /><span>Server Logs</span></NavLink>
+            <NavLink to="/server-logs" className="nav-item" onClick={() => go({ to: '/server-logs', label: 'Server Logs' })}><IconTerminal /><span>Server Logs</span></NavLink>
           )}
           {hasPermission(PERMISSIONS.SUPERBIN_VIEW) && (
-            <NavLink to="/super-bin" className="nav-item" onClick={() => addTab({ to: '/super-bin', label: 'Super Bin' })}><IconTrash /><span>Super Bin</span></NavLink>
+            <NavLink to="/super-bin" className="nav-item" onClick={() => go({ to: '/super-bin', label: 'Super Bin' })}><IconTrash /><span>Super Bin</span></NavLink>
           )}
-          <NavLink to="/docs" className="nav-item" onClick={() => addTab({ to: '/docs', label: 'Docs' })}><IconBook /><span>Docs</span></NavLink>
+          <NavLink to="/docs" className="nav-item" onClick={() => go({ to: '/docs', label: 'Docs' })}><IconBook /><span>Docs</span></NavLink>
         </nav>
       </aside>
       <div className={`sidebar-backdrop${sidebarOpen ? ' show' : ''}`} onClick={() => setSidebarOpen(false)} />

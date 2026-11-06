@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getCurrentUserName, hasPermission, PERMISSIONS } from '../state/ops';
-import { createDeposit, directoryLookup, listClients, listPostedTransactions, listLoanRepayPosted, listLoans } from '../api';
+import { createDeposit, directoryLookup, listClients, listPostedTransactions, listLoanRepayPosted, listLoans, listTxnRecords } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
-import { IconSearch, IconSend } from '../components/Icons';
+import { IconPlus, IconSearch, IconSend } from '../components/Icons';
+import Modal from '../components/Modal';
+import Pager from '../components/Pager';
 
 export default function Deposit() {
   const allowed = hasPermission(PERMISSIONS.DEPOSIT_CREATE);
@@ -22,6 +24,24 @@ export default function Deposit() {
   const [loanBal, setLoanBal] = useState(0);
   const [initiatedAt] = useState(new Date().toLocaleString());
   const [accountStatus, setAccountStatus] = useState('Active');
+  const [showForm, setShowForm] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const loadRows = async () => {
+    try {
+      const data = await listTxnRecords({ kind: 'deposit' });
+      setRows(Array.isArray(data) ? data : []);
+    } catch {
+      try {
+        const posted = await listPostedTransactions({ type: 'deposit' });
+        setRows((posted || []).map((p) => ({ ...p, status: 'Approved' })));
+      } catch {
+        setRows([]);
+      }
+    }
+  };
+  useEffect(() => { if (allowed) loadRows(); }, [allowed]);
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const toCurrency = (n) => {
     const num = Number(n || 0);
@@ -56,7 +76,7 @@ export default function Deposit() {
     if (!q) return;
     (async () => {
       try {
-        if (/^\\d{10}$/.test(q)) {
+        if (/^\d{10}$/.test(q)) {
           const info = await directoryLookup(q);
           setClient(info);
           setAccountStatus(info.status || 'Active');
@@ -112,18 +132,55 @@ export default function Deposit() {
           },
         });
         showSuccess('Deposit submitted for approval');
+        setForm({ accountNumber: '', depositorName: '', depositorAddress: '', incomeSource: '', amount: '', date: '', method: 'cash', notes: '' });
+        setClient(null);
+        setShowForm(false);
+        await loadRows();
       } catch {
         showError('Failed to submit deposit');
       }
     })();
-    setForm({ accountNumber: '', depositorName: '', depositorAddress: '', incomeSource: '', amount: '', date: '', method: 'cash', notes: '' });
-    setClient(null);
   };
+  const toMoney = (n) => {
+    try { return Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' }); } catch { return `GHS ${Number(n || 0).toFixed(2)}`; }
+  };
+  const pageRows = rows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
   if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
-      <h1>Deposit</h1>
-      <form onSubmit={submit} className="form card" style={{ maxWidth: 520 }}>
+      <div className="page-head">
+        <h1>Deposit</h1>
+        <button className="btn btn-primary" type="button" onClick={() => setShowForm(true)}><IconPlus /><span>Add Deposit</span></button>
+      </div>
+      <div className="card">
+        <h3>Deposit Records</h3>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Account</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Initiated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageRows.map((r) => (
+              <tr key={r.id}>
+                <td>{r.id}</td>
+                <td>{r.accountNumber}</td>
+                <td>{toMoney(r.amount)}</td>
+                <td>{r.status || 'Pending'}</td>
+                <td>{r.initiatedAt || r.createdAt || '—'}</td>
+              </tr>
+            ))}
+            {!rows.length && <tr><td colSpan="5">No deposits yet. Click Add Deposit to create one.</td></tr>}
+          </tbody>
+        </table>
+        <Pager total={rows.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
+      </div>
+      <Modal open={showForm} title="New Deposit" subtitle="Deposits are submitted for approval" onClose={() => setShowForm(false)}>
+      <form onSubmit={submit} className="form">
         <label>
           Account Number
           <div className="row">
@@ -200,6 +257,7 @@ export default function Deposit() {
         </label>
         <button className="btn btn-primary" type="submit"><IconSend /><span>Submit for Approval</span></button>
       </form>
+      </Modal>
     </div>
   );
 }

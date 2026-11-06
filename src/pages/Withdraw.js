@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getCurrentUserName, hasPermission, PERMISSIONS } from '../state/ops';
-import { createWithdraw, directoryLookup, listClients, listPostedTransactions, listLoanRepayPosted, listLoans, fetchConfig } from '../api';
+import { createWithdraw, directoryLookup, listClients, listPostedTransactions, listLoanRepayPosted, listLoans, fetchConfig, listTxnRecords } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
-import { IconSearch, IconSend } from '../components/Icons';
+import { IconPlus, IconSearch, IconSend } from '../components/Icons';
+import Modal from '../components/Modal';
+import Pager from '../components/Pager';
 
 export default function Withdraw() {
   const allowed = hasPermission(PERMISSIONS.WITHDRAW_CREATE);
@@ -24,6 +26,24 @@ export default function Withdraw() {
     address: '',
   });
   const [accountStatus, setAccountStatus] = useState('Active');
+  const [showForm, setShowForm] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const loadRows = async () => {
+    try {
+      const data = await listTxnRecords({ kind: 'withdraw' });
+      setRows(Array.isArray(data) ? data : []);
+    } catch {
+      try {
+        const posted = await listPostedTransactions({ type: 'withdraw' });
+        setRows((posted || []).map((p) => ({ ...p, status: 'Approved' })));
+      } catch {
+        setRows([]);
+      }
+    }
+  };
+  useEffect(() => { if (allowed) loadRows(); }, [allowed]);
   const toCurrency = (n) => {
     const num = Number(n || 0);
     try { return num.toLocaleString('en-GH', { style: 'currency', currency: 'GHS' }); } catch { return `GHS ${num.toFixed(2)}`; }
@@ -138,21 +158,55 @@ export default function Withdraw() {
           },
         });
         showSuccess('Withdrawal submitted for approval');
+        setForm({ accountNumber: '', amount: '', notes: '' });
+        setClient(null);
+        setAccountBal(0);
+        setLoanBal(0);
+        setWithdrawer({ idNumber: '', phone: '', address: '' });
+        setShowForm(false);
+        await loadRows();
       } catch {
         showError('Failed to submit withdrawal');
       }
     })();
-    setForm({ accountNumber: '', amount: '', notes: '' });
-    setClient(null);
-    setAccountBal(0);
-    setLoanBal(0);
-    setWithdrawer({ idNumber: '', phone: '', address: '' });
   };
+  const pageRows = rows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
   if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
-      <h1>Withdraw</h1>
-      <form onSubmit={submit} className="form card" style={{ maxWidth: 520 }}>
+      <div className="page-head">
+        <h1>Withdraw</h1>
+        <button className="btn btn-primary" type="button" onClick={() => setShowForm(true)}><IconPlus /><span>Add Withdrawal</span></button>
+      </div>
+      <div className="card">
+        <h3>Withdrawal Records</h3>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Account</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Initiated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageRows.map((r) => (
+              <tr key={r.id}>
+                <td>{r.id}</td>
+                <td>{r.accountNumber}</td>
+                <td>{toCurrency(r.amount)}</td>
+                <td>{r.status || 'Pending'}</td>
+                <td>{r.initiatedAt || r.createdAt || '—'}</td>
+              </tr>
+            ))}
+            {!rows.length && <tr><td colSpan="5">No withdrawals yet. Click Add Withdrawal to create one.</td></tr>}
+          </tbody>
+        </table>
+        <Pager total={rows.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
+      </div>
+      <Modal open={showForm} title="New Withdrawal" subtitle="Withdrawals are submitted for approval" onClose={() => setShowForm(false)}>
+      <form onSubmit={submit} className="form">
         <label>
           Account Number
           <div className="row">
@@ -228,6 +282,7 @@ export default function Withdraw() {
         </label>
         <button className="btn btn-primary" type="submit"><IconSend /><span>Submit for Approval</span></button>
       </form>
+      </Modal>
     </div>
   );
 }

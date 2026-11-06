@@ -54,6 +54,10 @@
   align-items: center;
   gap: 10px;
 }
+.nav-item:hover {
+  background: #1e293b;
+  color: #fff;
+}
 .nav-item.active {
   background: #1e293b;
   color: #fff;
@@ -66,6 +70,50 @@
 }
 .nav-item.active svg {
   opacity: 1;
+}
+.nav-group {
+  display: grid;
+  gap: 2px;
+}
+.nav-group-toggle {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.nav-group.current > .nav-group-toggle,
+.nav-group.open > .nav-group-toggle {
+  background: #162033;
+  color: #fff;
+}
+.nav-caret {
+  margin-left: auto;
+  opacity: .7;
+  transition: transform .18s ease;
+  flex: 0 0 14px;
+}
+.nav-caret.open {
+  transform: rotate(180deg);
+}
+.nav-sub {
+  display: none;
+  gap: 2px;
+  padding: 2px 0 6px 8px;
+  margin-left: 12px;
+  border-left: 1px solid #1e293b;
+}
+.nav-group.open > .nav-sub {
+  display: grid;
+}
+.nav-sub .nav-item {
+  padding: 8px 10px;
+  font-size: 13px;
+}
+.nav-sub .nav-item.active {
+  background: #1e293b;
 }
 .topbar {
   position: fixed;

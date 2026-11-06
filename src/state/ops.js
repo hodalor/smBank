@@ -43,6 +43,11 @@ const PERMS = {
   ASSETS_VIEW: 'assets.view',
   ASSETS_MANAGE: 'assets.manage',
   NOTIFY_SEND: 'notify.send',
+  SUMMARY_VIEW: 'summary.view',
+  EXPENSES_VIEW: 'expenses.view',
+  EXPENSES_CREATE: 'expenses.create',
+  EXPENSES_APPROVE: 'expenses.approve',
+  EXPENSES_PAY: 'expenses.pay',
 };
 
 const ROLE_PERMISSIONS = {
@@ -58,6 +63,7 @@ const ROLE_PERMISSIONS = {
     PERMS.LOANS_REPAY_CREATE,
     PERMS.LOANS_REPAY_APPROVALS_VIEW,
     PERMS.REPORTS_VIEW,
+    PERMS.SUMMARY_VIEW,
   ],
   [ROLES.LOAN_OFFICER]: [
     PERMS.DASHBOARD_VIEW,
@@ -79,6 +85,10 @@ const ROLE_PERMISSIONS = {
     PERMS.CLIENT_MANAGER_MANAGE,
     PERMS.ASSETS_VIEW,
     PERMS.REPORTS_VIEW,
+    PERMS.SUMMARY_VIEW,
+    PERMS.EXPENSES_VIEW,
+    PERMS.EXPENSES_CREATE,
+    PERMS.EXPENSES_PAY,
   ],
   [ROLES.TELLER]: [
     PERMS.CLIENTS_VIEW,
@@ -86,6 +96,7 @@ const ROLE_PERMISSIONS = {
     PERMS.WITHDRAW_CREATE,
     PERMS.TXN_RECORDS_VIEW,
     PERMS.ASSETS_VIEW,
+    PERMS.EXPENSES_VIEW,
   ],
   [ROLES.CUSTOMER_SERVICE]: [
     PERMS.CLIENTS_VIEW,
@@ -173,6 +184,39 @@ export function hasPermission(perm) {
   const user = getCurrentUser();
   const set = getEffectivePermissions(user);
   return set.has(perm);
+}
+
+const DEFAULT_EXPENSE_GRADES = {
+  view: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.ACCOUNT_MANAGER, ROLES.TELLER],
+  create: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.ACCOUNT_MANAGER],
+  approve: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+  pay: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.ACCOUNT_MANAGER],
+};
+
+export function getExpenseGrades(cfg) {
+  const source = cfg || getAppConfig() || {};
+  const g = source.expenseGrades || {};
+  return {
+    view: Array.isArray(g.view) && g.view.length ? g.view : DEFAULT_EXPENSE_GRADES.view,
+    create: Array.isArray(g.create) && g.create.length ? g.create : DEFAULT_EXPENSE_GRADES.create,
+    approve: Array.isArray(g.approve) && g.approve.length ? g.approve : DEFAULT_EXPENSE_GRADES.approve,
+    pay: Array.isArray(g.pay) && g.pay.length ? g.pay : DEFAULT_EXPENSE_GRADES.pay,
+  };
+}
+
+export function canExpenseAction(action, cfg) {
+  const user = getCurrentUser();
+  const role = user.role || '';
+  if (role === ROLES.ADMIN || role === ROLES.SUPER_ADMIN) return true;
+  const permMap = {
+    view: PERMS.EXPENSES_VIEW,
+    create: PERMS.EXPENSES_CREATE,
+    approve: PERMS.EXPENSES_APPROVE,
+    pay: PERMS.EXPENSES_PAY,
+  };
+  if (permMap[action] && hasPermission(permMap[action])) return true;
+  const grades = getExpenseGrades(cfg);
+  return (grades[action] || []).includes(role);
 }
 
 export function getPendingTxns() {

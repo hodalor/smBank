@@ -4,7 +4,8 @@ import { listUsers, upsertUser, removeUser, resetUserPassword, setUserEnabled } 
 import { showError, showSuccess, showWarning } from '../components/Toaster';
 import { confirm, prompt } from '../components/Confirm';
 import Pager from '../components/Pager';
-import { IconFilter, IconX, IconSave, IconEdit, IconTrash, IconCheck, IconDownload, IconFile } from '../components/Icons';
+import { IconFilter, IconX, IconSave, IconEdit, IconTrash, IconCheck, IconDownload, IconFile, IconPlus } from '../components/Icons';
+import Modal from '../components/Modal';
 import { downloadCsvFile } from '../utils/downloads';
 import { openBrandedPrintWindow } from '../utils/printLayouts';
 
@@ -16,7 +17,7 @@ export default function Users() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [exportCols, setExportCols] = useState({ username: true, fullName: false, email: false, phone: false, department: false, role: true, enabled: false });
-  const [form, setForm] = useState({
+  const blankForm = {
     fullName: '',
     username: '',
     email: '',
@@ -30,7 +31,9 @@ export default function Users() {
     permsAdd: [],
     permsRemove: [],
     password: '',
-  });
+  };
+  const [form, setForm] = useState(blankForm);
+  const [modalOpen, setModalOpen] = useState(false);
   const [changingPassword, setChangingPassword] = useState('');
   const [approvalCode, setApprovalCode] = useState('');
   const roles = getRoles();
@@ -156,7 +159,9 @@ export default function Users() {
     }
     setForm({ ...form, permsAdd: Array.from(add), permsRemove: Array.from(rem) });
   };
-  const editUser = (u) => setForm({
+  const editUser = (u) => {
+    setModalOpen(true);
+    setForm({
     fullName: u.fullName || '',
     username: u.username,
     email: u.email || '',
@@ -171,6 +176,7 @@ export default function Users() {
     permsRemove: u.permsRemove || [],
     password: '',
   });
+  };
   const submit = async (e) => {
     e.preventDefault();
     const payload = { ...form };
@@ -233,7 +239,14 @@ export default function Users() {
   if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
-      <h1>Users</h1>
+      <div className="page-head">
+        <h1>Users</h1>
+        {isAdminOrSuper && (
+          <button className="btn btn-primary" type="button" onClick={() => { setForm(blankForm); setModalOpen(true); }}>
+            <IconPlus /><span>Add User</span>
+          </button>
+        )}
+      </div>
       <div className="row" style={{ gap: 8 }}>
         <input className="input" placeholder="Department" value={filterDept} onChange={(e) => setFilterDept(e.target.value)} style={{ width: 180 }} />
           <select className="input" value={filterRole} onChange={(e) => setFilterRole(e.target.value)} style={{ width: 180 }}>
@@ -264,9 +277,13 @@ export default function Users() {
           <button className="btn btn-primary" type="button" onClick={downloadCSV}><IconDownload /><span>Export CSV</span></button>
         </div>
       </div>
-      <div className="row" style={{ gap: 16 }}>
-        <form onSubmit={submit} className="card" style={{ padding: 16, minWidth: 420, display: 'grid', gap: 12 }}>
-          <h3>{users.find(u => u.username === form.username) ? 'Edit User' : 'New User'}</h3>
+      <Modal
+        open={modalOpen}
+        title={users.find(u => u.username === form.username) ? 'Edit User' : 'New User'}
+        onClose={() => setModalOpen(false)}
+        width="min(760px, 100%)"
+      >
+        <form onSubmit={submit} className="form">
           <label>
             Full Name
             <input className="input" name="fullName" value={form.fullName} onChange={change} required disabled={!isAdminOrSuper} />
@@ -382,6 +399,7 @@ export default function Users() {
             </div>
           )}
         </form>
+      </Modal>
         <div className="card" style={{ padding: 16, flex: 1 }}>
           <h3>All Users</h3>
           <table className="table">
@@ -444,7 +462,6 @@ export default function Users() {
           </table>
           <Pager total={users.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
         </div>
-      </div>
     </div>
   );
 }

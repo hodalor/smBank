@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { getCurrentUserName, hasPermission, PERMISSIONS } from '../state/ops';
-import { createLoanRepayment, directoryLookup, listClients, listLoanRepayPosted, listLoans } from '../api';
+import { createLoanRepayment, directoryLookup, listClients, listLoanRepayPosted, listLoanRepayPending, listLoans } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
-import { IconSearch, IconSend } from '../components/Icons';
+import { IconPlus, IconSearch, IconSend } from '../components/Icons';
+import Modal from '../components/Modal';
+import Pager from '../components/Pager';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
@@ -17,6 +19,26 @@ export default function LoanRepay() {
   const [loan, setLoan] = useState(null);
   const [outstanding, setOutstanding] = useState(0);
   const [paidToDate, setPaidToDate] = useState(0);
+  const [showForm, setShowForm] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const loadRows = async () => {
+    try {
+      const [pending, posted] = await Promise.all([
+        listLoanRepayPending().catch(() => []),
+        listLoanRepayPosted({}),
+      ]);
+      const mapped = [
+        ...(pending || []).map((r) => ({ ...r, status: r.status || 'Pending' })),
+        ...(posted || []).map((r) => ({ ...r, status: r.status || 'Approved' })),
+      ];
+      setRows(mapped);
+    } catch {
+      setRows([]);
+    }
+  };
+  useEffect(() => { if (allowed) loadRows(); }, [allowed]);
   useEffect(() => {
     let mounted = true;
     const run = async () => {
@@ -97,18 +119,55 @@ export default function LoanRepay() {
       try {
         await createLoanRepayment(loanId, { mode, amount: finalAmount, initiatorName: getCurrentUserName() });
         showSuccess('Loan repayment submitted for approval');
+        setAmount('');
+        setNote('');
+        setShowForm(false);
+        await loadRows();
       } catch {
         showError('Failed to submit loan repayment');
       }
     })();
-    setAmount('');
   };
 
+  const pageRows = rows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
   if (!allowed) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
-      <h1>Repay Loan</h1>
-      <form className="form card" onSubmit={submit}>
+      <div className="page-head">
+        <h1>Repay Loan</h1>
+        <button className="btn btn-primary" type="button" onClick={() => setShowForm(true)}><IconPlus /><span>Add Repayment</span></button>
+      </div>
+      <div className="card">
+        <h3>Repayment Records</h3>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Loan ID</th>
+              <th>Account</th>
+              <th>Amount</th>
+              <th>Mode</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageRows.map((r) => (
+              <tr key={r.id}>
+                <td>{r.id}</td>
+                <td>{r.loanId}</td>
+                <td>{r.accountNumber}</td>
+                <td>{gh(r.amount)}</td>
+                <td>{r.mode || '—'}</td>
+                <td>{r.status || 'Pending'}</td>
+              </tr>
+            ))}
+            {!rows.length && <tr><td colSpan="6">No repayments yet. Click Add Repayment to create one.</td></tr>}
+          </tbody>
+        </table>
+        <Pager total={rows.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(n) => { setPageSize(n); setPage(1); }} />
+      </div>
+      <Modal open={showForm} title="Repay Loan" subtitle="Repayments are submitted for approval" onClose={() => setShowForm(false)}>
+      <form className="form" onSubmit={submit}>
         <div className="form-grid">
           <label>
             Account Number
@@ -160,6 +219,7 @@ export default function LoanRepay() {
           <button className="btn btn-primary" type="submit"><IconSend /><span>Submit for Approval</span></button>
         </div>
       </form>
+      </Modal>
       <div className="card">
         <h3>Policy</h3>
         <ul>

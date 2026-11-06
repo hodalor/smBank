@@ -4,6 +4,7 @@ import { hasPermission, PERMISSIONS } from '../state/ops';
 import { showError, showSuccess } from '../components/Toaster';
 import Pager from '../components/Pager';
 import { IconPlus, IconSave } from '../components/Icons';
+import Modal from '../components/Modal';
 
 const CONDITIONS = ['New', 'Refurbished', 'Used'];
 const STATUSES = ['Available', 'In Use', 'Damaged', 'Repair', 'Retired'];
@@ -64,6 +65,7 @@ export default function Assets() {
     return rows.slice(start, start + pageSize);
   }, [rows, page, pageSize]);
 
+  const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     name: '',
     category: '',
@@ -88,6 +90,7 @@ export default function Assets() {
       };
       await createAsset(payload);
       setForm({ name: '', category: '', otherCategory: '', serialNumber: '', purchaseDate: '', condition: 'New', status: 'Available', assignedTo: '', notes: '' });
+      setShowForm(false);
       showSuccess('Asset registered');
       const list = await listAssets(filters);
       setRows(Array.isArray(list) ? list : []);
@@ -99,7 +102,12 @@ export default function Assets() {
   if (!hasPermission(PERMISSIONS.ASSETS_VIEW)) return <div className="card">Not authorized.</div>;
   return (
     <div className="stack">
-      <h1>Assets Registry</h1>
+      <div className="page-head">
+        <h1>Assets Registry</h1>
+        {canManage && (
+          <button className="btn btn-primary" type="button" onClick={() => setShowForm(true)}><IconPlus /><span>Add Asset</span></button>
+        )}
+      </div>
       <div className="card">
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <input className="input" placeholder="Search name/category/serial" value={filters.q} onChange={(e) => setFilters({ ...filters, q: e.target.value })} />
@@ -123,8 +131,8 @@ export default function Assets() {
       </div>
 
       {canManage && (
-        <form className="form card" onSubmit={submit}>
-          <h3>Register Asset</h3>
+        <Modal open={showForm} title="Register Asset" onClose={() => setShowForm(false)} width="min(780px, 100%)">
+        <form className="form" onSubmit={submit}>
           <div className="form-grid">
             <label>
               Name
@@ -179,6 +187,7 @@ export default function Assets() {
             <button className="btn btn-primary" type="submit" disabled={!canSubmit}><IconPlus /><span>Register</span></button>
           </div>
         </form>
+        </Modal>
       )}
 
       <div className="card">
