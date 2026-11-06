@@ -18,6 +18,9 @@ export default function Pager({ total = 0, page = 1, pageSize = 10, onPageChange
             <option value={20}>20</option>
             <option value={50}>50</option>
             <option value={100}>100</option>
+            <option value={200}>200</option>
+            <option value={500}>500</option>
+            <option value={1000}>1000</option>
           </select>
         </label>
         <button className="btn" onClick={prev} disabled={page <= 1}><IconArrowLeft /><span>Prev</span></button>

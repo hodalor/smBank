@@ -214,6 +214,9 @@ export async function approveExpense(id, payload = {}) {
 export async function payExpense(id, payload = {}) {
   return apiFetch(`/expenses/${encodeURIComponent(id)}/pay`, { method: 'POST', body: JSON.stringify(payload) });
 }
+export async function rejectExpense(id, payload = {}) {
+  return apiFetch(`/expenses/${encodeURIComponent(id)}/reject`, { method: 'POST', body: JSON.stringify(payload) });
+}
 
 export async function createDeposit(payload) {
   return apiFetch('/transactions/deposit', { method: 'POST', body: JSON.stringify(payload) });

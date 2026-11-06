@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { canExpenseAction, getCurrentUser, getExpenseGrades, getRoles, hasPermission, PERMISSIONS, saveAppConfig } from '../state/ops';
-import { approveExpense, createExpense, fetchConfig, listExpenses, payExpense, updateConfig } from '../api';
+import { canExpenseAction, displayUserName, getCurrentUser, getExpenseGrades, getRoles, hasPermission, PERMISSIONS, saveAppConfig } from '../state/ops';
+import { approveExpense, createExpense, fetchConfig, listExpenses, payExpense, rejectExpense, updateConfig } from '../api';
 import { showError, showSuccess, showWarning } from '../components/Toaster';
+import { confirm, prompt } from '../components/Confirm';
 import Pager from '../components/Pager';
 import Modal from '../components/Modal';
-import { IconCheck, IconDownload, IconFile, IconPlus, IconSave, IconSend } from '../components/Icons';
+import { IconCheck, IconDownload, IconFile, IconPlus, IconSave, IconSend, IconX } from '../components/Icons';
 import { downloadCsvFile } from '../utils/downloads';
 import { openBrandedPrintWindow } from '../utils/printLayouts';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const TABS = ['Pending', 'Approved', 'Paid', 'Rejected'];
 const blankForm = () => ({
   date: new Date().toISOString().slice(0, 10),
   description: '',
@@ -17,6 +19,12 @@ const blankForm = () => ({
   amount: '',
   remarks: '',
 });
+
+function statusStyle(status) {
+  if (status === 'Approved' || status === 'Paid') return { background: '#dcfce7', color: '#0f172a' };
+  if (status === 'Rejected') return { background: '#fee2e2', color: '#0f172a' };
+  return { background: '#e2e8f0', color: '#0f172a' };
+}
 
 export default function Expenses() {
   const canView = canExpenseAction('view');
@@ -32,6 +40,7 @@ export default function Expenses() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState(null);
   const [form, setForm] = useState(blankForm());
   const [grades, setGrades] = useState(getExpenseGrades());
   const roles = Object.values(getRoles());
@@ -89,19 +98,42 @@ export default function Expenses() {
     }
   };
 
-  const approve = async (row) => {
+  const approve = async (row, e) => {
+    if (e) e.stopPropagation();
     try {
       await approveExpense(row.id);
       showSuccess('Expense approved');
+      setSelected(null);
       await load();
     } catch (err) {
       showError(err.message || 'Failed to approve');
     }
   };
-  const markPaid = async (row) => {
+  const reject = async (row, e) => {
+    if (e) e.stopPropagation();
+    const remarks = await prompt('Reason for rejection (optional)', {
+      title: 'Reject Expense',
+      placeholder: 'Remarks',
+      confirmText: 'Reject',
+    });
+    if (remarks == null) return;
+    try {
+      await rejectExpense(row.id, { remarks: String(remarks || '').trim() });
+      showSuccess('Expense rejected');
+      setSelected(null);
+      await load();
+    } catch (err) {
+      showError(err.message || 'Failed to reject');
+    }
+  };
+  const markPaid = async (row, e) => {
+    if (e) e.stopPropagation();
+    const ok = await confirm('Mark this expense as paid?', { title: 'Mark Paid', confirmText: 'Mark Paid' });
+    if (!ok) return;
     try {
       await payExpense(row.id);
       showSuccess('Expense marked as paid');
+      setSelected(null);
       await load();
     } catch (err) {
       showError(err.message || 'Failed to mark as paid');
@@ -141,8 +173,9 @@ export default function Expenses() {
     description: r.description || '',
     voucherNo: r.voucherNo || '',
     amount: gh(r.amount),
-    approvedBy: r.approvedBy || '',
-    paidBy: r.paidBy || '',
+    approvedBy: displayUserName(r.approvedBy) || '',
+    paidBy: displayUserName(r.paidBy) || '',
+    rejectedBy: displayUserName(r.rejectedBy) || '',
     remarks: r.remarks || '',
     status: r.status || '',
   }));
@@ -153,6 +186,7 @@ export default function Expenses() {
     { key: 'amount', label: 'Amount (GH₵)' },
     { key: 'approvedBy', label: 'Approved By' },
     { key: 'paidBy', label: 'Paid By' },
+    { key: 'rejectedBy', label: 'Rejected By' },
     { key: 'remarks', label: 'Remarks' },
     { key: 'status', label: 'Status' },
   ];
@@ -169,6 +203,21 @@ export default function Expenses() {
       tables: [{ title: `${tab} Expenses`, columns: exportCols, rows: exportRows, emptyText: 'No expenses.' }],
     });
   };
+
+  const tabLabel = (name) => (name === 'Pending' ? 'Pending Approval' : name);
+  const actionsFor = (row) => (
+    <div className="row" style={{ gap: 6 }}>
+      {row.status === 'Pending' && canApprove && (
+        <>
+          <button className="btn btn-primary" type="button" onClick={(e) => approve(row, e)}><IconCheck /><span>Approve</span></button>
+          <button className="btn" type="button" onClick={(e) => reject(row, e)}><IconX /><span>Reject</span></button>
+        </>
+      )}
+      {row.status === 'Approved' && canPay && (
+        <button className="btn btn-primary" type="button" onClick={(e) => markPaid(row, e)}><IconSend /><span>Mark Paid</span></button>
+      )}
+    </div>
+  );
 
   if (!canView) return <div className="card">Not authorized.</div>;
   return (
@@ -210,7 +259,7 @@ export default function Expenses() {
             <div style={{ fontWeight: 700, paddingTop: 8 }}>GH₵</div>
           </div>
           <div>
-            <div className="dashboard-subtitle">{tab} total</div>
+            <div className="dashboard-subtitle">{tabLabel(tab)} total</div>
             <div style={{ fontWeight: 700, paddingTop: 8 }}>{gh(totalAmount)}</div>
           </div>
         </div>
@@ -218,9 +267,9 @@ export default function Expenses() {
 
       <div className="card">
         <div className="page-tabs">
-          {['Pending', 'Approved', 'Paid'].map((name) => (
+          {TABS.map((name) => (
             <button key={name} type="button" className={`page-tab${tab === name ? ' active' : ''}`} onClick={() => setTab(name)}>
-              {name === 'Pending' ? 'Pending Approval' : name}
+              {tabLabel(name)}
             </button>
           ))}
         </div>
@@ -240,30 +289,21 @@ export default function Expenses() {
             </thead>
             <tbody>
               {pageRows.map((r) => (
-                <tr key={r.id}>
+                <tr key={r.id} onClick={() => setSelected(r)} style={{ cursor: 'pointer' }}>
                   <td>{String(r.date || '').slice(0, 10) || '—'}</td>
                   <td>{r.description}</td>
                   <td>{r.voucherNo || '—'}</td>
                   <td>{gh(r.amount)}</td>
-                  <td>{r.approvedBy || '—'}</td>
-                  <td>{r.paidBy || '—'}</td>
+                  <td>{displayUserName(r.approvedBy) || '—'}</td>
+                  <td>{displayUserName(r.paidBy) || '—'}</td>
                   <td>{r.remarks || '—'}</td>
                   {(canApprove || canPay) && (
-                    <td>
-                      <div className="row" style={{ gap: 6 }}>
-                        {tab === 'Pending' && canApprove && (
-                          <button className="btn btn-primary" type="button" onClick={() => approve(r)}><IconCheck /><span>Approve</span></button>
-                        )}
-                        {tab === 'Approved' && canPay && (
-                          <button className="btn btn-primary" type="button" onClick={() => markPaid(r)}><IconSend /><span>Mark Paid</span></button>
-                        )}
-                      </div>
-                    </td>
+                    <td onClick={(e) => e.stopPropagation()}>{actionsFor(r)}</td>
                   )}
                 </tr>
               ))}
               {!filtered.length && (
-                <tr><td colSpan={canApprove || canPay ? 8 : 7}>No {tab.toLowerCase()} expenses.</td></tr>
+                <tr><td colSpan={canApprove || canPay ? 8 : 7}>No {tabLabel(tab).toLowerCase()} expenses.</td></tr>
               )}
             </tbody>
           </table>
@@ -327,6 +367,65 @@ export default function Expenses() {
             <span style={{ color: '#64748b', fontSize: 13 }}>Created by {getCurrentUser().username || 'you'}</span>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        open={!!selected}
+        title="Expense Details"
+        subtitle={selected ? `Ref: ${selected.voucherNo || selected.id}` : ''}
+        onClose={() => setSelected(null)}
+      >
+        {selected && (
+          <div className="stack">
+            <div className="detail-modal-grid">
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Status</div>
+                <span className="detail-modal-pill" style={statusStyle(selected.status)}>{selected.status}</span>
+              </div>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Amount</div>
+                <div className="detail-modal-value">{gh(selected.amount)}</div>
+              </div>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Date</div>
+                <div className="detail-modal-value">{String(selected.date || '').slice(0, 10) || '—'}</div>
+              </div>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Voucher / Ref. No.</div>
+                <div className="detail-modal-value">{selected.voucherNo || '—'}</div>
+              </div>
+            </div>
+            <div className="detail-modal-notes">
+              <div className="detail-modal-label">Expense Description</div>
+              <div>{selected.description || '—'}</div>
+            </div>
+            <div className="detail-modal-grid">
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Created By</div>
+                <div>{displayUserName(selected.createdBy) || '—'}</div>
+              </div>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Approved By</div>
+                <div>{displayUserName(selected.approvedBy) || '—'}</div>
+              </div>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Paid By</div>
+                <div>{displayUserName(selected.paidBy) || '—'}</div>
+              </div>
+              <div className="detail-modal-block">
+                <div className="detail-modal-label">Rejected By</div>
+                <div>{displayUserName(selected.rejectedBy) || '—'}</div>
+              </div>
+            </div>
+            {(selected.remarks || selected.rejectRemarks) && (
+              <div className="detail-modal-notes">
+                {selected.remarks ? <div>Remarks: {selected.remarks}</div> : null}
+                {selected.rejectRemarks ? <div>Reject reason: {selected.rejectRemarks}</div> : null}
+              </div>
+            )}
+            {actionsFor(selected)}
+          </div>
+        )}
       </Modal>
     </div>
   );

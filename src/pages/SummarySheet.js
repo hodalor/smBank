@@ -2,9 +2,29 @@ import { useEffect, useMemo, useState } from 'react';
 import { hasPermission, PERMISSIONS } from '../state/ops';
 import { listClients, listLoans, listLoanRepayPosted, listPostedTransactions } from '../api';
 import Pager from '../components/Pager';
+import KpiValue from '../components/KpiValue';
 import { IconDownload, IconFile } from '../components/Icons';
 import { downloadCsvFile } from '../utils/downloads';
 import { openBrandedPrintWindow } from '../utils/printLayouts';
+import { showWarning } from '../components/Toaster';
+
+const ALL_EXPORT_COLS = [
+  { key: 'name', label: 'Customer Name' },
+  { key: 'accountNumber', label: 'Account Number' },
+  { key: 'accountBalance', label: 'Account Balance' },
+  { key: 'loanBalance', label: 'Loan Balance' },
+  { key: 'principal', label: 'Principal' },
+  { key: 'interest', label: 'Interest' },
+  { key: 'totalPayable', label: 'Total Payable' },
+  { key: 'rate', label: 'Rate (%)' },
+  { key: 'months', label: 'Months' },
+  { key: 'start', label: 'Start' },
+  { key: 'due', label: 'Due' },
+  { key: 'daysToDue', label: 'Days to Due' },
+  { key: 'overdue', label: 'Overdue' },
+  { key: 'status', label: 'Status' },
+];
+const defaultExportCols = () => Object.fromEntries(ALL_EXPORT_COLS.map((c) => [c.key, true]));
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
@@ -41,6 +61,10 @@ export default function SummarySheet() {
   const [posted, setPosted] = useState([]);
   const [repays, setRepays] = useState([]);
   const [q, setQ] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [loanFilter, setLoanFilter] = useState('');
+  const [overdueOnly, setOverdueOnly] = useState(false);
+  const [exportCols, setExportCols] = useState(defaultExportCols);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -168,15 +192,26 @@ export default function SummarySheet() {
     return out;
   }, [clients, loans, balances, repaidByLoan]);
 
+  const statusOptions = useMemo(() => {
+    const set = new Set();
+    rows.forEach((r) => { if (r.status) set.add(String(r.status)); });
+    return Array.from(set).sort();
+  }, [rows]);
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
-    if (!s) return rows;
-    return rows.filter((r) =>
-      String(r.name || '').toLowerCase().includes(s)
-      || String(r.accountNumber || '').toLowerCase().includes(s)
-      || String(r.status || '').toLowerCase().includes(s)
-    );
-  }, [rows, q]);
+    return rows.filter((r) => {
+      if (s) {
+        const blob = `${r.name || ''} ${r.accountNumber || ''} ${r.status || ''}`.toLowerCase();
+        if (!blob.includes(s)) return false;
+      }
+      if (statusFilter && String(r.status || '') !== statusFilter) return false;
+      if (loanFilter === 'with' && !(Number(r.principal || 0) > 0 || Number(r.loanBalance || 0) > 0)) return false;
+      if (loanFilter === 'none' && (Number(r.principal || 0) > 0 || Number(r.loanBalance || 0) > 0)) return false;
+      if (overdueOnly && !(Number(r.overdue || 0) > 0)) return false;
+      return true;
+    });
+  }, [rows, q, statusFilter, loanFilter, overdueOnly]);
 
   const totals = useMemo(() => {
     const deposited = (posted || []).filter((t) => t.kind === 'deposit').reduce((s, t) => s + Number(t.amount || 0), 0);
@@ -202,22 +237,8 @@ export default function SummarySheet() {
     { label: 'Total Payable', value: gh(totals.payable), hint: 'Principal, interest and fees', accent: '#e0f2fe' },
   ];
 
-  const exportCols = [
-    { key: 'name', label: 'Customer Name' },
-    { key: 'accountNumber', label: 'Account Number' },
-    { key: 'accountBalance', label: 'Account Balance' },
-    { key: 'loanBalance', label: 'Loan Balance' },
-    { key: 'principal', label: 'Principal' },
-    { key: 'interest', label: 'Interest' },
-    { key: 'totalPayable', label: 'Total Payable' },
-    { key: 'rate', label: 'Rate (%)' },
-    { key: 'months', label: 'Months' },
-    { key: 'start', label: 'Start' },
-    { key: 'due', label: 'Due' },
-    { key: 'daysToDue', label: 'Days to Due' },
-    { key: 'overdue', label: 'Overdue' },
-    { key: 'status', label: 'Status' },
-  ];
+  const selectedExportCols = ALL_EXPORT_COLS.filter((c) => exportCols[c.key]);
+  const toggleExportCol = (key) => setExportCols((prev) => ({ ...prev, [key]: !prev[key] }));
   const exportRows = filtered.map((r) => ({
     ...r,
     accountBalance: gh(r.accountBalance),
@@ -227,19 +248,37 @@ export default function SummarySheet() {
     totalPayable: gh(r.totalPayable),
     overdue: gh(r.overdue),
   }));
-  const downloadCSV = () => downloadCsvFile('bank_loan_summary.csv', exportCols.map((c) => c.key), exportRows);
+  const selectedKeys = selectedExportCols.map((c) => c.key);
+  const downloadCSV = () => {
+    if (!selectedKeys.length) {
+      showWarning('Select at least one column to export');
+      return;
+    }
+    downloadCsvFile('bank_loan_summary.csv', selectedKeys, exportRows);
+  };
   const exportPdf = () => {
+    if (!selectedKeys.length) {
+      showWarning('Select at least one column to export');
+      return;
+    }
     openBrandedPrintWindow({
       title: 'Bank & Loan Summary Sheet',
       subtitle: 'Customer account and loan balances',
       summaryCards: cards.map((c) => ({ label: c.label, value: c.value })),
       tables: [{
         title: 'Summary',
-        columns: exportCols,
+        columns: selectedExportCols,
         rows: exportRows,
         emptyText: 'No records to export.',
       }],
     });
+  };
+  const resetFilters = () => {
+    setQ('');
+    setStatusFilter('');
+    setLoanFilter('');
+    setOverdueOnly(false);
+    setPage(1);
   };
 
   if (!allowed) return <div className="card">Not authorized.</div>;
@@ -259,15 +298,52 @@ export default function SummarySheet() {
         {cards.map((item) => (
           <div key={item.label} className="card dashboard-kpi-card" style={{ '--accent': item.accent }}>
             <div className="dashboard-kpi-label">{item.label}</div>
-            <div className="dashboard-kpi-value">{item.value}</div>
+            <KpiValue>{item.value}</KpiValue>
             <div className="dashboard-kpi-hint">{item.hint}</div>
           </div>
         ))}
       </div>
       <div className="card">
+        <div className="row" style={{ alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
+          <label>
+            Search
+            <input className="input" style={{ minWidth: 220 }} placeholder="Name, account or status" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+          </label>
+          <label>
+            Status
+            <select className="input" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
+              <option value="">All statuses</option>
+              {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </label>
+          <label>
+            Loans
+            <select className="input" value={loanFilter} onChange={(e) => { setLoanFilter(e.target.value); setPage(1); }}>
+              <option value="">All accounts</option>
+              <option value="with">With loan</option>
+              <option value="none">No loan</option>
+            </select>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 8 }}>
+            <input type="checkbox" checked={overdueOnly} onChange={(e) => { setOverdueOnly(e.target.checked); setPage(1); }} />
+            Overdue only
+          </label>
+          <button className="btn" type="button" onClick={resetFilters}>Clear filters</button>
+        </div>
+        <div className="row" style={{ alignItems: 'center', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
+          <div style={{ color: '#64748b' }}>Export columns</div>
+          {ALL_EXPORT_COLS.map((c) => (
+            <label key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <input type="checkbox" checked={!!exportCols[c.key]} onChange={() => toggleExportCol(c.key)} />
+              {c.label}
+            </label>
+          ))}
+        </div>
+      </div>
+      <div className="card">
         <div className="row" style={{ justifyContent: 'space-between' }}>
           <h3>Accounts</h3>
-          <input className="input" style={{ maxWidth: 280 }} placeholder="Search name, account or status" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+          <div className="dashboard-subtitle">{filtered.length} records</div>
         </div>
         <div className="table-scroll">
           <table className="table">

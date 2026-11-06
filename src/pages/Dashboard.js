@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { SavingsLine, LoansBar, LoanStatusDoughnut } from '../components/Charts';
 import { hasPermission, PERMISSIONS } from '../state/ops';
 import { listClients, listLoanRepayPosted, listLoans, listPostedTransactions } from '../api';
+import KpiValue from '../components/KpiValue';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -283,7 +284,7 @@ export default function Dashboard() {
         {kpis.map((item) => (
           <div key={item.label} className="card dashboard-kpi-card" style={{ '--accent': item.accent }}>
             <div className="dashboard-kpi-label">{item.label}</div>
-            <div className="dashboard-kpi-value">{item.value}</div>
+            <KpiValue>{item.value}</KpiValue>
             <div className="dashboard-kpi-hint">{item.hint}</div>
           </div>
         ))}

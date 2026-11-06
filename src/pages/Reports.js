@@ -4,6 +4,7 @@ import { IconDownload, IconFile } from '../components/Icons';
 import { listClients, listLoans, listLoanRepayPosted, listPostedTransactions } from '../api';
 import { openBrandedPrintWindow } from '../utils/printLayouts';
 import { downloadCsvFile } from '../utils/downloads';
+import KpiValue from '../components/KpiValue';
 
 const gh = (n) => Number(n || 0).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' });
 
@@ -188,12 +189,12 @@ export default function Reports() {
       <div className="dashboard-kpi-grid">
         <div className="card dashboard-kpi-card" style={{ '--accent': '#dbeafe' }}>
           <div className="dashboard-kpi-label">Report Type</div>
-          <div className="dashboard-kpi-value">{reportType}</div>
+          <KpiValue>{reportType}</KpiValue>
           <div className="dashboard-kpi-hint">Current report selection</div>
         </div>
         <div className="card dashboard-kpi-card" style={{ '--accent': '#dcfce7' }}>
           <div className="dashboard-kpi-label">Rows</div>
-          <div className="dashboard-kpi-value">{rows.length}</div>
+          <KpiValue>{rows.length}</KpiValue>
           <div className="dashboard-kpi-hint">Records ready to export</div>
         </div>
       </div>

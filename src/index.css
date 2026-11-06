@@ -250,6 +250,8 @@ img, svg, canvas {
   position: relative;
   overflow: hidden;
   border-radius: 18px;
+  container-type: inline-size;
+  min-width: 0;
 }
 .dashboard-kpi-card::after {
   content: '';
@@ -282,10 +284,16 @@ img, svg, canvas {
 .dashboard-kpi-value {
   position: relative;
   z-index: 1;
-  font-size: 28px;
+  display: block;
+  width: calc(100% - 56px);
+  max-width: 100%;
+  font-size: clamp(12px, 8.5cqi, 26px);
   font-weight: 800;
   line-height: 1.15;
   margin-top: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
 }
 .dashboard-kpi-hint {
   position: relative;
@@ -613,7 +621,7 @@ img, svg, canvas {
     min-width: 100%;
   }
   .dashboard-kpi-value {
-    font-size: 22px;
+    font-size: clamp(13px, 9cqi, 22px);
   }
   .detail-modal {
     padding: 16px;
