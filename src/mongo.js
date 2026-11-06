@@ -77,6 +77,12 @@ async function connect(uri) {
     emailFromAddresses: [String],
     defaultEmailFrom: { type: String, default: '' },
     lastCustomerSerial: { type: Number, default: 0 }, // global running serial
+    expenseGrades: {
+      view: [String],
+      create: [String],
+      approve: [String],
+      pay: [String],
+    },
     monthlyAccountFees: {
       enabled: { type: Boolean, default: false },
       deductionDay: { type: Number, default: 30 },
@@ -165,6 +171,7 @@ async function connect(uri) {
     collateral: Mixed,
     attachments: Mixed,
     createdAt: String,
+    startDate: String,
     status: String, // Pending | Active
     approvedAt: String,
     approverName: String,
@@ -182,6 +189,22 @@ async function connect(uri) {
     initiatedAt: String,
     approvedAt: String,
     approverName: String,
+  }, { timestamps: true });
+
+  const ExpenseSchema = new Schema({
+    id: { type: String, index: true },
+    date: String,
+    description: String,
+    voucherNo: String,
+    amount: Number,
+    remarks: String,
+    status: String, // Pending | Approved | Paid
+    createdBy: String,
+    createdAt: String,
+    approvedBy: String,
+    approvedAt: String,
+    paidBy: String,
+    paidAt: String,
   }, { timestamps: true });
 
   const AssetSchema = new Schema({
@@ -267,6 +290,7 @@ async function connect(uri) {
     ActivityLog: model('ActivityLog', ActivitySchema),
     ServerLog: model('ServerLog', ServerLogSchema),
     Asset: model('Asset', AssetSchema),
+    Expense: model('Expense', ExpenseSchema),
     Notification: model('Notification', NotificationSchema),
   };
   try {

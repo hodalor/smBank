@@ -300,6 +300,12 @@ let config = readJSON(CONFIG_FILE, {
     lastRunDateKey: '',
     rules: [],
   },
+  expenseGrades: {
+    view: ['Super Admin', 'Admin', 'Account Manager', 'Teller'],
+    create: ['Super Admin', 'Admin', 'Account Manager'],
+    approve: ['Super Admin', 'Admin'],
+    pay: ['Super Admin', 'Admin', 'Account Manager'],
+  },
 });
 
 const BIN_FILE = 'superbin.json';
@@ -1020,6 +1026,49 @@ function canManageAssets(role) {
   const r = String(role || '');
   return r === 'Admin' || r === 'Super Admin';
 }
+function defaultExpenseGrades() {
+  return {
+    view: ['Super Admin', 'Admin', 'Account Manager', 'Teller'],
+    create: ['Super Admin', 'Admin', 'Account Manager'],
+    approve: ['Super Admin', 'Admin'],
+    pay: ['Super Admin', 'Admin', 'Account Manager'],
+  };
+}
+function normalizeExpenseGrades(input) {
+  const fallback = defaultExpenseGrades();
+  const g = input && typeof input === 'object' ? input : {};
+  const clean = (arr, fb) => (Array.isArray(arr) && arr.length ? arr.map((x) => String(x)) : fb);
+  return {
+    view: clean(g.view, fallback.view),
+    create: clean(g.create, fallback.create),
+    approve: clean(g.approve, fallback.approve),
+    pay: clean(g.pay, fallback.pay),
+  };
+}
+async function getLiveExpenseGrades() {
+  if (isConnected()) {
+    try {
+      const { Config } = getModels();
+      const doc = await Config.findOne().lean();
+      if (doc && doc.expenseGrades) return normalizeExpenseGrades(doc.expenseGrades);
+    } catch {}
+  }
+  return normalizeExpenseGrades(config.expenseGrades);
+}
+async function canExpenseAction(req, action) {
+  if (!req.user || !req.user.username) return false;
+  const role = String(req.user.role || '');
+  if (role === 'Admin' || role === 'Super Admin') return true;
+  const permMap = {
+    view: 'expenses.view',
+    create: 'expenses.create',
+    approve: 'expenses.approve',
+    pay: 'expenses.pay',
+  };
+  if (permMap[action] && await userHasPermission(req.user.username, permMap[action], role)) return true;
+  const grades = await getLiveExpenseGrades();
+  return (grades[action] || []).includes(role);
+}
 async function userHasPermission(username, perm, fallbackRole = '') {
   const role = String(fallbackRole || '');
   if (!username) return false;
@@ -1147,6 +1196,8 @@ let loanRepayPosted = readJSON(LOAN_REPAY_POSTED_FILE, []);
 
 const ASSETS_FILE = 'assets.json';
 let assets = readJSON(ASSETS_FILE, []);
+const EXPENSES_FILE = 'expenses.json';
+let expenses = readJSON(EXPENSES_FILE, []);
 const upload = multer ? multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } }) : null;
 
 // Health
@@ -1863,10 +1914,12 @@ app.get('/config', async (req, res) => {
     if (!doc) doc = await Config.create(config);
     const out = { ...config, ...doc };
     out.monthlyAccountFees = normalizeMonthlyAccountFees(out.monthlyAccountFees, out.accountTypes || []);
+    out.expenseGrades = normalizeExpenseGrades(out.expenseGrades);
     return res.json(out);
   }
   const out = { ...config };
   out.monthlyAccountFees = normalizeMonthlyAccountFees(out.monthlyAccountFees, out.accountTypes || []);
+  out.expenseGrades = normalizeExpenseGrades(out.expenseGrades);
   res.json(out);
 });
 app.put('/config', async (req, res) => {
@@ -1900,6 +1953,9 @@ app.put('/config', async (req, res) => {
       const acctTypes = Array.isArray(body.accountTypes) ? body.accountTypes : ((await Config.findOne().lean())?.accountTypes || config.accountTypes || []);
       body.monthlyAccountFees = normalizeMonthlyAccountFees(body.monthlyAccountFees, acctTypes);
     }
+    if (Object.prototype.hasOwnProperty.call(body, 'expenseGrades')) {
+      body.expenseGrades = normalizeExpenseGrades(body.expenseGrades);
+    }
     const saved = await Config.findOneAndUpdate({}, { $set: body }, { upsert: true, new: true });
     await logActivity(req, 'config.update', 'config', '', {});
     const obj = saved && saved.toObject ? saved.toObject() : saved;
@@ -1928,6 +1984,9 @@ app.put('/config', async (req, res) => {
   if (Object.prototype.hasOwnProperty.call(body, 'monthlyAccountFees')) {
     const acctTypes = Array.isArray(body.accountTypes) ? body.accountTypes : (config.accountTypes || []);
     body.monthlyAccountFees = normalizeMonthlyAccountFees(body.monthlyAccountFees, acctTypes);
+  }
+  if (Object.prototype.hasOwnProperty.call(body, 'expenseGrades')) {
+    body.expenseGrades = normalizeExpenseGrades(body.expenseGrades);
   }
   config = { ...config, ...body };
   writeJSON(CONFIG_FILE, config);
@@ -3069,6 +3128,127 @@ app.post('/assets/:id/status', async (req, res) => {
   await logActivity(req, 'asset.update', 'asset', String(assets[idx].id || id), { fromStatus, toStatus: assets[idx].status, fromAssignee, toAssignee: assets[idx].assignedTo, remarks });
   res.json({ ok: true });
 });
+
+function expenseMatchesFilters(item, { status, month, year, q }) {
+  if (status && String(item.status || '') !== String(status)) return false;
+  const dateStr = String(item.date || item.createdAt || '');
+  if (year) {
+    const y = dateStr.slice(0, 4);
+    if (y && y !== String(year)) return false;
+  }
+  if (month) {
+    const m = Number(dateStr.slice(5, 7));
+    if (m && m !== Number(month)) return false;
+  }
+  if (q) {
+    const s = String(q).toLowerCase();
+    const blob = `${item.description || ''} ${item.voucherNo || ''} ${item.remarks || ''}`.toLowerCase();
+    if (!blob.includes(s)) return false;
+  }
+  return true;
+}
+
+app.get('/expenses', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!(await canExpenseAction(req, 'view'))) return res.status(403).json({ error: 'forbidden' });
+  const { status, month, year, q } = req.query || {};
+  if (isConnected()) {
+    const { Expense } = getModels();
+    const filter = {};
+    if (status) filter.status = String(status);
+    const docs = await Expense.find(filter).sort({ date: -1, createdAt: -1, _id: -1 }).lean();
+    const list = docs.filter((item) => expenseMatchesFilters(item, { status: '', month, year, q }));
+    return res.json(list);
+  }
+  const list = expenses.filter((item) => expenseMatchesFilters(item, { status, month, year, q }));
+  res.json(list);
+});
+app.post('/expenses', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!(await canExpenseAction(req, 'create'))) return res.status(403).json({ error: 'forbidden' });
+  const body = req.body || {};
+  const description = String(body.description || '').trim();
+  const amount = Number(body.amount || 0);
+  if (!description) return res.status(400).json({ error: 'description_required' });
+  if (!(amount > 0)) return res.status(400).json({ error: 'amount_required' });
+  const nowIso = new Date().toISOString();
+  const payload = {
+    id: body.id || newId('EX'),
+    date: body.date || nowIso.slice(0, 10),
+    description,
+    voucherNo: String(body.voucherNo || '').trim(),
+    amount: Math.round(amount * 100) / 100,
+    remarks: String(body.remarks || '').trim(),
+    status: 'Pending',
+    createdBy: req.user.username,
+    createdAt: nowIso,
+    approvedBy: '',
+    approvedAt: '',
+    paidBy: '',
+    paidAt: '',
+  };
+  if (isConnected()) {
+    const { Expense } = getModels();
+    const doc = await Expense.create(payload);
+    await logActivity(req, 'expense.create', 'expense', payload.id, { amount: payload.amount });
+    return res.status(201).json(doc.toObject ? doc.toObject() : doc);
+  }
+  expenses.unshift(payload);
+  writeJSON(EXPENSES_FILE, expenses);
+  await logActivity(req, 'expense.create', 'expense', payload.id, { amount: payload.amount });
+  res.status(201).json(payload);
+});
+app.post('/expenses/:id/approve', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!(await canExpenseAction(req, 'approve'))) return res.status(403).json({ error: 'forbidden' });
+  const id = req.params.id;
+  const nowIso = new Date().toISOString();
+  if (isConnected()) {
+    const { Expense } = getModels();
+    const doc = await Expense.findOne({ id });
+    if (!doc) return res.status(404).json({ error: 'not_found' });
+    if (String(doc.status) !== 'Pending') return res.status(400).json({ error: 'invalid_status' });
+    doc.status = 'Approved';
+    doc.approvedBy = req.user.username;
+    doc.approvedAt = nowIso;
+    await doc.save();
+    await logActivity(req, 'expense.approve', 'expense', id, {});
+    return res.json(doc.toObject ? doc.toObject() : doc);
+  }
+  const idx = expenses.findIndex((x) => String(x.id) === String(id));
+  if (idx < 0) return res.status(404).json({ error: 'not_found' });
+  if (String(expenses[idx].status) !== 'Pending') return res.status(400).json({ error: 'invalid_status' });
+  expenses[idx] = { ...expenses[idx], status: 'Approved', approvedBy: req.user.username, approvedAt: nowIso };
+  writeJSON(EXPENSES_FILE, expenses);
+  await logActivity(req, 'expense.approve', 'expense', id, {});
+  res.json(expenses[idx]);
+});
+app.post('/expenses/:id/pay', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!(await canExpenseAction(req, 'pay'))) return res.status(403).json({ error: 'forbidden' });
+  const id = req.params.id;
+  const nowIso = new Date().toISOString();
+  if (isConnected()) {
+    const { Expense } = getModels();
+    const doc = await Expense.findOne({ id });
+    if (!doc) return res.status(404).json({ error: 'not_found' });
+    if (String(doc.status) !== 'Approved') return res.status(400).json({ error: 'invalid_status' });
+    doc.status = 'Paid';
+    doc.paidBy = req.user.username;
+    doc.paidAt = nowIso;
+    await doc.save();
+    await logActivity(req, 'expense.pay', 'expense', id, {});
+    return res.json(doc.toObject ? doc.toObject() : doc);
+  }
+  const idx = expenses.findIndex((x) => String(x.id) === String(id));
+  if (idx < 0) return res.status(404).json({ error: 'not_found' });
+  if (String(expenses[idx].status) !== 'Approved') return res.status(400).json({ error: 'invalid_status' });
+  expenses[idx] = { ...expenses[idx], status: 'Paid', paidBy: req.user.username, paidAt: nowIso };
+  writeJSON(EXPENSES_FILE, expenses);
+  await logActivity(req, 'expense.pay', 'expense', id, {});
+  res.json(expenses[idx]);
+});
+
 // Manual account manager assignment (assign, unassign, reassign) with remarks
 app.post('/clients/:id/manager', async (req, res) => {
   const id = req.params.id;
@@ -3413,6 +3593,7 @@ app.post('/loans', async (req, res) => {
     collateral: body.collateral || {},
     attachments: body.attachments || [],
     createdAt: new Date().toISOString(),
+    startDate: body.startDate || '',
     status: 'Pending',
   };
   try {
