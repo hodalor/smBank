@@ -198,13 +198,16 @@ async function connect(uri) {
     voucherNo: String,
     amount: Number,
     remarks: String,
-    status: String, // Pending | Approved | Paid
+    status: String, // Pending | Approved | Paid | Rejected
     createdBy: String,
     createdAt: String,
     approvedBy: String,
     approvedAt: String,
     paidBy: String,
     paidAt: String,
+    rejectedBy: String,
+    rejectedAt: String,
+    rejectRemarks: String,
   }, { timestamps: true });
 
   const AssetSchema = new Schema({

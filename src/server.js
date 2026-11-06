@@ -3186,6 +3186,9 @@ app.post('/expenses', async (req, res) => {
     approvedAt: '',
     paidBy: '',
     paidAt: '',
+    rejectedBy: '',
+    rejectedAt: '',
+    rejectRemarks: '',
   };
   if (isConnected()) {
     const { Expense } = getModels();
@@ -3221,6 +3224,33 @@ app.post('/expenses/:id/approve', async (req, res) => {
   expenses[idx] = { ...expenses[idx], status: 'Approved', approvedBy: req.user.username, approvedAt: nowIso };
   writeJSON(EXPENSES_FILE, expenses);
   await logActivity(req, 'expense.approve', 'expense', id, {});
+  res.json(expenses[idx]);
+});
+app.post('/expenses/:id/reject', async (req, res) => {
+  if (!req.user || !req.user.username) return res.status(401).json({ error: 'unauthorized' });
+  if (!(await canExpenseAction(req, 'approve'))) return res.status(403).json({ error: 'forbidden' });
+  const id = req.params.id;
+  const nowIso = new Date().toISOString();
+  const rejectRemarks = String((req.body && req.body.remarks) || '').trim();
+  if (isConnected()) {
+    const { Expense } = getModels();
+    const doc = await Expense.findOne({ id });
+    if (!doc) return res.status(404).json({ error: 'not_found' });
+    if (String(doc.status) !== 'Pending') return res.status(400).json({ error: 'invalid_status' });
+    doc.status = 'Rejected';
+    doc.rejectedBy = req.user.username;
+    doc.rejectedAt = nowIso;
+    doc.rejectRemarks = rejectRemarks;
+    await doc.save();
+    await logActivity(req, 'expense.reject', 'expense', id, { remarks: rejectRemarks });
+    return res.json(doc.toObject ? doc.toObject() : doc);
+  }
+  const idx = expenses.findIndex((x) => String(x.id) === String(id));
+  if (idx < 0) return res.status(404).json({ error: 'not_found' });
+  if (String(expenses[idx].status) !== 'Pending') return res.status(400).json({ error: 'invalid_status' });
+  expenses[idx] = { ...expenses[idx], status: 'Rejected', rejectedBy: req.user.username, rejectedAt: nowIso, rejectRemarks };
+  writeJSON(EXPENSES_FILE, expenses);
+  await logActivity(req, 'expense.reject', 'expense', id, { remarks: rejectRemarks });
   res.json(expenses[idx]);
 });
 app.post('/expenses/:id/pay', async (req, res) => {
